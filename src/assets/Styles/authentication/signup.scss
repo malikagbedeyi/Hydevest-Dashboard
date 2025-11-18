@@ -1,0 +1,280 @@
+@mixin mobile {
+    @media screen and (max-width:580px) {
+        @content;
+    }
+}
+@mixin tablet {
+    @media screen and (max-width:980px) {
+        @content;
+    }
+}
+@mixin Responsive($breakpoint) {
+    @media screen and (max-width: $breakpoint) {
+      @content;
+    }
+  }
+
+@mixin laptop {
+    @media screen and (max-width:1190px) {
+        @content;
+    }
+}
+@mixin Destop {
+    @media screen and (max-width:1440px) {
+        @content;
+    }
+}
+@mixin FullHd {
+    @media screen and (max-width:2784px) {
+        @content;
+    }
+}
+@keyframes Pop {
+    0% {
+      transform: translateY(-50%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  *{
+    list-style: none;
+    margin: 0;
+    font-style: normal;
+  }
+  .register{
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #FCF2FF;
+    position: relative;
+     font-family: 'Poppins' sans-serif;
+     background-image: url(../../Images/overflow-signup-02.avif);
+     background-position: top left;
+     background-repeat: no-repeat;
+      background-size: cover;
+     .overflow{
+      position: absolute;
+      background: #000;
+      opacity: 0.5;
+      width: 100%;
+      height: 100%;
+     }
+    .registerContainer{
+      position: relative;
+        width: 60%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      z-index: 999;
+      margin: auto auto;
+       padding: 30px 0;
+      @include tablet{
+        width: 100%;
+      }
+       @include mobile{
+        padding: 20px;
+          }
+        .registerParent{
+            width: 100%;
+            align-items: center;
+            // padding: 30px 0;
+            //  box-shadow: 2px 6px 10px 2px #fff;
+            //  border-radius: 20px 0 0 20px;
+            .registerSidebar{
+                height: 100%;
+                background: #7F39F2;
+                padding: 20px;
+                align-items: center;
+                border-radius: 20px 0 0 20px;
+                //  box-shadow: 2px 6px 10px 2px #fff;
+                @include mobile{
+                  height: 7vh;
+                  border-radius: 20px 20px 0 0 ;
+                }
+                .registerSidebarLogo{
+                display: flex;
+                gap: 15px;
+              justify-content: center;
+               align-items: center;
+               text-align: center;
+                @include mobile{
+                  margin: auto;
+                  height: 100%;
+                }
+                img{
+                  background: #fff  ;
+                  color: #7F39F2;
+                  border-radius: 4px;
+                  width: 40px;
+                  height:40px;
+                }
+                h1{
+                  color: #fff;
+                  font-size: 20px;
+                  font-weight: 600;
+                  align-items: center;
+                  text-align: center;
+                   margin:  0;
+                }
+                }
+                .registerSidebartext{
+                    height: 100%;
+                     display: flex;
+                    gap: 10px;
+                    flex-direction: column;
+                  justify-content: center;
+                   align-items: center;
+                   text-align: left;
+                    @include mobile{
+                      display: none;
+                }
+                   h1{
+                    font-weight: 600;
+                    color:#f8f5f5;
+                    font-size: 1.5rem;
+                    line-height: 30px;
+                    margin-bottom: 10px;
+                   }
+                   p{
+                    font-weight: 500;
+                    color:#f8f5f5;
+                    font-size:17px;
+                    line-height: 22px;
+                   }
+                }
+            }
+            .registerChild{
+                padding: 20px 10px;
+                height: 100%;
+                background: inherit;
+                padding: 20px 30px;
+                  box-shadow: 2px 6px 10px 2px #fff;
+                .registerChildTop{
+                    display: flex;
+                    flex-direction: column;
+                    color: #f5f5f5;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid #fff;
+                    h1{
+                        font-size: 24px;
+                        font-weight: 600;
+                        letter-spacing: 1px;
+                    }
+                    p{
+                        font-size: 16px;
+                        font-weight: 400;
+                        letter-spacing: 1px;
+                    }
+                }
+                form{
+                  width: 100%;
+                  .formtitle{
+                    margin: 5% 0;
+                    p{
+                      font-size: 18px;
+                      font-weight: 300;
+                      color: #f5f5f5;
+                    }
+                  }
+                  .formInput{
+                  .fillWrapper{
+                    display: flex;
+                    gap: 30px;
+                    width: 100%;
+                    margin:4% 0 ;
+                    .leftwrapper,
+                    .rightWrapper{
+                      display: flex;
+                      flex-direction: column;
+                      gap: 5px;
+                      width: 100%;
+                      h3{
+                        text-transform:capitalize;
+                        font-size: 16px;
+                        font-weight: 400;
+                        line-height: 20px;
+                        text-align: left;
+                        text-underline-position: from-font;
+                        text-decoration-skip-ink: none;
+                        color: #f5f5f5;
+
+                      }
+                      input{
+                        outline-style: none;
+                        border-style: none;
+                        width: 100%;
+                        height: 50px;
+                        padding: 8px 0px 0px 10px;
+                        border-radius: 6px;
+                        border: 1px 0px 0px 0px solid #E4E4E499;;
+                        background: #FAF8FD;
+                        &::placeholder{
+                          color: rgb(25, 36, 52,0.5);
+                          font-size: 14px;
+
+                          
+                        }
+                      }
+                    }
+                  }
+                  }
+                  .robotHoman{
+                  display: flex;
+                  gap: 40px;
+                  .iconvarify{
+                  display: flex;
+                    position: relative;
+                    cursor: pointer;
+                  .clickIcons,
+                  .unClickIcons{
+                  position: absolute;
+                  transition: .3s ;
+                   width: 24px;
+                  height: 24px;
+                  gap: 0px;
+                  border-radius: 6px 0px 0px 0px;
+                  opacity: 0px;
+                  background:#FFFFFF;
+                  box-shadow: 0px 4px 8px 0px #3232470F;
+                  }
+                   .unClickIcons{
+                  display: flex;
+                  justify-content: center;
+
+                  svg{
+                  margin: auto;
+                  }
+                   }
+                  }
+                     p{
+                   font-size: 16px;
+                   font-weight: 300;
+                   color: #f5f5f5;
+                   }
+                 }
+                 button{
+                  margin:10px auto;
+                  padding: 10px 50px ;
+                  border: none;
+                  background: #7F39F2;
+                  color: #fff;
+                  transition: .3s;
+                  border-radius: 5px;
+                  display: flex;
+                  justify-content: center;
+                  &:hover{
+                    border: 1px solid #0152FF;
+                    background: #FAF8FD;
+                    color: #0152FF;
+                    transition: .3s;
+                  }
+                 }
+                }
+
+            }
+        }
+    }
+  }
