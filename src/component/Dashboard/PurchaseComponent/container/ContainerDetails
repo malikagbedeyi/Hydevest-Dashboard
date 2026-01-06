@@ -1,0 +1,572 @@
+import React, { useRef, useState } from "react";
+import "../../../../assets/Styles/dashboard/Purchase/tripDetails.scss";
+import { Plus, ChevronDown, X, Calendar, Edit, Delete, ChevronUp } from "lucide-react";
+import { tableDataItem } from '../trip/TripData'
+import { tableDataContainer } from "./ContainerData";
+import DrildownContainer from "./DrildownContainer";
+
+
+const ContainerDetails = ({ trip, goBack }) => {
+    const scrollRef = useRef(null);
+ const [approved, setApproved] = useState(false);
+ const [selectedTrip,setSelectedTrip,]=useState(false)
+const [showTripDetails,setShowTripDetails]=useState(false)
+
+const [currentPage, setCurrentPage] = useState(1);
+const [itemPerPage] = useState(10);
+const [currentPage2, setCurrentPage2] = useState(1);
+const [itemPerPage2] = useState(10);
+
+const indexOfLastPage =  currentPage * itemPerPage;
+const indexOfFirstPage = indexOfLastPage - itemPerPage;
+const currentItem = tableDataItem.slice(indexOfFirstPage, indexOfLastPage);
+const paginate = (pageNumber) => setCurrentPage(pageNumber);
+const totalItems = tableDataItem.length;
+
+const indexOfLastPage2 =  currentPage2 * itemPerPage2;
+const indexOfFirstPage2 = indexOfLastPage2 - itemPerPage2;
+const currentItem2 = tableDataContainer.slice(indexOfFirstPage2, indexOfLastPage2);
+const paginate2 = (pageNumber) => setCurrentPage2(pageNumber);
+const totalItems2 = tableDataContainer.length;
+
+const nextPage = () => {
+  if (currentPage < Math.ceil(totalItems / itemPerPage)) {
+    setCurrentPage(currentPage + 1);
+  }
+   else if (currentPage2 < Math.ceil(totalItems2 / itemPerPage2)) {
+    setCurrentPage2(currentPage2 + 1);
+  }
+};
+const prevPage = () => {
+  if (currentPage > 1) {
+    setCurrentPage(currentPage - 1);
+  }
+  else if (currentPage2 > 1) {
+    setCurrentPage2(currentPage2 - 1);
+  }
+
+};
+const openTripDetails = (row) => {
+  setSelectedTrip(row);
+  setShowTripDetails(true);
+};
+
+const openTripDetails2 = (row) => {
+  setSelectedTrip(row);
+  setShowTripDetails(true);
+};
+
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+  const [activeTab, setActiveTab] = useState("container");
+  const [showModal, setShowModal] = useState(false);
+   const [showItemData, setShowItemData] = useState(false);
+
+  // Editable states
+  const [budget, setBudget] = useState("12,345");
+  const [location, setLocation] = useState("London, England");
+  const [startDate, setStartDate] = useState("2025-02-21");
+  const [endDate, setEndDate] = useState("2025-02-21");
+
+  // Individual edit states
+  const [editBudget, setEditBudget] = useState(false);
+  const [editStartDate, setEditStartDate] = useState(false);
+  const [editLocation, setEditLocation] = useState(false);
+  const [editEndDate, setEditEndDate] = useState(false);
+const [description, setDescription] = useState(trip?.description || "");
+const [editDescription, setEditDescription] = useState(false);
+
+  const [file, setFile] = useState(null);
+
+  const handleFile = (e) => {
+    setFile(e.target.files[0]);
+  };
+  if (showTripDetails) {
+    return (
+      <DrildownContainer 
+      setTrip={setSelectedTrip}
+        trip={selectedTrip}
+        goBack={() => setShowTripDetails(false)}
+      />
+    )
+  }
+  return (
+    <>
+    <div className="trip-details-container" ref={scrollRef}>
+        {/* HEADER */}
+        <div className="trip-header">
+          <div>
+            <h2>{trip?.title}</h2>
+            <p>{trip?.id}</p>
+          </div>
+
+          <div className="header-btns">
+               {!showItemData && (
+            <button className="outline"
+            onClick={() => {
+                 setShowItemData(false);
+                 setShowModal(true);
+                 
+                // setApproved(!approved)
+                 }} >Add Container</button>
+            )}
+            <button className="status">
+              <span>{approved ? "  Started" : "Not Started"}</span>
+               {approved ? <ChevronDown size={16} /> :<ChevronUp size={16} />}
+            </button>
+
+          </div>
+        </div>
+        {/* DESCRIPTION */}
+        <div className="trip-description">
+         <div className="desc-header">
+    <h4>Description</h4>
+    {!editDescription && (
+      <Edit
+        size={16}
+        className="edit-icon"
+        onClick={() => setEditDescription(true)}
+      />
+    )}
+  </div>
+  <div className="desc-body">
+    {editDescription ? (
+      <textarea
+        className="desc-textarea"
+        value={description}
+        autoFocus
+        onChange={(e) => setDescription(e.target.value)}
+        onBlur={() => setEditDescription(false)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            setEditDescription(false);
+          }
+        }}
+      />
+    ) : (
+      <p>{description}</p>
+    )}
+  </div>
+        </div>
+
+        {/* INFO GRID */}
+        <div className="info-grid">
+          {/* CARD 1: Budget + Start Date */}
+          <div className="info-card">
+            <div className="info-wrapper">
+
+              {/* Budget */}
+              <div className="info-content">
+                <h4>Budgeted Amount</h4>
+                <div className="info-content-data">
+                  {editBudget ? (
+                    <input
+                      type="text"
+                      value={budget}
+                      autoFocus
+                      onChange={(e) => setBudget(e.target.value)}
+                      onBlur={() => setEditBudget(false)}
+                      onKeyDown={(e) => e.key === "Enter" && setEditBudget(false)}
+                    />
+                  ) : (
+                    <h2>N{budget}</h2>
+                  )}
+           <Edit className="edit-icon" size={16} onClick={() => setEditBudget(true)} />
+                </div>
+              </div>
+
+              {/* Start Date */}
+              <div className="info-content">
+                <h4 className="space">Start Date</h4>
+
+                <div className="info-content-data">
+                  {editStartDate ? (
+                    <input
+                      type="date"
+                      value={startDate}
+                      autoFocus
+                      onChange={(e) => setStartDate(e.target.value)}
+                      onBlur={() => setEditStartDate(false)}
+                      onKeyDown={(e) => e.key === "Enter" && setEditStartDate(false)}
+                    />
+                  ) : (
+                    <h2>{startDate}</h2>
+                  )}
+
+                  <Edit className="edit-icon" size={16} onClick={() => setEditStartDate(true)} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CARD 2: Destination + End Date */}
+          <div className="info-card">
+            <div className="info-wrapper">
+
+              {/* Destination */}
+              <div className="info-content">
+                <h4>Destination</h4>
+                <div className="info-content-data">
+                  {editLocation ? (
+                    <input
+                      type="text"
+                      value={location}
+                      autoFocus
+                      onChange={(e) => setLocation(e.target.value)}
+                      onBlur={() => setEditLocation(false)}
+                      onKeyDown={(e) => e.key === "Enter" && setEditLocation(false)}
+                    />
+                  ) : (
+                    <h2>{location}</h2>
+                  )}
+
+                  <Edit className="edit-icon" size={16} onClick={() => setEditLocation(true)} />
+                </div>
+              </div>
+
+              {/* End Date */}
+              <div className="info-content">
+                <h4 className="space">End Date</h4>
+
+                <div className="info-content-data">
+                  {editEndDate ? (
+                    <input
+                      type="date"
+                      value={endDate}
+                      autoFocus
+                      onChange={(e) => setEndDate(e.target.value)}
+                      onBlur={() => setEditEndDate(false)}
+                      onKeyDown={(e) => e.key === "Enter" && setEditEndDate(false)}
+                    />
+                  ) : (
+                    <h2>{endDate}</h2>
+                  )}
+
+                  <Edit className="edit-icon" size={16} onClick={() => setEditEndDate(true)} />
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        {/* TABS */}
+        <div className="tabs">
+          <div className="tab-wrapper">
+            <div className="tab-content">
+              <span
+                className={activeTab === "finance" ? "active" : ""}
+                onClick={() => setActiveTab("finance")}
+              >
+                Trip Finance
+              </span>
+              <span
+                className={activeTab === "container" ? "active" : ""}
+                onClick={() => setActiveTab("container")}
+              >
+                Container
+              </span>
+            </div>
+            <div className="tab-content">
+             <button
+              onClick={() => {
+                 setShowItemData(false);
+                 setShowModal(true);
+                 }} >
+                  <Plus size={30} className="tab-content-icon" />
+                  <p>
+                      {activeTab === "finance" && "Add Item"}
+                      {activeTab === "container" && "Add Container"}
+                      </p>
+             </button>
+
+            </div>
+          </div>
+        </div>
+        {/* FINANCE SECTION */}
+        {activeTab === "finance" && showItemData && (
+          <div className="finance-section">
+              <div className="trip-finance-content">
+                <div className="trip-finance-table ">
+                <div className="left-table ">
+                    <div className="table-header">
+                    <div className="left-tableheader">
+                    <ul >
+  {/* <li > <span>S/No</span> </li> */}
+  <li> <span>S/No</span> </li>
+  <li > <span>Title</span></li>
+  </ul>
+  </div>
+                      </div>
+                      <div className="table-body">
+                      {currentItem.map((row, index) => (
+                         <div  key={index}  className="table-row"
+                          onClick={() => openTripDetails(row)}>
+                        <div className="tableRow-left">
+                          <div className="ul">
+                        {/* <p className='table-icon'><span>{row.icon}</span></p> */}
+                         <p  > <span>{row.sn}</span></p>
+                        <p > <span>{row.title}</span></p> 
+                        </div>
+                        </div>
+                        </div> ))}
+                        </div>
+                      </div> 
+                      <div className="right-table">
+                        <div className="table-header">
+                        <div className="right-tableheader">
+                        <ul>
+                        <li> <span>Description</span> </li>
+                      <li> <span>date</span> </li>
+                      <li><span>type</span></li>
+                      <li> <span>amount</span> </li>
+                        <li><span>rate</span></li>
+                        <li> <span>amountNGN</span> </li><li> <span>status</span></li>
+                        </ul>
+                        </div>
+                        </div>
+                        <div className="table-body">
+                            {currentItem.map((row, index) => (
+                            <div  key={index} className="table-row"
+                             onClick={() => openTripDetails(row)}>
+                             <div className="tableRow-right">
+                             <div className="ul">
+                             <p> <span>{row.description}</span></p>
+                         <p> <span >{row.date}</span></p>
+                         <p> <span>{row.type}</span></p>
+                         <p> <span>{row.amount}</span></p>
+                         <p> <span>{row.rate}</span></p>
+                         <p> <span >{row.amountNGN}</span></p>
+                         <p> <span> {row.status} </span> </p>
+                         </div>
+                         </div>
+                         </div> ))}
+                        </div>
+                         </div>
+  </div>
+  <div className="pagination">
+          <button className='double-paginateIcon' onClick={prevPage} disabled={currentPage === 1}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path></svg>
+          </button>
+          <button onClick={prevPage} disabled={currentPage === 1}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path></svg>
+          </button>
+          <p>
+          <span className='span'> {indexOfFirstPage + 1}</span>- <span>{Math.min(indexOfLastPage, totalItems)} </span>
+          </p>
+          <button onClick={nextPage}
+            disabled={currentPage === Math.ceil(totalItems / itemPerPage)} >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path></svg>
+          </button>
+          <button className='double-paginateIcon-right' onClick={nextPage}
+            disabled={currentPage === Math.ceil(totalItems / itemPerPage)} >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path></svg>
+          </button>
+          <span>
+            Showing {indexOfFirstPage + 1}-{Math.min(indexOfLastPage, totalItems)} of {totalItems}
+          </span>
+        </div>
+   </div>
+          </div>
+        )}
+        {activeTab === "container" && showItemData && (
+          <div className="finance-section">
+              <div className="trip-finance-content">
+                <div className="trip-finance-table ">
+                <div className="left-table ">
+                    <div className="table-header">
+                    <div className="left-tableheader">
+                    <ul >
+  {/* <li > <span>S/No</span> </li> */}
+  <li> <span>S/No</span> </li>
+  <li > <span>Title</span></li>
+  </ul>
+  </div>
+                      </div>
+                      <div className="table-body">
+                      {currentItem2.map((row, index) => (
+                         <div  key={index}  className="table-row"
+                          onClick={() => openTripDetails(row)}>
+                        <div className="tableRow-left">
+                          <div className="ul">
+                        {/* <p className='table-icon'><span>{row.icon}</span></p> */}
+                         <p  > <span>{row.sn}</span></p>
+                        <p > <span>{row.title}</span></p> 
+                        </div>
+                        </div>
+                        </div> ))}
+                        </div>
+                      </div> 
+                      <div className="right-table">
+                        <div className="table-header">
+                        <div className="right-tableheader">
+                        <ul>
+                        <li> <span>Description</span> </li>
+                      <li> <span>date</span> </li>
+                      <li><span>type</span></li>
+                      <li> <span>amount</span> </li>
+                        <li><span>rate</span></li>
+                        <li> <span>amountNGN</span> </li><li> <span>status</span></li>
+                        </ul>
+                        </div>
+                        </div>
+                        <div className="table-body">
+                            {currentItem2.map((row, index) => (
+                            <div  key={index} className="table-row"
+                             onClick={() => openTripDetails(row)}>
+                             <div className="tableRow-right">
+                             <div className="ul">
+                             <p> <span>{row.description}</span></p>
+                         <p> <span >{row.date}</span></p>
+                         <p> <span>{row.type}</span></p>
+                         <p> <span>{row.amount}</span></p>
+                         <p> <span>{row.rate}</span></p>
+                         <p> <span >{row.amountNGN}</span></p>
+                         <p> <span> {row.status} </span> </p>
+                         </div>
+                         </div>
+                         </div> ))}
+                        </div>
+                         </div>
+  </div>
+  <div className="pagination">
+          <button className='double-paginateIcon' onClick={prevPage} disabled={currentPage === 1}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path></svg>
+          </button>
+          <button onClick={prevPage} disabled={currentPage2 === 1}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path></svg>
+          </button>
+          <p>
+          <span className='span'> {indexOfFirstPage2 + 1}</span>- <span>{Math.min(indexOfLastPage2, totalItems2)} </span>
+          </p>
+          <button onClick={nextPage}
+            disabled={currentPage2 === Math.ceil(totalItems2 / itemPerPage2)} >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path></svg>
+          </button>
+          <button className='double-paginateIcon-right' onClick={nextPage}
+            disabled={currentPage2 === Math.ceil(totalItems2 / itemPerPage2)} >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path></svg>
+          </button>
+          <span>
+            Showing {indexOfFirstPage2 + 1}-{Math.min(indexOfLastPage2, totalItems2)} of {totalItems2}
+          </span>
+        </div>
+   </div>
+          </div>
+       )}
+        {/* FOOTER BUTTONS */}
+        <div className="footer-btns">
+          <button onClick={()=>goBack(true)} className="preview">Preview</button>
+          <button   onClick={() => {
+    scrollToTop();
+    setApproved(false);
+  }} className="create">Update</button>
+        </div>
+      </div>
+
+      {/* MODAL */}
+      {showModal &&  !showItemData &&  (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <div className="modal-header">
+              <h3>Add Item</h3>
+              <button  onClick={() => setShowModal(false)}>
+                <X size={16}/>
+              </button>
+            </div>
+            <div className="modal-form">
+                <div className="modal-form-content">
+              <div className="modal-form-grid">
+                <label>Title</label>
+                <input type="text" placeholder="Enter item name" />
+              </div>
+              <div className="modal-form-grid">
+                <label>Description</label>
+                <textarea placeholder="Enter item description"></textarea>
+              </div>
+                <div className="modal-form-grid">
+                <label>Type</label>
+                <div className="select-box">
+                  <span>Advance</span> <ChevronDown size={16} />
+                </div>
+              </div>
+              <div className="modal-form-grid">
+                <label>Date</label>
+                <div className="input-icon">
+                  <input type="text" placeholder="DD/MM/YYYY" />
+                  <Calendar size={16} />
+                </div>
+              </div>            
+                </div>
+              <div className="modal-form-content-wrapper">
+                <div className="grid-select">                
+            <label>Budgeted Amount</label>
+                <div className="select-box">
+                    <div className="select-box-icon">
+                  <span>$4,000</span> 
+                   <X  className="input-icon"/>
+                    </div>
+                  <ChevronDown size={16} />
+              </div>
+              </div>
+              <div className="grid-select">
+                <label>Advance Amount</label>
+                <div className="select-box">
+                  <span>$4,000</span> <ChevronDown size={16} />
+                </div>
+              </div>
+              <div className="grid-select">
+              <label>Upload</label>
+    <div className="upload-box">
+      <label className="upload-label">
+        {file ? (
+          <p>{file.name}</p>
+        ) : (
+          <>
+            <i className="bx bx-upload"></i>
+            <span>Upload the receipt</span>
+          </>
+        )}
+
+        <input type="file" onChange={handleFile} hidden />
+      </label>
+    </div>
+            </div>
+                <div className="grid-select">
+                <label>Currency</label>
+                <div className="select-box">
+                    <div className="select-box-icon">
+                  <span>$ dollar</span> 
+                    </div>
+                  <ChevronDown size={16} />
+              </div>
+              </div>
+              <div className="grid-select">
+                <label>Rate</label>
+                <div className="select-box">
+                    <input type="number" placeholder="2" />
+                </div>
+              </div>
+              </div>
+            </div>
+           <button onClick={() => {  setShowItemData(true); setShowModal(false); }}className="add-btn" >
+              Add Item
+
+           </button>
+
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+
+export default ContainerDetails
+

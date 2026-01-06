@@ -38,13 +38,13 @@ const SignUp = () => {
             <h1>Hydevest</h1>
             </div>
             <div className="registerSidebartext">
-                <h1>Login to open account</h1>
+                <h1>Register to open account</h1>
                 <p>Welcome to Hydevest lorem jsjkodvn aocnkcnol</p>
             </div>
         </div>
             <div className="registerChild col-lg-9 col-md-9 col-sm-9">
                 <div className="registerChildTop">
-                    <h1>Login</h1>
+                    <h1>Register</h1>
                     <p>Identity Infomation</p>
                 </div>
                 <form action="">

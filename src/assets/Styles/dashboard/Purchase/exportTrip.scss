@@ -1,0 +1,188 @@
+@mixin mobile {
+    @media screen and (max-width:580px) {
+        @content;
+    }
+}
+@mixin tablet {
+    @media screen and (max-width:980px) {
+        @content;
+    }
+}
+@mixin Responsive($breakpoint) {
+    @media screen and (max-width: $breakpoint) {
+      @content;
+    }
+  }
+
+@mixin laptop {
+    @media screen and (max-width:1190px) {
+        @content;
+    }
+}
+@mixin Destop {
+    @media screen and (max-width:1440px) {
+        @content;
+    }
+}
+@mixin FullHd {
+    @media screen and (max-width:2784px) {
+        @content;
+    }
+}
+@keyframes dropdown {
+    0% {
+      transform: translateY(-30%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  *{
+    margin:0;
+}
+
+.exportTrip{
+    position: fixed;
+            top: 0;
+            left: 0;
+            padding:0 10px;
+            width: 100%;
+            z-index: 1001;
+            background: rgba(54, 53, 86, 0.42);
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            padding: 30px 0px 10px;
+  .export-content{
+      background: #fff;
+      width:37.5vw;
+      padding: 50px 30px; 
+      overflow-y: auto;
+      scrollbar-width: none;
+      border-radius: 8px;
+      animation: fadeIn .4s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      font-family: "Poppins" sans-serif;
+      @include Destop{
+        width:600px;
+      }
+      .delete-box{
+        display: flex;
+        justify-content: flex-end;
+        cursor: pointer;
+        svg{
+          width: 1.4vw;
+          height: 1.4vw;
+           @include Destop{
+            width: 20px;
+          height: 20px;
+            }
+          }
+       }
+    .export-proceeed-wrapper{
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      h4{
+          font-family: "Poppins" sans-serif;
+          font-weight: 700;
+          font-size: 1.5vw;
+          line-height: 36px;
+          letter-spacing: 0px;  
+          color: #263238;     
+          @include Destop{
+            font-size: 24px;
+          }     
+      }
+      span{
+          font-family: "Poppins" sans-serif;
+          font-weight: 400;
+          font-size: 1vw;
+          line-height: 18px;
+          letter-spacing: 0px;
+          color: #263238;   
+          @include Destop{
+            font-size: 14px;
+          }          
+      }
+      .export-proceed{
+          margin-top: 3%;
+          display: flex;
+          gap: 10px;
+          align-items: center;
+        .export-content{
+          margin-top: 5%;
+          padding: 8px 14px;
+          box-shadow: 0px 2px 4px 0px #32324714;
+          background: #fff;
+          align-items: center;
+          display: flex;
+          flex-direction: row;
+          gap: 15px;
+          transition: .35s;
+          cursor: pointer;
+          &:hover,&:focus{
+            transform: scale(1.1);
+            transition: .4s ease-in-out;
+            border: 1px solid #0152FF;
+            box-shadow: none;
+            a{
+              color: #0152FF;
+            }
+          }
+          a{
+            font-family: "Roboto" sans-serif;
+            font-weight: 500;
+            font-size: 1vw;
+            line-height: 20px;
+            letter-spacing: 0.1px;
+            text-align: center;
+            text-decoration: none;
+            color: #1B212C;
+            margin: 0;
+            @include Destop{
+              font-size: 14px;
+            } 
+          }
+          svg{
+            width: 1.5vw;
+            height: 1.5vw;
+             @include Destop{
+              width: 25px;
+            height: 25px;
+              }
+            }
+          img{
+            width: 25%;
+          }
+        }
+      }
+        button{
+          align-items: center;
+          margin: 7% 0 5%;
+          padding: 8px 16px;
+          background: #0152FF;
+          border: none;
+          border-radius: 8px;
+          display: flex;
+          gap: 10px;
+          span{
+              color: #fff;
+          }
+          svg{
+            width: 1.4vw;
+            height: 1.4vw;
+             @include Destop{
+              width: 20px;
+            height: 20px;
+              }
+            }
+        }
+    }
+  }
+}

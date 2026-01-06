@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route, useLocation,useNavigate } from 'react-router-dom';
 import SignUp from './component/Authentication/SignUp';
+import DashboardPage from './component/Dashboard/DashboardPage';
 
 
 function AppContent() {
@@ -10,6 +11,7 @@ function AppContent() {
       ) : ( */}
       <Routes>
         <Route path='/' element={<SignUp />} />
+          <Route path='/dashboard' element={<DashboardPage />} />
       </Routes>
       {/* )} */}
     </>

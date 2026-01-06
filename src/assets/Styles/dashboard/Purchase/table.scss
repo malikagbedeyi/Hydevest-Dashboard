@@ -1,0 +1,209 @@
+@mixin mobile {
+    @media screen and (max-width:580px) {
+        @content;
+    }
+}
+@mixin tablet {
+    @media screen and (max-width:980px) {
+        @content;
+    }
+}
+@mixin laptop {
+    @media screen and (max-width:1190px) {
+        @content;
+    }
+}
+@mixin Destop {
+    @media screen and (max-width:1440px) {
+        @content;
+    }
+}
+@mixin FullHd {
+    @media screen and (max-width:2784px) {
+        @content;
+    }
+}
+@keyframes fadeOut {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50px);
+  }
+}
+@keyframes fadeIn {
+      0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.userTable{
+    width: 100%;
+    margin-top: 10px;
+    .drill-summary-grid{
+      margin-bottom: 30px;
+    .drill-summary {
+      width: 100%;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        .summary-item {
+          width: 100%;
+          padding: 12px 16px 20px;
+          box-shadow: 0px 4px 16px 0px #0000001F;
+          background: #ffffff;
+          gap: 8px;
+          display: flex;
+          flex-direction: column;
+          .small {
+           font-family: "Roboto",sans-serif;
+           font-weight: 500;
+           font-style: Medium;
+           font-size: 1vw;
+           line-height: 24px;
+           letter-spacing: 0px;
+           color: #8EA396;
+           margin: 0;
+            @include Destop{
+              font-size: 14px;
+          }
+          }
+  
+          h2 {
+           font-family: "Poppins",sans-serif;
+           font-weight: 500;
+           font-style: Medium;
+           font-size: 1.5vw;
+           line-height: 100%;
+           letter-spacing: 0px;
+           margin: 0 0 0 30px;
+           color: #581aae;
+           position: relative;
+            @include Destop{
+              font-size: 24px;
+          }
+          span{
+             position: absolute;
+             top: -6px;
+             left: -30px;
+              font-size: 0.9vw;
+              @include Destop{
+              font-size: 14px;
+          }
+          }
+          }
+        }
+      }
+      }
+     .table-wrap {
+        overflow: auto;
+        background: #fff;
+        border-radius: 8px;
+        padding: 8px 8px 0 -80px;
+        scrollbar-width: none;
+      }
+      .table {
+        min-width: 120%;
+        border-collapse: collapse;
+        font-size: 14px;
+        thead th {
+          text-align: left;
+          padding: 12px;
+          color: #263238;
+          font-weight: 600;
+          background: #f5f5f9;
+          border-bottom: 5px solid #fff;
+        }
+        tbody td {
+          padding: 20px 0px 20px 10px;
+          border-bottom: 5px solid #fff;
+          background: #f5f5f7;
+          vertical-align: middle;
+          color: #333;
+          margin: 20px 0!important;
+          cursor:pointer;
+        }
+
+        tbody tr {
+          position: relative;
+          transition: background 0.2s ease;
+          background: #f5f5f9;
+             
+        }
+
+        tbody tr:hover {
+          background: #fbfbff;
+        }
+
+        /* TEXT SHORTENER */
+        .td-desc {
+          max-width: 100px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        /* =====================
+            EDIT BUTTON (NEW)
+        ===================== */
+
+        .td-actions {
+          position: relative;
+        }
+        .delete-btn{
+          border: none;
+        }
+        .edit-btn {
+          margin-left: 10px;
+          padding: 6px 14px;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 600;
+          background: #581aae;
+          color: #fff;
+          border: none;
+          cursor: pointer;
+
+          opacity: 0;
+          visibility: hidden;
+          transform: translateX(-5px);
+          transition: all 0.2s ease;
+        }
+
+        /* Show on hover */
+        tbody tr:hover .edit-btn {
+          opacity: 1;
+          visibility: visible;
+          transform: translateX(0);
+        }
+}
+
+}
+    .btn-row-delete {
+          width: 100%;
+          margin-top: 18px;
+          display:flex; 
+          gap:12px; 
+          justify-content:center;
+          align-items: center;
+          .create {
+            background: #581aae; 
+            color: #fff;
+             padding: 10px 18px; 
+            border-radius: 24px; 
+            border: none;
+             cursor:pointer;
+          }
+          .cancel {
+            background: transparent; 
+            padding: 10px 18px; 
+            border-radius: 24px; 
+            border: 1px solid #581aae; 
+            color:#581aae;
+             cursor:pointer;
+          }
+}

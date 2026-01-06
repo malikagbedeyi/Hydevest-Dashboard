@@ -1,0 +1,971 @@
+@mixin mobile {
+    @media screen and (max-width:580px) {
+        @content;
+    }
+}
+@mixin tablet {
+    @media screen and (max-width:980px) {
+        @content;
+    }
+}
+@mixin laptop {
+    @media screen and (max-width:1190px) {
+        @content;
+    }
+}
+@mixin Destop {
+    @media screen and (max-width:1440px) {
+        @content;
+    }
+}
+@mixin FullHd {
+    @media screen and (max-width:2784px) {
+        @content;
+    }
+}
+@keyframes fadeOut {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50px);
+  }
+}
+@keyframes fadeIn {
+      0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.trip{
+    flex: 1;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: inherit;
+
+    .emptyTrip{
+        width: 100%;
+        margin-top: 10px;
+      .emptyTrip-container{
+        .emptyTrip-content{
+           .top-content{
+             background: #fff;
+              padding:5px 20px 10px;
+              border-radius: 16px 16px 0 0;
+              width: 100%;
+              .top-content-wrapper{
+                  display: flex;
+            justify-content:space-between;
+            align-items: center;
+            .left-wrapper{
+                
+            }
+                .right-wrapper{
+                     display: flex;
+                     gap: 10px;
+            justify-content:center;
+             align-items: center;
+             .right-wrapper-input{
+                width: 15vw;
+                 height: 3vw;
+                border: 1px solid #B9B7B7;
+                 border-radius: 6px;
+                padding: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                @include Destop{
+                    height: 35px;
+                    width: 200px;
+                }
+                input{
+                  border: none;
+                  width: 100%;
+                  outline-style: none;
+                  color: #1B212C;
+                  font-family: "Roboto" sans-serif;
+                  font-weight: 400;
+                  font-size: 1vw;
+                  line-height: 20px;
+                  letter-spacing: 0.25px;
+                  @include Destop{
+                  font-size: 14px;
+                }
+              &::placeholder{
+                  color: #8EA396;
+                    }
+            }
+                .input-icon{
+                            width: 1.3vw;
+                            height: 1.3vw;
+                            @include Destop{
+                                width:17px ;
+                                height:17px;
+                        }
+            }
+                 }
+              .select-input{
+                            .select-input-field{
+                                z-index: 999;
+                                cursor: pointer;
+                                align-items: center;
+                                padding: 0 12px;
+                                width: 12vw;
+                                height: 3vw;
+                                display: flex;
+                                justify-content: space-between;
+                                gap: 8px;
+                                border: 1px solid #263238;
+                                border-radius: 6px;
+                                @include Destop{
+                                height: 35px;
+                                width: 158px;
+                            }
+                                span{
+                                    margin: auto 0;
+                                    color: #263238;
+                                    font-family: "Roboto" sans-serif;
+                                    font-weight: 500;
+                                    font-size: 1.1vw;
+                                    line-height: 19.36px;
+                                    letter-spacing: 0%;      
+                                    @include Destop{
+                                    font-size: 16px;
+                                     }                              
+                                }
+                                
+                            }
+                            .filter{    
+                            z-index: 999;                
+                                cursor: pointer;
+                                align-items: center;
+                                padding: 0 12px;
+                                width: 10vw;
+                                height: 3vw;
+                                display: flex;
+                                justify-content: space-between;
+                                gap: 8px;
+                                border: 1px solid #263238;
+                                border-radius: 6px;
+                                @include Destop{
+                                height: 35px;
+                                width: 148px;
+                            }
+                                span{
+                                    margin: auto 0;
+                                    color: #263238;
+                                    font-family: "Roboto" sans-serif;
+                                    font-weight: 500;
+                                    font-size: 1.1vw;
+                                    line-height: 19.36px;
+                                    letter-spacing: 0%;      
+                                    @include Destop{
+                                    font-size: 16px;
+                                     }                              
+                                }
+                             }
+                            .select-dropdown{
+                                position: absolute;
+                                z-index: 1000!important;
+                                margin-top: 10px;
+                                 width: 12vw;
+                                 height: 32vh;
+                                 overflow-y: auto;
+                                 background: #fff;
+                                 box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+                                 border-radius: 8px;
+                                 scrollbar-width: none;
+                                 animation: dropdown .35s ease-in-out;
+                                 @include Destop{
+                                    width: 188px;
+                                }
+                                ul{
+                                    padding: 20px 0 5px;
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: 15px;
+                                    overflow: hidden;
+                                        @include Destop{
+                                            gap: 10px;
+                                    }
+                                    li{
+                                        display: flex;
+                                        justify-content: space-between;
+                                        padding: 0 10px;
+                                        align-items: center;
+                                        &:hover{
+                                            background: #F1F1F1;
+                                            span{
+                                                color: #000;
+                                                font-weight: 500;
+                                            }
+                                        }
+                                        span{
+                                            font-family: "Poppins" sans-serif;
+                                            font-weight: 400;
+                                            font-size: 1vw;
+                                            line-height: 18px;
+                                            letter-spacing: 0px;
+                                            font-weight: 400;
+                                            line-height: 18px;
+                                            letter-spacing: 0px;   
+                                            color: #263238;    
+                                              @include Destop{
+                                                 font-size: 13px;
+                                     }                                                                                 
+                                        }
+                                        .check{
+                                            svg{
+                                                width: 1.2vw;
+                                                height: 1.2vw;
+                                                @include Destop{
+                                                    width:17px ;
+                                                     height:17px;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                          .import-input{
+                            cursor: pointer;
+                            width: 8vw;
+                            height: 3vw;
+                            align-items: center;
+                            padding: 0 12px;
+                            display: flex;
+                            justify-content: space-between;
+                            gap: 8px;
+                            border-radius: 6px;
+                            border: 1px solid #263238;
+                              @include Destop{
+                                width: 124px;
+                               height: 35px;
+                                 }
+                            p{
+                                margin: auto 0;
+                                font-family: "Roboto" sans-serif;
+                                font-weight: 400;
+                                font-size: 1.1vw;
+                                line-height: 24px;
+                                letter-spacing: 0%;   
+                                color: #1B212C; 
+                                @include Destop{
+                                    font-size: 16px;
+                                     }                            
+                            }
+                            .input-icon{
+                                font-size: 16px;
+                                svg{
+                                    width: 1.3vw;
+                                    height: 1.3vw;
+                                    @include Destop{
+                                        width:17px ;
+                                        height:17px;
+                                    }
+                                }
+                            }
+                        }
+                 button{
+                  background: #581aae;
+                color: #fff;
+                padding: 5px 30px ;
+                border: none;
+                border-radius: 8px;
+            }
+                }
+              }
+            }
+            .main-content{
+                .main-content-image{
+                     display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-top: 3%;
+                  .main-content-image-text{
+                    text-align: center;
+                    p{
+                      font-size: 1.3vw;
+                      color: #263238;  
+                      margin: 0;
+                    }
+                    span{
+                        font-size: 1.2vw;
+                        color: #B9B7B7;
+                        margin: 0;
+                    }
+                }
+                }
+                .main-content-page{
+                    width: 100%;
+  .trip-modal {
+  width: 100%;
+  padding:20px;
+  background: #fff;
+ border-radius: 12px;
+box-shadow: 0px 3px 12px rgba(0,0,0,0.08);
+ animation: fadeIn .5s;
+ position: relative;
+ height: 100%;
+ max-width: 100%;
+.trip-card {
+ width: 100%;
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+  }
+  .close-icon {
+    cursor: pointer;
+    color: #ff0000;
+  }
+}
+.subtitle {
+  margin-top: 6px;
+  color: #6c6c6c;
+  font-size: 14px;
+}
+.form-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-top: 25px;
+  form-group-wrapper{
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    .form-group-content{
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        .form-group-wrapper{
+          display: flex;
+          flex-direction: column;
+          gap: 30px;
+          .form-group-content{
+        .input-box {
+          position: relative;
+          input {
+            width: 100%;
+            padding: 12px 40px 12px 14px;
+            border: 1.5px solid #eaeaea;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+      
+            &:focus {
+              border-color: #581aae;
+            }
+          }
+      
+          .clear,
+          .calendar {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            cursor: pointer;
+          }
+        }
+           }
+          }
+        label {
+          font-size: 14px;
+          margin-bottom: 6px;
+          span {
+            color: red;
+          }
+        }
+        textarea {
+          width: 100%;
+          height: 160px;
+          padding: 12px;
+          border: none;
+          background: #F9F9F9;
+          border-radius: 8px;
+          font-size: 14px;
+          outline: none;
+          &:focus {
+            border-color: #581aae;
+          }
+        }
+          .input-box {
+          position: relative;
+          input {
+            width: 100%;
+            padding: 12px 40px 12px 14px;
+            border: 1.5px solid #eaeaea;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+      
+            &:focus {
+              border-color: #581aae;
+            }
+          }
+      
+          .clear,
+          .calendar {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            cursor: pointer;
+          }
+        }
+      }
+  .input-box {
+    position: relative;
+    input {
+      width: 100%;
+      padding: 12px 40px 12px 14px;
+      border: 1.5px solid #eaeaea;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+
+      &:focus {
+        border-color: #581aae;
+      }
+    }
+
+    .clear,
+    .calendar {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #888;
+      cursor: pointer;
+    }
+  }
+     }
+    }
+.form-group {
+  display: flex;
+  flex-direction: column;
+  label {
+    font-size: 14px;
+    margin-bottom: 6px;
+    span {
+      color: red;
+    }
+  }
+  textarea {
+    width: 100%;
+    height: 160px;
+    padding: 12px;
+    border: none;
+    background: #F9F9F9;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    &:focus {
+      border-color: #581aae;
+    }
+  }
+.form-group-wrapper{
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    .form-group-content{
+  .input-box {
+    position: relative;
+    input {
+      width: 100%;
+      padding: 12px 40px 12px 14px;
+      border: 1.5px solid #eaeaea;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+
+      &:focus {
+        border-color: #581aae;
+      }
+    }
+
+    .clear,
+    .calendar {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #888;
+      cursor: pointer;
+    }
+  }
+     }
+    }
+    .input-box {
+    position: relative;
+    input {
+      width: 100%;
+      padding: 12px 40px 12px 14px;
+      border: 1.5px solid #eaeaea;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+
+      &:focus {
+        border-color: #581aae;
+      }
+    }
+
+    .clear,
+    .calendar {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #888;
+      cursor: pointer;
+    }
+  }
+}
+}
+
+.btn-row {
+  margin-top: 35px;
+  display: flex;
+  gap: 18px;
+
+  button {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 30px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .create {
+    // background: linear-gradient(90deg, #581aae, #d400ff);
+    background: #581aae;
+    color: white;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  .cancel {
+    background: transparent;
+    border: 2px solid #581aae;
+    color: #581aae;
+
+    &:hover {
+      background: #f8e9ff;
+    }
+  }
+}
+  }
+  .trip-card-popup{
+  .trip-card-popup-container{
+    position: fixed;
+            top: 0;
+            left: 0;
+            padding:0 10px;
+            width: 100%;
+            z-index: 1001;
+            background: rgba(54, 53, 86, 0.42);
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            padding: 30px 0px 10px;
+  .popup-content{
+      background: #fff;
+      width:37.5vw;
+      padding: 50px 30px; 
+      overflow-y: auto;
+      scrollbar-width: none;
+      border-radius: 8px;
+      animation: fadeIn .4s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      font-family: "Poppins" sans-serif;
+      @include Destop{
+        width:600px;
+      }
+      .delete-box{
+        display: flex;
+        justify-content: flex-end;
+        cursor: pointer;
+        svg{
+          width: 1.4vw;
+          height: 1.4vw;
+           @include Destop{
+            width: 20px;
+          height: 20px;
+            }
+          }
+       }
+    .popup-proceeed-wrapper{
+        .popup-proceeed-content{
+          padding: 8px 14px;
+              display: flex;
+      flex-direction: column;
+          gap: 10px;
+          transition: .35s;
+          cursor: pointer;
+          svg{
+            width: 1.5vw;
+            height: 1.5vw;
+             @include Destop{
+              width: 25px;
+            height: 25px;
+              }
+        }
+        }
+        span{
+        font-size: 2vw;
+        font-weight: 500;
+        text-align: center;
+        }
+
+    }
+  }
+}
+}
+}
+.trip-table-content {
+    margin:1% 0 0;
+    width: 100%;
+.trip-table {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1.3fr 3fr;
+    align-items: stretch;
+    .left-table,
+    .right-table{
+          .table-header{
+             .left-tableheader,
+             .right-tableheader{
+                ul{
+                  li{
+                    span{
+                    color: #555555!important;
+                    font-weight: 400!important;
+                    }
+                  }
+                }
+             }
+          }
+    }
+    .left-table{
+        .table-header {
+             border-radius: 0 0 0 16px;
+            .left-tableheader{
+                width: 100%;
+                padding-left: 10px;
+                ul{
+              display: grid;
+             grid-template-columns:  2fr 2fr ;
+            }
+            }
+        }
+        .table-row{
+      .tableRow-left{
+         padding-left: 10px;
+        .ul{
+        display: grid; 
+        gap: 10px;
+        grid-template-columns:  2fr 2fr;
+          margin-top: 5px;
+        padding: 0;
+        .table-icon{
+            justify-content: center;
+            padding-left: 0;
+        }
+        p{
+            padding-left: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+      }
+    }
+    }
+    .right-table{
+     min-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+        .table-header{
+          //  color: #0152FF;
+         min-width: 200%;
+          border-radius: 0 0 16px 0;
+            .right-tableheader{
+                width: 100%;
+                    ul{
+                    overflow-x: auto;
+                  display: grid;
+                  grid-template-columns:3fr 2fr 2.5fr 2fr 2.5fr 2fr 1fr 1fr ;
+                }
+            }
+        }
+        .table-row{
+          min-width: 200%;
+      .tableRow-right{
+        .ul{
+            display: grid; 
+            gap: 0;
+            grid-template-columns:3fr 2fr 2.5fr 2fr 2.5fr 2fr 1fr 1fr ;
+            margin-top: 10px;
+            p{
+                display: flex;
+                flex-direction: column;
+                margin: 0;
+                padding: 5px 0;
+            }
+            .table-icons{
+                align-items: center;
+                justify-content: center;
+            }
+        }
+    }
+}
+    }
+    .left-table, 
+    .right-table{
+        display: flex;
+        flex-direction: column; 
+        height: 100%;
+        flex-grow: 1;
+        align-items: stretch;
+    .table-header{
+     padding: 0;
+     width: 100%;
+    position: relative;
+    z-index: 99;
+    background: #f4f4f4;
+    // border-bottom: 2px solid #581aae;
+    margin-bottom: 5px;
+    .left-tableheader,
+    .right-tableheader{
+                ul{
+                    padding: 0;
+                //  gap: 10px;
+                 margin: 0;
+             li {
+                display: flex;
+                justify-content:center;
+                align-items: center;
+                background: inherit;
+                height: 2.8vw;
+                padding: 0  ;
+                  @include Destop{
+                  height: 40px;
+                  }
+                span {
+                    font-family: "Poppins", sans-serif;
+                    font-weight: 400;
+                    font-size: 1vw;
+                    line-height: 20px;
+                    color: #4a4a4a;
+                    letter-spacing: 0px;
+                      @include Destop{
+                      font-size: 16px;
+                      }
+                }
+                svg {
+                    align-items: center;
+                }
+            }
+            }
+        }
+    }
+    .table-body{
+        flex-grow: 1;
+    .table-row{
+    padding: 0 ;
+        height: 10%;
+    flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+   padding: 5px 0;
+    .tableRow-left,
+    .tableRow-right{
+        height: 100%;
+        flex-grow: 1; 
+        display: flex;
+        flex-direction: column;
+        justify-content: stretch;
+        background: #f4f4f4;
+
+    .ul{
+    cursor: pointer;
+    gap: 0;
+    height: 100%;
+    align-items: center;
+    position: relative;
+      overflow-y: auto;
+   scrollbar-width: none;
+    &::after{
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 1px;
+    background: #eeeeee;
+    transition: .6s ease-in-out;
+    }
+    p {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        padding: 10px 10px;
+         height: 100%;
+        margin: 0;
+        color: #555555;
+          overflow-y: auto;
+   scrollbar-width: none;
+        span {  
+            font-family: "Poppins", sans-serif;
+            font-weight: 400;
+            font-size: .8vw;
+             line-height: 20px;
+            letter-spacing: 0px;
+            margin: 0;
+            color: #263238;
+            @include Destop{
+            font-size: 15px;
+            }
+        }
+    }
+}
+  }
+}
+}
+    }
+}
+ }
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #581aae;
+    padding: 10px 0px;
+    left: 0;
+    bottom: 0;
+    z-index: 99;
+    // border-radius: 30px;
+  .double-paginateIcon{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: inherit;
+    &:disabled {
+        background-color: inherit;
+        cursor: not-allowed;
+      }
+    svg{
+        margin-right: -15px;
+    }
+  }
+  .double-paginateIcon-right{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: inherit;
+    &:disabled {
+        background-color: inherit;
+        cursor: not-allowed;
+      }
+      &:hover:not(:disabled) {
+        background-color: inherit;
+        border-color: none;
+      }
+    svg{
+        margin-left: -15px;
+    }
+  }
+  button {
+    border: none;
+    height: 2.8vw;
+    width: 2.8vw;
+    line-height: 2.8vw;
+    background-color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    cursor: pointer;
+    margin: 0;
+    @include Destop{
+    height: 40px;
+    width: 40px;
+    }
+    svg{
+        fill: #581aae;
+        align-items: center;
+    }
+  &:disabled {
+    background-color: #fff;
+    cursor: allowed;
+  }
+ &:hover:not(:disabled) {
+    transition: .35s;
+    background-color: #f7f6f6;
+    border-color: none;
+  }
+
+}
+p{
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin: auto 0;
+    span{
+        padding: 5px 10px;
+        font-weight: 400;
+        color: #fff;
+    }
+    .span{
+        font-weight: 400;
+        background: inherit;
+        border: 1px solid #fff;
+        border-radius: 5px;
+    }
+  }
+  span {
+    font-size: 1vw;
+    font-weight: 500;
+    font-family: "poppins" sans-serif;
+    letter-spacing: 1px;
+    color: #fff;
+     @include Destop{
+      font-size: 15px;
+    }
+  }
+}
+.tripDetail{
+    width: 100%!important;
+}
+                }
+            }
+        }
+      }
+    }
+}

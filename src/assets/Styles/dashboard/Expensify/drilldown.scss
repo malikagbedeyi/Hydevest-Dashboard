@@ -1,0 +1,562 @@
+
+
+@keyframes dropdown {
+    0% {
+      opacity: 0;
+      transform: translateY(-20%);
+    }
+    100%{
+       opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  * { 
+   box-sizing: 
+   border-box;
+    margin: 0; 
+    padding: 0; 
+    font-family: "Poppins", sans-serif; }
+  
+    .drilldown-wrapper{
+  background: #f5f5f7;
+  padding: 10px 0;
+  .drilldown-header{
+  display: flex;
+  justify-content:flex-end ;
+  align-items: flex-end;
+  .icon-drilldown{
+      color: red;
+  }
+  }
+     .actions {
+      display: flex;
+      gap: 10px;
+      display: flex;
+      justify-content: flex-end;
+      margin: 3% 0;
+      .primary {
+        background: #581aae;
+        color: #fff;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .status {
+        background: inherit;
+        color: #263238;
+        border: 1px solid #e1e4ea;
+        padding: 8px 14px;
+        border-radius: 6px;
+      }
+    }
+  .drilldown-title{
+  h2{
+      margin:0 0 30px;
+      font-size: 25px;
+      color: #263238;
+      font-weight: 600;
+  }
+  }
+  .detail-full-grid{
+  .detail-row{
+    background:#f7f7f9;
+       padding:12px;
+       border-radius:10px; 
+       display: flex;
+       flex-direction: column;
+       gap: 10px;
+       position: relative;
+  }
+  }
+  .detail-body{
+    padding: 20px;
+    background: #fff;
+  }
+  .drilldown-body{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+       gap: 16px; 
+      margin-bottom: 16px;
+   
+  .detail-row{
+    background:#f7f7f9;
+       padding:12px;
+       border-radius:10px; 
+       display: flex;
+       flex-direction: column;
+       gap: 10px;
+       position: relative;
+       .label{
+        display:block; 
+      margin-bottom:6px; 
+      font-size:14px; 
+      color:#444;
+       }
+       .value{
+          display: flex;
+          justify-content: space-between;
+           background: #fff;
+           padding: 10px;
+          border-radius:10px; 
+          width: 100%;
+          color: gray;
+          font-size: 13px;
+       }
+       .editable-field{
+          display: flex;
+          justify-content: space-between;
+           background: #fff;
+           padding: 10px;
+          border-radius:10px; 
+          &:hover{
+            .icon-edit,.icon-check{
+              display: block;
+              transition: .4s;
+            }
+          }
+       input{
+          background: inherit;
+          width: 95%;
+          color: gray;
+          font-size: 13px;
+          outline: none;
+          border: none;
+       }
+       .icon-edit,.icon-check{
+          color: #aba9a9;
+          width: 13px;
+          cursor: pointer;
+           transition: .4s;
+          display: none;
+            &:hover{
+               transform: scale(1.2);
+          }
+       }
+  }
+  }
+  }
+    .drill-footer {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 20 px;
+  
+      .btn {
+        padding: 10px 28px;
+        border-radius: 28px;
+        border: none;
+        cursor: pointer;
+  
+        &.outline {
+          background: #fff;
+          border: 1px solid #581aae;
+          color: #581aae;
+        }
+  
+        &.primary {
+          background: #581aae;
+          color: #fff;
+        }
+      }
+    }
+  }
+.payslip-wrapper{
+    position: fixed;
+    background: rgb(0, 0, 0,0.7);
+    width: 100%;
+    height: 100vh;
+    top: 0;
+    display: flex;
+    
+.payslip-card {
+    width: 50%;
+    align-items: center;
+    margin: auto auto auto 15%;
+    align-items: center;
+    padding: 24px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    font-family: "Inter", sans-serif;
+  
+    h3 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #1f2937;
+      text-transform: uppercase;
+      border-bottom: 1px dashed #e5e7eb;
+      padding-bottom: 12px;
+    }
+  }
+  .payslip-logo{
+    img{
+        width: 20%;
+    }
+  }
+  /* ===========================
+     PAYSLIP ROW
+  =========================== */
+  
+  .payslip-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+  
+    span {
+      font-size: 13px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+  
+    strong {
+      font-size: 14px;
+      color: #111827;
+      font-weight: 600;
+    }
+  
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+  
+  /* ===========================
+     SALARY SUMMARY
+  =========================== */
+  
+  .payslip-row.total {
+    margin-top: 12px;
+    padding-top: 14px;
+    border-top: 2px solid #581aae;
+  
+    span {
+      font-weight: 600;
+      color: #374151;
+    }
+  
+    strong {
+      font-size: 16px;
+      color: #581aae;
+    }
+  }
+  
+  /* ===========================
+     STATUS TAG
+  =========================== */
+  
+  .payslip-status {
+    display: inline-block;
+    margin: 12px auto 0;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 999px;
+    text-align: center;
+  
+    &.approved {
+      background: rgba(88, 26, 174, 0.1);
+      color: #581aae;
+    }
+  
+    &.pending {
+      background: rgba(245, 158, 11, 0.1);
+      color: #f59e0b;
+    }
+  }
+  
+  /* ===========================
+     PRINT FRIENDLY
+  =========================== */
+  
+  @media print {
+    body {
+      background: #fff;
+    }
+  
+    .payslip-card {
+      box-shadow: none;
+      border: 1px solid #e5e7eb;
+    }
+  }
+  
+}
+  .drill-wrapper {
+    padding: 20px;
+    font-family: Inter, sans-serif;
+  .drill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    .breadcrumb {
+      font-size: 14px;
+      color: #777;
+      align-items: center;
+      span {
+        color: #000;
+        font-weight: 500;
+      }
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      .primary {
+        background: #581aae;
+        color: #fff;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .status {
+        background: #f1f3f6;
+        border: 1px solid #e1e4ea;
+        padding: 8px 14px;
+        border-radius: 6px;
+      }
+    }
+  }
+  .drilldown-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    background: #f9f9f9;
+    padding: 25px;
+    label {
+      font-size: 13px;
+      margin-bottom: 6px;
+  
+      span { color: red; }
+    }
+  .trip-description {
+    .desc-header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    .edit-icon {
+      cursor: pointer;
+      opacity: 0.7;
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+  .desc-body{
+     padding: 20px;
+    background: #fff;
+    border-radius: 6px;
+  .desc-textarea {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border: none;
+    outline: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    resize: vertical;
+  }
+  }
+  
+  }
+  
+    .info-content-data{
+       display: flex;
+       gap:  5px;
+      align-items: center;
+       padding: 12px;
+      background: #fff;
+      border: 1px solid #fff;
+      border-radius: 6px;
+        &:hover .edit-icon{
+      display: flex;
+        }
+  h2{
+            font-weight: 500;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.9vw;
+  margin: 0;
+  }
+  .edit-icon{
+          font-size: 10px;
+          cursor: pointer;
+          display: none;
+          transition: .2s ease;
+      }
+        input, textarea, select {
+         width: 100%;
+    height: 100%;
+                font-weight: 500;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.9vw;
+  margin: 0;
+  outline: none;
+  align-items: center;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #fff;
+      border-radius: 6px;
+      outline: none;
+    }
+  }
+    input, textarea, select {
+     width: 100%;
+    height: 100%;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #fff;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+    }
+  }
+  .payrollTable{
+    overflow: auto;
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px 8px 0 -80px;
+    scrollbar-width: none;
+  .table {
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    thead th {
+      text-align: left;
+      padding: 12px;
+      color: #263238;
+      font-weight: 600;
+      background: #f5f5f9;
+      border-bottom: 5px solid #fff;
+    }
+    tbody td {
+      padding: 20px 0px 20px 10px;
+      border-bottom: 5px solid #fff;
+      background: #f5f5f7;
+      vertical-align: middle;
+      color: #333;
+      margin: 20px 0!important;
+      cursor:pointer;
+    }
+
+    tbody tr {
+      position: relative;
+      transition: background 0.2s ease;
+      background: #f5f5f9;
+         
+    }
+
+    tbody tr:hover {
+      background: #fbfbff;
+    }
+
+    /* TEXT SHORTENER */
+    .td-desc {
+      max-width: 100px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* =====================
+        EDIT BUTTON (NEW)
+    ===================== */
+
+    .td-actions {
+      position: relative;
+    }
+    .delete-btn{
+      border: none;
+    }
+    .edit-btn {
+      margin-left: 10px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #581aae;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(-5px);
+      transition: all 0.2s ease;
+    }
+
+    /* Show on hover */
+    tbody tr:hover .edit-btn {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+    }
+}
+}
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+     height: 15vh;
+     margin-bottom: 15px;
+    gap: 15px;
+    select{
+    background: inherit;
+    border: none;
+    }
+  }
+  .date-input {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #fff;
+    border-radius: 6px;
+  
+    input {
+      border: none;
+      background: transparent;
+      flex: 1;
+    }
+  
+    svg {
+      margin-right: 10px;
+      color: #777;
+    }
+  }
+ 
+  .footer-btns {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+  
+    button {
+      padding: 10px 28px;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+  
+    .preview {
+      border: 1px solid #581aae;
+      background: #fff;
+      color: #7e2cf1;
+    }
+  
+    .create {
+      background: #581aae;
+      border: none;
+      color: #fff;
+    }
+  }
+}
+
+  }

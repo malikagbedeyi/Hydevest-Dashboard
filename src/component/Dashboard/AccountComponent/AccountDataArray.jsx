@@ -1,0 +1,222 @@
+export const dataTable = [
+  {
+    sn: 1,
+    title: "Raw Hide Import",
+    description: "Bovine hide shipment from Brazil",
+    date: "2025-01-05",
+    type: "finance",
+    amount: 2500,
+    rate: 1500,
+    amountNGN: 3750000,
+    status: "Completed"
+  },
+  {
+    sn: 2,
+    title: "Leather Export",
+    description: "Processed leather sent to Dubai",
+    date: "2025-01-07",
+    type: "account",
+    amount: 1800,
+    rate: 1520,
+    amountNGN: 2736000,
+    status: "Pending"
+  },
+  {
+    sn: 3,
+    title: "Cow Skin Purchase",
+    description: "Local hide supply from Kano",
+    date: "2025-01-10",
+    type: "Purchase",
+    amount: 900,
+    rate: 1400,
+    amountNGN: 1260000,
+    status: "Completed"
+  },
+  {
+    sn: 4,
+    title: "Shipment Clearance",
+    description: "Port clearance charges",
+    date: "2025-01-12",
+    type: "Expense",
+    amount: 400,
+    rate: 1500,
+    amountNGN: 600000,
+    status: "Approved"
+  },
+  {
+    sn: 5,
+    title: "Wele Supply",
+    description: "Frozen Wele delivery to Lagos",
+    date: "2025-01-14",
+    type: "Sale",
+    amount: 1200,
+    rate: 1550,
+    amountNGN: 1860000,
+    status: "Completed"
+  },
+  {
+    sn: 6,
+    title: "Transport Fee",
+    description: "Cargo transport to warehouse",
+    date: "2025-01-17",
+    type: "Expense",
+    amount: 270,
+    rate: 1500,
+    amountNGN: 405000,
+    status: "Completed"
+  },
+  {
+    sn: 7,
+    title: "Hide Processing",
+    description: "Factory processing charges",
+    date: "2025-01-20",
+    type: "Expense",
+    amount: 360,
+    rate: 1500,
+    amountNGN: 540000,
+    status: "Pending"
+  },
+  {
+    sn: 8,
+    title: "Bulk Export",
+    description: "Bulk leather goods shipment",
+    date: "2025-01-22",
+    type: "Export",
+    amount: 3000,
+    rate: 1500,
+    amountNGN: 4500000,
+    status: "Completed"
+  },
+  {
+    sn: 9,
+    title: "Supplier Payment",
+    description: "Payment to supplier in Kenya",
+    date: "2025-01-25",
+    type: "Payment",
+    amount: 1000,
+    rate: 1525,
+    amountNGN: 1525000,
+    status: "Approved"
+  },
+  {
+    sn: 10,
+    title: "Cold Storage",
+    description: "Cold room rental",
+    date: "2025-01-27",
+    type: "Expense",
+    amount: 200,
+    rate: 1500,
+    amountNGN: 300000,
+    status: "Completed"
+  },
+  {
+    sn: 11,
+    title: "Hide Import",
+    description: "Shipment from Ethiopia",
+    date: "2025-01-29",
+    type: "Import",
+    amount: 2200,
+    rate: 1510,
+    amountNGN: 3322000,
+    status: "Pending"
+  },
+  {
+    sn: 12,
+    title: "Packaging Cost",
+    description: "Export packaging materials",
+    date: "2025-02-01",
+    type: "Expense",
+    amount: 180,
+    rate: 1500,
+    amountNGN: 270000,
+    status: "Completed"
+  },
+  {
+    sn: 13,
+    title: "Online Order",
+    description: "International buyer order",
+    date: "2025-02-03",
+    type: "Sale",
+    amount: 1450,
+    rate: 1540,
+    amountNGN: 2233000,
+    status: "Pending"
+  },
+  {
+    sn: 14,
+    title: "Broker Fee",
+    description: "Customs broker payment",
+    date: "2025-02-05",
+    type: "Expense",
+    amount: 120,
+    rate: 1500,
+    amountNGN: 180000,
+    status: "Completed"
+  },
+  {
+    sn: 15,
+    title: "Wele Distribution",
+    description: "Wholesale distribution to markets",
+    date: "2025-02-08",
+    type: "Sale",
+    amount: 1600,
+    rate: 1500,
+    amountNGN: 2400000,
+    status: "Completed"
+  },
+  {
+    sn: 16,
+    title: "Damaged Stock",
+    description: "Spoilt hide stock",
+    date: "2025-02-10",
+    type: "Loss",
+    amount: 300,
+    rate: 1500,
+    amountNGN: 450000,
+    status: "Declined"
+  },
+  {
+    sn: 17,
+    title: "Supplier Bonus",
+    description: "Performance incentive",
+    date: "2025-02-12",
+    type: "Expense",
+    amount: 100,
+    rate: 1500,
+    amountNGN: 150000,
+    status: "Approved"
+  },
+  {
+    sn: 18,
+    title: "International Order",
+    description: "High volume leather demand",
+    date: "2025-02-14",
+    type: "Export",
+    amount: 4000,
+    rate: 1550,
+    amountNGN: 6200000,
+    status: "Pending"
+  },
+  {
+    sn: 19,
+    title: "Warehouse Rent",
+    description: "Monthly storage fee",
+    date: "2025-02-17",
+    type: "Expense",
+    amount: 500,
+    rate: 1500,
+    amountNGN: 750000,
+    status: "Completed"
+  },
+  {
+    sn: 20,
+    title: "Final Delivery",
+    description: "Customer final batch",
+    date: "2025-02-20",
+    type: "Sale",
+    amount: 2100,
+    rate: 1500,
+    amountNGN: 3150000,
+    status: "Completed"
+  }
+];

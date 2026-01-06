@@ -1,0 +1,314 @@
+@mixin mobile {
+    @media screen and (max-width:580px) {
+        @content;
+    }
+}
+@mixin tablet {
+    @media screen and (max-width:980px) {
+        @content;
+    }
+}
+@mixin laptop {
+    @media screen and (max-width:1190px) {
+        @content;
+    }
+}
+@mixin Destop {
+    @media screen and (max-width:1440px) {
+        @content;
+    }
+}
+@mixin FullHd {
+    @media screen and (max-width:2784px) {
+        @content;
+    }
+}
+@keyframes dropdown {
+    from{
+        transform: translateY(-50%);
+    }
+    to{  transform: translateY(0);}
+}
+ul{
+    padding: 0;
+}
+.sidebar{
+      width: 16vw;
+    position: relative;
+    transition: .6s;
+    height: 100vh;
+    margin: 0;
+    padding:0 20px 20px;
+    background: #fff;
+    box-shadow: 0px 10px 31px rgba(169, 177, 193, 0.17);
+    overflow-x: auto;
+    scrollbar-width: none;
+    @include Destop{
+        width: 220px;
+    }
+    .sidelogo{
+        position: sticky;
+        top: 0;
+        background: #fff;
+      padding: 40px 12px 20px;
+      gap: 1.25vw;
+      opacity: 1;
+      border-radius: 9px;
+      display: flex;
+      @include Destop{
+        gap: 18px;
+    }
+        .logo{
+            height: 2.5vw;
+            @include Destop{
+                gap: 36px;
+            }
+            img{
+                width: 100%;
+            }
+        }
+    }
+    .toggle{
+        position: fixed;
+        left: 13%;
+        top: 10px;
+        height: 3.47vw;
+        width: 3.47vw;
+        line-height: 3.47vw;
+        border-radius: 50%;
+        padding: 0.7;
+        background: #fff;
+        color: #581aae;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        cursor: pointer;
+         transition: .6s;
+         @include Destop{
+            height: 50px;
+            width: 50px;
+            line-height: 50px;
+            padding: 10px;
+        }
+    }
+    nav{
+        ul{
+            padding: 0;
+            margin: 1.4vw 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4vw;
+            @include Destop{
+                margin: 20px 0 0;
+                gap: 20px
+            }
+            .sidemenu-li{
+                  width: 100%;
+                  max-width: 100%;
+                display: flex;
+                position: relative;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.8vw;
+                border-radius: 1.8vw;
+                transition: .2s ease-in;
+                cursor: pointer;
+                @include Destop{
+                    padding: 12px;
+                    border-radius: 24px;
+                }
+                &.active{
+                    padding-left: 1.4vw;
+                     background: #581aae;
+                     transform: scale(1.1);
+                     .expande-munu,.collapse-menu{
+                        color: #fff;
+                     }
+                     @include Destop{
+                        padding-left: 20px;
+                    }
+                }
+                &:hover{
+                      padding-left: 1.4vw;
+                    transform: scale(1.1);
+                     background: #581aae;
+                     color: #fff;
+                     @include Destop{
+                        padding-left: 20px;
+                    }
+                    //  transition: .3 ;
+                     .expande-munu,.collapse-munu{
+                        color: #fff;
+                        // transition: .3s ;
+                     }
+                }
+                span{
+                    font-size: 1.1vw;
+                    @include Destop{
+                        font-size: 16px;
+                    }
+                }
+                .expande-munu{
+                    width: 100%;
+                     display: flex;
+                     gap: 0.8vw;
+                    text-decoration: none;
+                    color: #2D2D2D;
+                    @include Destop{
+                        gap: 12px;
+                    }
+                    .expande-icon{
+                        
+                        @include Destop{
+                            gap: 12px;
+                        }
+                    }
+                }
+                   .collapse-menu{
+                        display: none;
+                    }
+                    .chevron-icon{
+                        color: #fff;
+                        transition: .3s;
+                        &.rotate {
+                      transform: rotate(180deg);
+                }
+                    }
+            }
+                    .submenu{
+                        padding:0 1.4vw 0 2.1vw ;
+                        position: relative;
+                        width: 100%;
+                        max-width: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.35vw;
+                        font-size: 1vw;
+                        background: #fff;
+                          position: relative;
+                          @include Destop{
+                            padding:0 20px 0 30px;
+                            gap: 5px;
+                            font-size: 16px;
+                            line-height: 1;
+                          }
+                        .submenu-item{
+                          width: 100%;
+                          max-width: 100%;
+                        display: flex;
+                        justify-content: space-between;
+                         position: relative;
+                          padding: 0.35vw 0.7vw;
+                           border-radius: 1.8vw;
+                        animation: dropdown .3s ease-in-out;
+                        cursor: pointer;
+                        position: relative;
+                        align-items: center;
+                        @include Destop{
+                            padding: 10px 10px;
+                            border-radius: 24px;
+                          }
+                         &:hover{
+                     background: none;
+                     color: none;
+                     transition: .4 ease-in;
+                     transform: scale(1.1);
+                     }
+                        .subActive{
+                       width: 0.7vw;
+                       height: 0.7vw;
+                       line-height: 0.7vw;
+                       display: none;
+                       justify-content: center;
+                       border-radius: 50%;
+                       background: #581aae;
+                       align-items: center;
+                       @include Destop{
+                        width: 10px;
+                        height: 10px;
+                        line-height: 10px;
+
+                      }
+                       }
+                     &.active{
+                        padding-left: 0.7vw;
+                          transform: scale(1.1);
+                           @include Destop{
+                        padding-left: 10px;
+
+                      }
+                     .subActive{
+
+                     display: flex;
+                       }
+                     }
+                        }
+                    }
+        }
+    }
+    }
+    .collapsed{
+        width: 4.9vw;
+        padding: 0.35vw;
+        @include Destop{
+            width: 70px;
+            padding: 5px;
+        }
+        .logo{
+            display: none;
+        }
+          .toggle{
+            left: 0.7vw;
+            transition: .6s;
+            background: #581aae;
+            color: #fff;
+            @include Destop{
+                left: 10px;
+            }
+          }
+        nav{
+            ul{
+                padding-top: 1.4vw;
+                @include Destop{
+                    padding-top: 20px;
+                }
+                .sidemenu-li{
+                    width: 100%;
+                     padding: 0.9vw 0;
+                        border-radius: 6px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: .4s;
+                         @include Destop{
+                         padding: 12px 0;
+                }
+                        &.active{
+                            padding-left: 0;
+                        }
+                        &:hover{
+                            padding-left: 0;
+                        }
+                    .expande-munu{
+                        display: none;
+                         transition: .4s;
+                    }
+                    .collapse-menu{
+                        display: flex;
+                        justify-content: center;
+                        margin: auto;
+                        align-items: center;
+                        padding: 0;
+                        gap: 0;
+                        margin: 0;    
+                     transition: .4s;  
+
+                    }
+                }
+                .chevron-icon{
+                    display: none;
+                }
+            }
+        }
+    }
