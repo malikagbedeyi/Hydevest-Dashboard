@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/static/css/main.edf0578c.css",
+    "main.js": "/static/js/main.4b50d7e5.js",
+    "static/media/LogoMain.png": "/static/media/LogoMain.f146262522f72ef99f2b.png",
+    "static/media/overflow-signup-02.avif": "/static/media/overflow-signup-02.c21eba20c21f4b1328a2.avif",
+    "static/media/profile-img.png": "/static/media/profile-img.c42e38afbe1185c5a066.png",
+    "static/media/11.png": "/static/media/11.3242063c382816325b99.png",
+    "index.html": "/index.html",
+    "main.edf0578c.css.map": "/static/css/main.edf0578c.css.map",
+    "main.4b50d7e5.js.map": "/static/js/main.4b50d7e5.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.edf0578c.css",
+    "static/js/main.4b50d7e5.js"
+  ]
+}
