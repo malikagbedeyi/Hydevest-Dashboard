@@ -2,6 +2,7 @@ import React from 'react'
 import '../../../../assets/Styles/dashboard/Sale/sales.scss'
 import profile from '../../../../assets/Images/profile-img.png'
 import { ChevronRight } from 'lucide-react'
+import BankAccountController from '../../AdminComponent/BankAccount/BankAccountController'
 
 const BankAccount = ({autoOpenCreate, setAutoOpenCreate}) => {
   return (
@@ -33,7 +34,7 @@ const BankAccount = ({autoOpenCreate, setAutoOpenCreate}) => {
         </div>
         </div>
         <div className="account-component">
-
+            <BankAccountController />
         </div>
     </div>
   )
