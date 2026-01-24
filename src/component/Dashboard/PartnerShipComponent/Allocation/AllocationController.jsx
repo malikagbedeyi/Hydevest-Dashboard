@@ -3,12 +3,17 @@ import { ChevronDown, Filter, Search } from "lucide-react";
 import "../../../../assets/Styles/dashboard/controller.scss";
 import CreateAllocation from "./CreateAllocation";
 import AllocationTable from "./AllocationTable";
+import DrillDownAllocation from "./DrillDownAllocation";
 
 
 const STORAGE_KEY = "allocation_data"; 
 
+
 const AllocationController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
+  const PROFIT_KEY = "profit_storage";
     const TRIP_KEY = "trip_data";
+    const [selectedAllocation, setSelectedAllocation] = useState(null);
+
   const [data, setData] = useState(() => {
     return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
   });
@@ -31,32 +36,8 @@ const AllocationController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }
     }
   }, [autoOpenCreate, setAutoOpenCreate]);
 
-  const handleAddData = (newData) => {
-    const updatedData = [...data, newData];
-    setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
-    setView("table");
-  };
-  
-  const handleDeleteData = (id) => {
-    const updatedData = data.filter(d => d.id !== id);
-    setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
-
-    // Update view if no data left
-    if (updatedData.length === 0) {
-      setView("empty");
-    }
-  };
-  const handleUpdateRecovery = (updatedRecovery) => {
-    const updatedData = data.map((rec) =>
-      rec.id === updatedRecovery.id ? updatedRecovery : rec
-    );
-  
-    setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
-  };
   const [searchTerm, setSearchTerm] = useState("");
+  
   const [trips, setTrips] = useState(() => {
     return JSON.parse(localStorage.getItem(TRIP_KEY)) || [];
   });
@@ -92,7 +73,43 @@ const AllocationController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }
     );
   });
   
+  const handleRowClick = (row) => {
+    setSelectedAllocation(row);
+    setView("drilldown");
+  };
+  const saveToStorage = (updated) => {
+    setData(updated);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  };
+  
+  
+  const handleAddData = (newAllocation) => {
+    const updated = [...data, newAllocation];
+    saveToStorage(updated);
 
+  
+    setView("table");
+  };
+  
+  
+  const handleDeleteData = (id) => {
+    const updated = data.filter(d => d.id !== id);
+    saveToStorage(updated);
+    setView(updated.length ? "table" : "empty");
+  };
+  
+  const handleUpdateAllocation = (updatedAllocation) => {
+    const updated = data.map(a =>
+      a.id === updatedAllocation.id ? updatedAllocation : a
+    );
+  
+    saveToStorage(updated);
+    setView("table");
+  };
+  
+  
+
+    
   return (
     <div className="controller">
       <div className="controller-container">
@@ -105,7 +122,8 @@ const AllocationController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }
                 <div className="right-wrapper">
                   <div className="right-wrapper-input">
                     <Search className="input-icon" />
-                    <input type="text" placeholder="Search" />
+                    <input type="text" placeholder="Search" 
+                    value={searchTerm} onChange={(e)=>setSearchTerm(e.target.value)}/>
                   </div>
 
                   <div className="select-input">
@@ -140,11 +158,21 @@ const AllocationController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }
             )}
 
             {data.length > 0 && view === "table" && (
-              <AllocationTable
-               data={data} 
-              onDelete={handleDeleteData}
-              onUpdate={handleUpdateRecovery} />
+             <AllocationTable
+             data={data}
+             onRowClick={handleRowClick}
+             onDelete={handleDeleteData}
+           />
             )}
+          {view === "drilldown" && selectedAllocation && (
+  <DrillDownAllocation
+    allocation={selectedAllocation}
+    containers={containers}
+    onBack={() => setView("table")}
+    onUpdate={handleUpdateAllocation}
+  />
+)}
+
 
             {view === "create" && (
               <CreateAllocation

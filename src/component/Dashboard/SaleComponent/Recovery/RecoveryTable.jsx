@@ -71,9 +71,9 @@ const RecoveryTable = ({ data = [], onDelete, onUpdate }) => {
             <thead>
               <tr>
                 <th>S/N</th>
+                <th>Sale ID</th>
                 <th>Customer Name</th>
                 <th>Phone</th>
-                <th>Sale ID</th>
                 <th>Amount Paid</th>
                 <th>Balance</th>
                 <th>Payment Date</th>
@@ -91,18 +91,15 @@ const RecoveryTable = ({ data = [], onDelete, onUpdate }) => {
                 currentData.map((rec, idx) => (
                   <tr key={rec.id} onClick={() => handleRowClick(rec)}>
                     <td>{startIndex + idx + 1}</td>
+                    <td>{rec.saleId}</td>
                     <td>{rec.customerName}</td>
                     <td>{rec.customerPhone}</td>
-                    <td>{rec.saleSN}</td>
                     <td>{formatMoney(rec.amountPaid)}</td>
-                    <td>{rec.balance === 0 ? <span style={{ color: "green" }}>Fully Paid</span> : formatMoney(rec.balance)}</td>
+                    <td> {rec.balanceAfter === 0 ? <span style={{ color: "green" }}>Fully Paid</span>  : formatMoney(rec.balanceAfter)} </td>
                     <td>{formatDate(rec.createdAt)}</td>
-                    <td>
-  {rec.status === "Approved" ? (
-    <span style={{ color: "green", fontWeight: 600 }}>Approved</span>
-  ) : (
-    <span style={{ color: "orange", fontWeight: 600 }}>Pending</span>
-  )}
+                    <td>{rec.status === "Approved" ? (
+                        <span style={{ color: "green", fontWeight: 600 }}>Approved</span>) : (
+                        <span style={{ color: "orange", fontWeight: 600 }}>In Transit</span>)}
 </td>
 
                     <td onClick={(e) => e.stopPropagation()}>
@@ -125,7 +122,7 @@ const RecoveryTable = ({ data = [], onDelete, onUpdate }) => {
               <button onClick={prevPage} disabled={currentPage === 1}>
                 Previous
               </button>
-              <span>{currentPage} / {totalPages}</span>
+              <p>{currentPage} / {totalPages}</p>
               <button onClick={nextPage} disabled={currentPage === totalPages}>
                 Next
               </button>

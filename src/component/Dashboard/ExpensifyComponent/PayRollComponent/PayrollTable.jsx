@@ -2,13 +2,12 @@
 import React, { useState, useEffect } from "react";
 import "../../../../assets/Styles/dashboard/Expensify/table.scss";
 import { Trash2 } from "lucide-react";
-import PayrollDrillDown from "./PayrollDrillDown";
 
-const PayrollTable = ({ data = [], onDelete, onUpdate }) => {
+
+const PayrollTable = ({ data = [], onDelete, onUpdate,handleRowClick}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [tableData, setTableData] = useState([]);
-  const [selectedPayroll, setSelectedPayroll] = useState(null);
 
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -28,18 +27,7 @@ const PayrollTable = ({ data = [], onDelete, onUpdate }) => {
           .replace(/ /g, "-")
       : "-";
 
-  if (selectedPayroll) {
-    return (
-      <PayrollDrillDown
-        payroll={selectedPayroll}
-        goBack={() => setSelectedPayroll(null)}
-        onUpdate={(updated) => {
-          onUpdate?.(updated);
-          setSelectedPayroll(null);
-        }}
-      />
-    );
-  }
+
 
   return (
     <>
@@ -66,7 +54,8 @@ const PayrollTable = ({ data = [], onDelete, onUpdate }) => {
                 </tr>
               ) : (
                 currentData.map((item, idx) => (
-                  <tr key={item.id} onClick={() => setSelectedPayroll(item)}>
+                  <tr key={item.id} onClick={() => handleRowClick(item)}>
+
                     <td>{startIndex + idx + 1}</td>
                     <td>
                       {new Date(item.selectedMonthYear).toLocaleString("default", {

@@ -106,8 +106,8 @@
         padding: 8px 8px 0 -80px;
         scrollbar-width: none;
       }
-      .table {
-        min-width: 120%;
+      table {
+       width: 150%!important;
         border-collapse: collapse;
         font-size: 14px;
         thead th {
@@ -181,7 +181,34 @@
           transform: translateX(0);
         }
 }
+.pagination{
+  padding:10px 20px;
+  width: 100%;
+  position: sticky;
+  left: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  button{
+    background: #fff;
+    color: #581aae;
+    border: 1px solid #581aae;
+    padding:5px 10px;
+    border-radius: 5px;
+    align-items: center;
+    margin: 0;
+    &:disabled{
+      background: #fff;
+      color: gray;
+      border: 1px solid gray;
+    }
+  }
+  p{
+    margin: 0;
 
+  }
+}
 }
     .btn-row-delete {
           width: 100%;

@@ -1,10 +1,17 @@
 import React from 'react'
 import { Plus, X, Edit, Trash2, ChevronDown, ChevronUp, Paperclip } from "lucide-react";
 
-const TripContainerData = ({handleContainerRowClick,containerData,handleDeleteContainer}) => {
-    const formatMoney = (value) =>
+const TripContainerData = ({handleContainerRowClick,containerData,handleDeleteContainer,avgContainerRate}) => {
+   
+  const formatMoney = (value) =>
     new Intl.NumberFormat("en-NG", {
-      minimumFractionDigits: 2,
+      // minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(Number(value || 0));
+
+    const formatMoneyUSd = (value) =>
+    new Intl.NumberFormat("en-US", {
+      // minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(Number(value || 0));
 
@@ -20,7 +27,7 @@ const TripContainerData = ({handleContainerRowClick,containerData,handleDeleteCo
     <div>
       <div className="userTable">
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" style={{width:"150%"}}>
           <thead>
             <tr>
               <th>S/N</th>
@@ -30,7 +37,9 @@ const TripContainerData = ({handleContainerRowClick,containerData,handleDeleteCo
                <th>Pieces</th>
                <th>Unit Price (USD)</th>
                <th>Amount (USD)</th>
-               <th>Qouted Amount (USD)</th>
+               <th>Amount (NGN)</th>
+               <th>Quoted Amount (USD)</th>
+               <th>Quoted Amount (NGN)</th>
               <th>Created Date</th>
               <th>Status</th>
               <th>Actions</th>
@@ -45,15 +54,18 @@ const TripContainerData = ({handleContainerRowClick,containerData,handleDeleteCo
               </tr>
             ) : (
               containerData.map((item, idx) => (
-                <tr key={item.id} onClick={() => handleContainerRowClick({...item,sn: idx + 1,})} style={{ cursor: "pointer" }}>
-                  <td>{idx + 1}</td>
+                <tr key={item.id} onClick={() => handleContainerRowClick(item)}
+                style={{ cursor: "pointer" }}>
+                  <td>{String(idx + 1).padStart(2, "0")}</td>
                   <td>{item.title}</td>
                   <td>{item.description}</td>
                   <td>TN {item.trackingNumber}</td>
                   <td>{item.unitpieces || "0"}</td>
-                  <td>{item.unitPrice || "0.00"}</td>
-                  <td>{item.amountUsd || "0.00"} </td>
-                  <td>{item.quotedAmountUsd || "0.00"} </td>
+                  <td>{item.unitPrice || "0"}</td>
+                  <td>{formatMoneyUSd(item.amountUsd || "0")} </td>
+                  <td>{formatMoney((Number(item.amountUsd) || 0) * (Number(avgContainerRate) || 0))}</td>
+                  <td>{formatMoneyUSd(item.quotedAmountUsd || "0")} </td>
+                  <td>{formatMoney((Number(item.quotedAmountUsd) || 0) * (Number(avgContainerRate) || 0))}</td>
                   <td>{formatDate(item.createdAt)}</td>
                   <td>
                     <span style={{ color: "orange", fontWeight: 600 }}>

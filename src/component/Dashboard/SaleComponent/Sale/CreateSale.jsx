@@ -1,21 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useMemo } from "react";
 import "../../../../assets/Styles/dashboard/Sale/createPresale.scss";
 import { X, ChevronDown, Plus } from "lucide-react";
-import { SaleContainerData } from "../../PurchaseComponent/container/ContainerData";
 import SaleItemsTable from "./SaleItemsTable";
-
+import {totalPurchase,calculateTotals,totalSaleAmount,totalPalletCount,totalPurchasePricePerPiece} from './hooks/ useSaleCalculations';
+import {usePresaleHelpers} from './hooks/usePresaleHelpers';
 const CUSTOMERS_KEY = "customers_data";
 
-const CreateSale = ({ preSales = [], sales, setSales, setView, data, onCreate }) => {
+const CreateSale = ({ preSales = [], sales, setView, onCreate, containersData }) => {
   const [editingRow, setEditingRow] = useState(null);
   const [searchContainer, setSearchContainer] = useState("");
-  const [searchPresale, setSearchPresale] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
+  const [presaleError, setPresaleError] = useState("");
   const [selectedValues, setSelectedValues] = useState([]);
-  const [selectedValues2, setSelectedValues2] = useState([]);
-  const [selectedValues3, setSelectedValues3] = useState([]);
   const [openContainerSelect, setOpenContainerSelect] = useState(false);
-  const [openPresaleSelect, setOpenPresaleSelect] = useState(false);
   const [salePop, setSalePop] = useState(false);
   const [activeContainerId, setActiveContainerId] = useState(null); 
   const [openContainerDropdowns, setOpenContainerDropdowns] = useState({});
@@ -25,8 +22,8 @@ const [palletContainers, setPalletContainers] = useState({});
   const [openPalletDropdowns, setOpenPalletDropdowns] = useState({});
   const activeContainer = containerSales[activeContainerId];  
   const dynamicContainerOptions = selectedValues;
-  const selectedContainerName = dynamicContainerOptions.find(c => c.id === activeContainerId)?.name || "";
-
+  const {presaleByContainerId,isPurchasePriceLowerThanPresale,getPalletOptionsForContainer,  } = usePresaleHelpers(preSales);
+  
   const [form, setForm] = useState({
     presaleId: "", container: "",noOfPallets: "", saleOption: "", wcPieces: "",
     customerPhone: "", customerName: "", customerLocation: "", customerAddress: "", 
@@ -35,22 +32,22 @@ const [palletContainers, setPalletContainers] = useState({});
   });
   useEffect(() => {
     if (selectedValues.length === 0) return;
-  
     setContainerSales(prev => {
       const updated = { ...prev };
   
       selectedValues.forEach(container => {
         const containerId = container.id; // ✅ DEFINE IT HERE
-  
-        if (!updated[containerId]) {
-          updated[containerId] = {
-            container: {
-              id: container.id,
-              name: container.name,
-            },
-            pallets: [],
-          };
-        }
+
+        updated[containerId] = {
+          container: {
+            id: container.id,
+            name: container.name,
+            trackingNumber: container.trackingNumber,
+          },
+  pallets: [],
+};
+
+        
       });
   
       return updated;
@@ -66,10 +63,25 @@ const [palletContainers, setPalletContainers] = useState({});
       setCollapsedContainers({ [selectedValues[0].id]: true });
     }
   }, [selectedValues]);
-  
+
+  const cleanNumber = (value) => value.replace(/[^\d.]/g, "");
+  const formatMoneyNGN = (value) =>
+  value === "" ? "" : "₦" + Number(value).toLocaleString("en-NG");
+  const formatNumber = (value) =>
+  value === "" ? "" : Number(value).toLocaleString("en-NG");
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const cleaned = cleanNumber(value);
+    setForm((prev) => ({
+      ...prev,
+      [name]: cleaned,
+    }));
+  };
   const handlePalletChange = (index, field, value) => {
     const updated = [...form.pallets];
     updated[index][field] = value;
+
     setForm((prev) => ({ ...prev, pallets: updated }));
   };
   const addPallet = (containerId = activeContainerId) => {
@@ -90,7 +102,6 @@ const [palletContainers, setPalletContainers] = useState({});
       ],
     }));
   };
-  
   
   const removeAddSale = (index) => {
       const updated = form.pallets.filter((_, i) => i !== index);
@@ -129,29 +140,41 @@ const [palletContainers, setPalletContainers] = useState({});
       form.pallets.forEach((pallet) => {
         const containerId = pallet.containerId || activeContainerId;
         if (!containerId) return;
-      
+  
         if (!updated[containerId]) {
           const containerObj = selectedValues.find(c => c.id === containerId);
           updated[containerId] = {
-            container: containerObj || { id: containerId, name: "Unknown Container" },
+            container: {
+              id: containerObj?.id,
+              name: containerObj?.name,
+              trackingNumber: containerObj?.trackingNumber, // 🔥 ADD THIS
+            },
             pallets: [],
           };
+          
         }
-      
-        const exists = updated[containerId].pallets.some(p => p.id === pallet.id);
-        if (!exists) {
-          updated[containerId].pallets.push({
-            ...pallet,
-            total: totalPurchase(pallet),
-          });
+  
+        const cleanPallet = {
+          id: pallet.id,
+          pieces: Number(pallet.pieces) || 0,
+          saleAmount: Number(pallet.saleAmount) || 0,
+          palletOption: Number(pallet.palletOption) || 0,
+          containerId,
+          createdAt: pallet.createdAt,
+          total: totalPurchase(pallet),
+        };
+  
+        const existsIndex = updated[containerId].pallets.findIndex(
+          p => p.id === pallet.id
+        );
+  
+        if (existsIndex === -1) {
+          updated[containerId].pallets.push(cleanPallet);
         } else {
-          // Update existing pallet
-          updated[containerId].pallets = updated[containerId].pallets.map(p =>
-            p.id === pallet.id ? { ...p, ...pallet, total: totalPurchase(pallet) } : p
-          );
+          updated[containerId].pallets[existsIndex] = cleanPallet;
         }
       });
-      
+  
       return updated;
     });
   
@@ -159,6 +182,7 @@ const [palletContainers, setPalletContainers] = useState({});
     setSalePop(false);
     setEditingRow(null);
   };
+  
 const handleEditSaleItem = (row) => {
   const palletData = containerSales[row.containerId].pallets.find(
     (p) => p.id === row.palletId
@@ -177,13 +201,7 @@ const handleEditSaleItem = (row) => {
   setSalePop(true);
   setEditingRow({ containerId: row.containerId, palletIndex: containerSales[row.containerId].pallets.findIndex(p => p.id === row.palletId) });
 };
-const totalPurchase = (pallet) => {
-  const pieces = parseFloat(pallet.pieces) || 0;          
-  const saleAmount = parseFloat(pallet.saleAmount) || 0;
-  const price = parseFloat(pallet.palletOption) || 0;     
 
-  return pieces * saleAmount * price;                     
-};
 const handleDeleteSaleItem = (row) => {
   setContainerSales(prev => {
     const updated = { ...prev };
@@ -196,55 +214,9 @@ const handleDeleteSaleItem = (row) => {
     return updated;
   });
 };
-const totalSaleAmount = tableSaleItems.reduce(
-  (sum, item) => sum + (Number(item.total) || 0),
-  0
-);
+
 const balance = amountPaid >= totalSaleAmount
     ? 0 : totalSaleAmount - amountPaid;
-const balanceLabel =
-  amountPaid >= totalSaleAmount ? "Fully Paid" : balance;
-
-const calculateTotals = (pallets) => {
-  if (!pallets || pallets.length === 0) {
-    return { pieces: 0, pallets: 0, totalPalletOption: 0, amount: 0 };
-  }
-  const totalPieces = pallets.reduce(
-    (sum, p) => sum + (parseFloat(p.pieces) || 0),
-    0
-  );
-  const totalPallets = pallets.reduce(
-    (sum, p) => sum + (parseFloat(p.saleAmount) || 0),
-    0
-  );
-  const totalPalletOption = pallets.reduce(
-    (sum, p) => sum + (parseFloat(p.palletOption) || 0),
-    0
-  );
-  const totalAmount = pallets.reduce(
-    (sum, p) => sum + totalPurchase(p),  
-    0
-  );
-  return {
-    pieces: totalPieces,
-    pallets: totalPallets,
-    totalPalletOption: totalPalletOption,
-    amount: totalAmount,
-  };
-};
-const totalPalletCount = Object.values(containerSales).reduce(
-  (sum, c) => sum + c.pallets.reduce(
-    (s, p) => s + (Number(p.saleAmount) || 0), 0
-  ),
-  0
-);
-
-const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
-  (sum, c) => sum + c.pallets.reduce(
-    (s, p) => s + (Number(p.pieces) || 0), 0
-  ),
-  0
-);
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat("en-NG", {
@@ -255,14 +227,15 @@ const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
   const [customers, setCustomers] = useState(() => {
     return JSON.parse(localStorage.getItem(CUSTOMERS_KEY)) || [];
   });
-
   const [foundCustomer, setFoundCustomer] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [showAddCustomerFields, setShowAddCustomerFields] = useState(false);
 
-  const filterContainers = SaleContainerData.filter((item) =>
-    item.name.toLowerCase().includes(searchContainer.toLowerCase())
-  ).slice(0, 5);
+  const filterContainers = (containersData || [])
+  .filter((item) => {
+    const name = item?.name ?? item?.title ?? "";
+    return name.toLowerCase().includes(searchContainer.toLowerCase());
+  })
 
   const toggleSelect = (item) => {
     setSelectedValues((prev) => {
@@ -270,42 +243,36 @@ const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
       if (exists) return prev.filter((v) => v.id !== item.id);
   
       // Only keep serializable properties
+      // return [
+      //   ...prev,
+      //   {
+      //     id: String(item.id),
+      //     name: String(item.name || ""),      
+      //     containerID: item.containerID,
+      //     totalPieces: item.totalPieces,
+      //     netWeight: item.netWeight,
+      //     maxWeight: item.maxWeight,
+      //     grossWeight: item.grossWeight,
+      //     netValue: item.netValue,
+      //     WarehouseArrivalDat: item.WarehouseArrivalDat,
+      //     createdAt: item.createdAt,
+      //   },
+      // ];
       return [
         ...prev,
         {
-          id: item.id,
-          name: item.name,
-          containerID: item.containerID,
-          totalPieces: item.totalPieces,
-          netWeight: item.netWeight,
-          maxWeight: item.maxWeight,
-          grossWeight: item.grossWeight,
-          netValue: item.netValue,
-          WarehouseArrivalDat: item.WarehouseArrivalDat,
+          id: item.id, // ✅ REAL container ID (number)
+          name: item.name || item.title || "",
+          trackingNumber: item.trackingNumber || "TN-UNKNOWN",
+
         },
       ];
+      
+      
     });
+    console.log("CONTAINER ITEM:", item);
   }; 
-  const filteredPresales = preSales
-    .filter((p) => p && p.sn && p.sn.toString().includes(searchPresale))
-    .slice(0, 10);
-
-  const handlePresaleSelect = (presale) => {
-    setSelectedValues2([presale.sn]); // display S/N in the selected box
-    setForm((prev) => ({
-      ...prev,
-      presaleId: presale.sn,           // store S/N in the form
-      noOfPallets: presale.noOfPallets || "",
-      saleOption: presale.saleOption || "",
-      wcPieces: presale.wcPieces || "",
-    }));
-    setOpenPresaleSelect(false);
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+ 
   const handleCustomerPhone = (e) => {
     const phone = e.target.value;
     setForm((prev) => ({ ...prev, customerPhone: phone }));
@@ -353,21 +320,17 @@ const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
     }));
   };
  
-  const handleCreate = (customer = foundCustomer) => {
-    if (!form.presaleId) return setSuccessMessage("Please select a Container");
-    if (!customer) return setSuccessMessage("Please add or select a customer");
-    
-    const hasAnyPallet = Object.values(containerSales).some(c => c.pallets.length > 0);
-    if (!hasAnyPallet) return setSuccessMessage("Please save at least one sale item");
-
-    if (customer instanceof Event) {
-      console.error("Event leaked into handleCreate:", customer);
+  const handleCreate = () => {
+    const customer = foundCustomer;
+  
+    if (!customer) {
+      setSuccessMessage("Please add or select a customer");
       return;
     }
-    
     const cleanContainers = Object.values(containerSales).map(c => ({
-      containerId: c.container.id,
+      containerId: c.container.id,        // ✅ REAL ID
       name: c.container.name,
+      trackingNumber: c.container.trackingNumber || "TN-UNKNOWN",
       pallets: c.pallets.map(p => ({
         id: p.id,
         pieces: Number(p.pieces),
@@ -376,18 +339,13 @@ const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
         createdAt: p.createdAt,
         total: Number(p.total),
       })),
-      totals: {
-        pieces: Number(calculateTotals(c.pallets).pieces),
-        pallets: Number(calculateTotals(c.pallets).pallets),
-        totalPalletOption: Number(calculateTotals(c.pallets).totalPalletOption),
-        amount: Number(calculateTotals(c.pallets).amount),
-      },
     }));
+    
     const newSale = {
       id: Date.now(),
       presaleId: form.presaleId,
       totalSaleAmount,
-      amountPaid,
+      amountPaid: Number(amountPaid),
       balance,
       noOfPallets: totalPalletCount,
       purchasePricePerPiece: totalPurchasePricePerPiece,
@@ -397,35 +355,46 @@ const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
         location: customer.location,
         address: customer.address,
       },
-    
       containers: cleanContainers,
       createdAt: new Date().toISOString(),
     };
-    console.log("New Sale:", newSale);
+  
     onCreate(newSale);
-    setSuccessMessage("Sale successfully created!");
-    setTimeout(() => {
-      setSuccessMessage(null);
-      setView("table");
-    }, 2000);
+    setView("table");
+    console.log("SALE BEING SAVED:", newSale);
+
   };
-  const handleSalePop = () => {
-    setSalePop(!salePop);
-  };
+
   const closePopup = () => setSuccessMessage(null);
 
   const handleClick = () => {
-    let customer = foundCustomer;
-  
-    if (!customer) {
-      const addedCustomer = handleAddCustomer();
-      if (!addedCustomer) return;
-      customer = addedCustomer;
+    if (!foundCustomer) {
+      const added = handleAddCustomer();
+      if (!added) return;
     }
   
-    handleCreate(customer);
+    handleCreate(); // ✅ NO ARGUMENT
   };
-  
+
+useEffect(() => {
+  if (!selectedValues.length) {
+    setPresaleError("");
+    return;
+  }
+
+
+  const containersWithoutPresale = selectedValues.filter(
+    c => !presaleByContainerId[c.id]
+  );
+
+  if (containersWithoutPresale.length > 0) {
+    setPresaleError(
+      "Some selected containers do not have a pre-sale"
+    );
+  } else {
+    setPresaleError("");
+  }
+}, [selectedValues, presaleByContainerId]);
 
   if (successMessage) {
     return (
@@ -509,78 +478,69 @@ const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
               </div>
 
               {/* Pre-sale Dropdown */}
-             <div className="form-group-select">
+              <div className="form-group">
   <label>Pre-Sale ID</label>
-  <div className="custom-select">
-    <div className="custom-select-drop">
-      <div className="select-box">
-        {selectedValues2.length === 0 ? (
-          <span className="placeholder">Select Pre-sale ID</span>
-        ) : (
-          <div className="selected-tags">
-            <span>{selectedValues2[0]}</span>
-          </div>
-        )}
-      </div>
-      <div
-        className="custom-select"
-        onClick={() => setOpenPresaleSelect(!openPresaleSelect)}
-      >
-        <ChevronDown className={openPresaleSelect ? "up" : "down"} />
-      </div>
-    </div>
 
-   <div className={openPresaleSelect ? "select-dropdown" : "d-none"}>
   <input
-    type="text"
-    placeholder="Search Pre-sale ID"
-    value={searchPresale}
-    onChange={(e) => setSearchPresale(e.target.value)}
-    className="search-input"
+    readOnly
+    className="readonly-input"
+    value={
+      selectedValues.length === 0
+        ? ""
+        : selectedValues
+            .map(c => presaleByContainerId[c.id]?.sn)
+            .filter(Boolean)
+            .map(sn => `ID:${sn}`)
+            .join(", ")
+    }
   />
-  <div className="option">
-    {filteredPresales.length > 0 ? (
-      filteredPresales.map((p) => (
-        <label key={p.id} onClick={() => handlePresaleSelect(p)}>
-          <span>{p.sn}</span> {/* Show S/N here */}
-        </label>
-      ))
-    ) : (
-      <span style={{ padding: "5px", display: "block" }}>No Pre-sale IDs found</span>
-    )}
-  </div>
+
+  {presaleError && (
+    <small className="error-text">{presaleError}</small>
+  )}
 </div>
 
-  </div>
-</div>
+
+
             </div>
             {/* Container Details */}
-           {selectedValues.length > 0 && (
-  <div className="grid-3">
-    {selectedValues.map((container) => (
-      <div key={container.id} className="container-details">
-        <div className="collapsed-container">
-        <h4>Pre-sale Details </h4>
-        <ChevronDown
-  onClick={() => toggleCollapsedContainer(container.id)}
-  className={collapsedContainers[container.id] ? "up" : "down"}/>
-</div>
-<ul className={collapsedContainers[container.id] ? "" : "d-none"}>
-          <li>Container ID: {container.containerID}</li>
-          <li>Total Pieces: {container.totalPieces}</li>
-          <li>Total Pallet: {form.noOfPallets}</li>
-          <li> Available Pallet: {container.netWeight}</li>
-          <li>Price Per Pieces: {container.maxWeight}</li>
-          <li>Gross Weight: {container.grossWeight}</li>
-          <li>Net Value: {container.netValue}</li>
-          <li>Arrival Date: {container.WarehouseArrivalDat}</li>
-          <li>Pallet Pieces : {form.wcPieces} </li>
-        </ul>
-      </div>
-    ))}
+            {selectedValues.length > 0 && (
+  <div className="sale-grid-3">
+    {selectedValues.map((container) => {
+      const presale = presaleByContainerId[container.id]; // ✅ NOW VALID
+
+      return (
+        <div key={container.id} className="container-details">
+          <div className="collapsed-container">
+            <h4>Pre-sale Details</h4>
+            <ChevronDown
+              onClick={() => toggleCollapsedContainer(container.id)}
+              className={collapsedContainers[container.id] ? "up" : "down"}
+            />
+          </div>
+
+          <ul className={collapsedContainers[container.id] ? "" : "d-none"}>
+            {presale ? (
+              <>
+                <li>Pre-Sale ID: {presale.sn}</li>
+                <li>Sale Option: {presale.saleOption}</li>
+                <li>Total Pieces: {presale.wcPieces}</li>
+                <li>Total Pallets: {presale.noOfPallets}</li>
+                <li>Expected Revenue: ₦{presale.expectedRevenue}</li>
+                <li>Status: {presale.status}</li>
+              </>
+            ) : (
+              <li className="error-text">
+                This container has no pre-sale
+              </li>
+            )}
+          </ul>
+        </div>
+      );
+    })}
   </div>
 )}
-              </div>
+        </div>
             {/* Customer Section */}
             <div className="">
             <h4 className="mb-4" style={{marginTop:""}} >Customer Details</h4>
@@ -609,9 +569,9 @@ const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
             </div>
 
             {foundCustomer && (
-              <div className="grid-3 mt-2">
+              <div className="customer-grid-3 mt-2">
               <div className="customer-details">
-                <ul>
+                <ul className="ul">
                   <li>Name: {foundCustomer.name}</li>
                   <li>State: {foundCustomer.location}</li>
                   <li>Address: {foundCustomer.address}</li>
@@ -656,15 +616,25 @@ const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
             if (!activeContainerId && selectedValues.length > 0) {
               setActiveContainerId(selectedValues[0].id);
             }
+          
             setForm(prev => ({
               ...prev,
-              pallets: prev.pallets.length ? prev.pallets : [
-                { pieces: "", saleAmount: "", palletOption: "" }
+              pallets: [
+                ...prev.pallets,
+                {
+                  id: crypto.randomUUID(),
+                  pieces: "",
+                  saleAmount: "",
+                  palletOption: "",
+                  containerId: activeContainerId || selectedValues[0]?.id,
+                  createdAt: new Date().toISOString(),
+                },
               ],
             }));
           
             setSalePop(true);
           }}
+          
           
         >
           <Plus size={16} /> Add Item
@@ -741,14 +711,21 @@ const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
   </div>
 )}
             <div className="form-group">
-                <label>Purchase Price (Per Pieces)</label>
-                <input
-                  value={pallet.pieces}
-                  onChange={(e) =>
-                    handlePalletChange(index, "pieces", e.target.value)
-                  }
-                />
-              </div>
+  <label>Purchase Price (Per Pieces)</label>
+  <input
+    value={pallet.pieces}
+    onChange={(e) =>
+      handlePalletChange(index, "pieces", e.target.value)
+    }
+  />
+
+  {isPurchasePriceLowerThanPresale(pallet) && (
+    <small className="error-text" style={{ color: "red" }}>
+      Purchase Price (Per Pieces) is already less than the Price Per Pic (NGN)
+    </small>
+  )}
+</div>
+
               <div className="form-group">
                 <label>No Of Pallet Purchased</label>
                 <input
@@ -777,28 +754,31 @@ const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
                   </div>
                   {openPalletDropdowns[index] && (
                     <div className="sale-select-dropdown">
-                      {[100, 97, 101].map(opt => (
-                        <span 
-                          key={opt}
-                          className="option-sale"
-                          onClick={() => {
-                            handlePalletChange(index, "palletOption", opt);
-                            setOpenPalletDropdowns(prev => ({
-                              ...prev,
-                              [index]: false,
-                            }));
-                          }}
-                        >
-                          {opt}
-                        </span>
-                      ))}
+                     {getPalletOptionsForContainer(
+  pallet.containerId || activeContainerId
+).map(opt => (
+  <span
+    key={opt}
+    className="option-sale"
+    onClick={() => {
+      handlePalletChange(index, "palletOption", opt);
+      setOpenPalletDropdowns(prev => ({
+        ...prev,
+        [index]: false,
+      }));
+    }}
+  >
+    {opt}
+  </span>
+))}
+
                     </div>
                   )}
                 </div>
               </div>
               <div className="form-group">
                 <label> Sale Amount </label>
-                <input value={totalPurchase(pallet)} readOnly />
+                <input value={formatMoneyNGN(totalPurchase(pallet))} readOnly />
               </div>
             </div>
 
@@ -820,59 +800,58 @@ const totalPurchasePricePerPiece = Object.values(containerSales).reduce(
 
   {/* ================= ACTIVE CONTAINER TOTALS ================= */}
   {activeContainer && activeContainer.pallets.length > 0 && (() => {
-  const totals = calculateTotals(activeContainer.pallets);
-
   return (
     <div className="sale-row">
-     
       {/* ================= SALE ITEMS TABLE ================= */}
-{tableSaleItems.length > 0 && (
-  <>
+      {Object.values(containerSales).some(c => c.pallets.length > 0) && (
+  <div className="sale-row">
     <SaleItemsTable
       items={tableSaleItems}
       onDelete={handleDeleteSaleItem}
-      onEdit ={handleEditSaleItem}
+      onEdit={handleEditSaleItem}
     />
     <div className="grid-2 mt-3">
-    <div className="form-group">
-          <h5 style={{color:"#581aae"}}>Total Sale Amount</h5>
-          <input value={formatCurrency(totalSaleAmount)} readOnly style={{color:"gray",border:"none", }} />
-        </div>
-        <div className="form-group">
-            <h5 style={{color:"#581aae"}}>Amount Paid</h5>
-            <input
-  type="number"
-  value={amountPaid}
-  onChange={(e) => {
-    const value = Number(e.target.value || 0);
+      <div className="form-group">
+        <h5 style={{ color: "#581aae" }}>Total Sale Amount</h5>
+        <input value={formatCurrency(totalSaleAmount)} readOnly />
+      </div>
 
-    if (value > totalSaleAmount) {
-      setSuccessMessage("Amount cannot more total sale amount");
-      return;
-    }
-
-    setAmountPaid(value);
-  }}
-/>
-
-              </div>
+      <div className="form-group">
+        <h5 style={{ color: "#581aae" }}>Amount Paid</h5>
+        <input
+          type="number"
+          value={formatMoneyNGN(amountPaid)}
+          onChange={(e) => {
+            const value = Number(e.target.value || 0);
+            if (value > totalSaleAmount) {
+              setSuccessMessage("Amount cannot exceed total sale amount");
+              return;
+            }
+            setAmountPaid(value);
+          }}
+        />
+      </div>
     </div>
-  </>
+    <div className="btn-row">
+      <button
+        className="cancel"
+        onClick={() =>
+          setView(sales && sales.length > 0 ? "table" : "empty")
+        }
+      >
+        Cancel
+      </button>
+      <button
+        className="create"
+        disabled={!!presaleError}
+        onClick={handleClick}
+      >
+        Create
+      </button>
+    </div>
+  </div>
 )}
 
-      <div className="btn-row">
-        <button
-          className="cancel"
-          onClick={() =>
-            setView(sales && sales.length > 0 ? "table" : "empty")
-          }
-        >
-          Cancel
-        </button>
-        <button className="create" onClick={() => handleClick()}>
-          Create
-        </button>
-      </div>
     </div>
   );
 })()}

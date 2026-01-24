@@ -86,10 +86,6 @@ const CreateAccount = ({
         return <ClearingAgent {...props} />;
       case "type-bdc-operator":
         return <BdcOperator {...props} />;
-        // case "entity":
-        // return <Entity {...props} />;
-        // case "bank-account":
-        // return <BankAccount {...props} />;
       default:
         return <h4></h4>;
     }

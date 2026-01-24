@@ -17,17 +17,35 @@ const PreSaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
     trips.forEach((trip) => {
       const tripContainers =
         JSON.parse(localStorage.getItem(`trip-${trip.id}-container`)) || [];
-      tripContainers.forEach((c) => (c.modelName = trip.title || "Unknown"));
+  
+      // Get the FX rate for this trip
+      const avgRate = Number(
+        localStorage.getItem(`trip-${trip.id}-avg_container_rate`) || 0
+      );
+  
+      tripContainers.forEach((c) => {
+        c.modelName = trip.title || "Unknown";
+        c.avgRate = avgRate; // attach the correct FX rate per container
+      });
+  
       allContainers = [...allContainers, ...tripContainers];
     });
     return allContainers;
   });
+  
   useEffect(() => {
     let allContainers = [];
     trips.forEach((trip) => {
       const tripContainers =
         JSON.parse(localStorage.getItem(`trip-${trip.id}-container`)) || [];
-      tripContainers.forEach((c) => (c.modelName = trip.title || "Unknown"));
+const avgRate =
+  Number(localStorage.getItem(`trip-${trip.id}-avg_container_rate`)) || 0;
+
+tripContainers.forEach((c) => {
+  c.modelName = trip.title || "Unknown";
+  c.avgRate = avgRate; // 🔑 attach FX rate
+});
+
       allContainers = [...allContainers, ...tripContainers];
     });
     setContainers(allContainers);
@@ -44,7 +62,7 @@ const PreSaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
     );
   });
   
-  const [users, setUsers] = useState(() => {
+  const [datas, setdatas] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       const parsed = stored ? JSON.parse(stored) : [];
@@ -78,8 +96,8 @@ const PreSaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
   ---------------------------------- */
   useEffect(() => {
     if (!hydrated) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-  }, [users, hydrated]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(datas));
+  }, [datas, hydrated]);
 
   /* ---------------------------------
      AUTO OPEN CREATE (DASHBOARD)
@@ -92,7 +110,7 @@ const PreSaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
   }, [autoOpenCreate, setAutoOpenCreate]);
 
 const handleDeletePreSale = (createdAt) => {
-  setUsers(prev => prev.filter(item => item.createdAt !== createdAt));
+  setdatas(prev => prev.filter(item => item.createdAt !== createdAt));
 };
 
   return (
@@ -144,14 +162,14 @@ const handleDeletePreSale = (createdAt) => {
                   </button>
                 </div>
               </div>
+
             </div>
           )}
 
           {/* MAIN CONTENT */}
           <div className="main-content">
-
             {/* EMPTY STATE */}
-            {users.length === 0 && view === "empty" && (
+            {datas.length === 0 && view === "empty" && (
               <div className="main-content-image">
                 <div className="main-content-image-text">
                   <p>No Pre-sale Created Yet</p>
@@ -161,9 +179,9 @@ const handleDeletePreSale = (createdAt) => {
             )}
 
             {/* TABLE */}
-            {users.length > 0 && (view === "table" || view === "empty") && (
+            {datas.length > 0 && (view === "table" || view === "empty") && (
               <PreSaleTable
-               preSales={users}
+               preSales={datas}
               onDelete={handleDeletePreSale}
               />
 
@@ -171,13 +189,13 @@ const handleDeletePreSale = (createdAt) => {
 
             {/* CREATE */}
             {view === "create" && (
-              <CreatePreSale
-                containersData={filteredContainers}
-                users={users}
-                setUsers={setUsers}
-                setView={setView}
-                openSubmenu={openSubmenu}
-              />
+             <CreatePreSale
+             containersData={filteredContainers}
+             users={datas}
+             setUsers={setdatas}
+             setView={setView}
+             openSubmenu={openSubmenu}
+           />           
             )}
 
           </div>

@@ -4,7 +4,7 @@ import { ChevronRight, X, Download } from "lucide-react";
 import "../../../../assets/Styles/dashboard/Expensify/drilldown.scss";
 import logo from '../../../../assets/Images/Logo/LogoMain.png';
 
-const PayrollDrillDown = ({ payroll, goBack, onUpdate }) => {
+const PayrollDrillDown = ({ payroll, goBack, handleUpdateRecovery }) => {
   const [data, setData] = useState(payroll);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
@@ -15,7 +15,7 @@ const PayrollDrillDown = ({ payroll, goBack, onUpdate }) => {
       approvedAt: new Date().toISOString(),
     };
     setData(updated);
-    onUpdate?.(updated);
+    handleUpdateRecovery?.(updated);
   };
 
   // 👉 DOWNLOAD PAYSLIP

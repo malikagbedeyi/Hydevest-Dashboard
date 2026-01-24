@@ -1,26 +1,15 @@
 import React, { useState,useRef, useEffect } from "react";
 import "../../../../assets/Styles/dashboard/Purchase/drildowncontainer.scss";
 import {ChevronLeft,ChevronDown, ChevronUp, Paperclip, Download,  Edit,  Trash2,  X,  Eye,  File,  Plus, Calendar, SendHorizontal} from "lucide-react";
-import { tableDataContainer } from "./ContainerData";
-import ContainerFinance from "./ContainerFinance";
 
 const fundingOption = ["partner" ," entity "]
 
-const DrildownContainer = ({
-  container = {},
-  goBack = () => {},
-  onUpdate,
-  avgContainerRate = 0,
-  formatNumber,
-  totalAmountUSD = 0,
-  totalAmountNGN = 0,
-  totalContainers = 0,
-  totalUnitPriceUSD = 0,
-}) => {
+const DrildownContainer = ({container = {},goBack = () => {},onUpdate,avgContainerRate = 0,formatNumber,}) => {
 
   const safeFormatNumber =
   typeof formatNumber === "function"
     ? formatNumber
+    
     : (num = 0) =>
         Number(num || 0).toLocaleString("en-US", {
           minimumFractionDigits: 0,
@@ -80,6 +69,7 @@ useEffect(() => {
     setForm((prev) => ({ ...prev, amountUsd: "" }));
   }
 }, [form.unitpieces, form.unitPrice]);
+
 useEffect(() => {
   const pieces = Number(form.unitpieces);
   const quotedPrice = Number(form.quotedPriceUsd);
@@ -106,7 +96,12 @@ const scrollToTop = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    if (onUpdate) onUpdate({ ...form, [name]: value });
+    if (onUpdate)onUpdate({
+      ...container,
+      ...form,
+      updatedAt: new Date().toISOString(),
+    });
+    
   };
 
   const toggleEdit = (field) => {
@@ -150,7 +145,7 @@ const scrollToTop = () => {
       <div className="drill-top">
         <div className="drill-title">
         <h4 className="small-muted">Title: {container.title || "—"}</h4>
-          <p>Container ID : {container.sn || "Container ID"}</p>
+        <p>Container ID : {container.id}</p>
         </div>
         <div className="right-title">
              <div className="actions">
@@ -167,16 +162,15 @@ const scrollToTop = () => {
       </div>
       <div className="drill-summary-grid">
       <div className="drill-summary">
-<div className="summary-item">
-  <p className="small">Total Amount (NGN)</p>
+      <div className="summary-item">
+  <p className="small"> Amount (NGN)</p>
   <h2>
-    {new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      maximumFractionDigits: 2,
-    }).format(totalAmountNGN)}
+    ₦{safeFormatNumber(
+      (Number(form.amountUsd) || 0) * (Number(avgContainerRate) || 0)
+    )}
   </h2>
 </div>
+
 <div className="summary-item">
   <p className="small">Unit Price (USD)</p>
   <h2>{form.unitPrice}</h2>
@@ -477,7 +471,7 @@ const scrollToTop = () => {
   className="btn primary"
   onClick={() => {
     const updatedContainer = {
-      ...container,   // original container
+      ...container,  
       ...form,   // edited fields overwrite only what changed
       updatedAt: new Date().toISOString(),
     };

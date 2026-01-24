@@ -1,154 +1,70 @@
 import React, { useEffect, useState } from "react";
-import { ChevronDown, Filter, Search } from "lucide-react";
-import "../../../assets/Styles/dashboard/Report/controller.scss";
-import ReportTable from "./ReportTable";
-import CreateReport from "./CreateReport";
+import "../../../assets/Styles/dashboard/account/emptyAccount.scss";
+import { ChevronDown, Filter, Search,User, Users, Truck, CreditCard, Shield ,Building2,Banknote, Container } from "lucide-react";
+import ContainerSaleReport from "./ContainerSale/ContainerSaleReport";
 
-const STORAGE_KEY = "report_data";
 
-const ReportController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
-  // Load trips from storage
-  const [data, setData] = useState(() => {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  });
-
-  // View controller
-  const [view, setView] = useState(() => {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    return saved.length ? "table" : "empty";
-  });
-  const [selectedTrip, setSelectedTrip] = useState(null);
+const reportTypes = [
+  { icon: Container, label: "Container Sales", submenu: "container-sale" },
+  { icon: Users, label: "Partner", submenu: "report-partner" },
+  { icon: Banknote, label: "Hynvest", submenu: "report-invest" },
   
+];
+const ReportController = ({openSubmenu}) => {
+  const [view, setView] = useState("empty"); 
+  const [reports, setReports] = useState([]);
+  const [activeReport, setActiveReport] = useState(null);
 
-  /* ===================== EFFECTS ===================== */
-
-  // Keep view in sync with data
-  useEffect(() => {
-    if (data.length === 0) setView("empty");
-    else if (view === "empty") setView("table");
-  }, [data]);
-
-  // Auto open create
-  useEffect(() => {
-    if (autoOpenCreate) {
-      setView("create");
-      setAutoOpenCreate(false);
-    }
-  }, [autoOpenCreate, setAutoOpenCreate]);
-
-  /* ===================== ACTIONS ===================== */
-
-  const handleAddTrip = (newTrip) => {
-    const updated = [...data, newTrip];
-    setData(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    setView("table");
+  const handleReportClick = (submenu) => {
+    setActiveReport(submenu);
   };
 
-  const handleDeleteTrip = (id) => {
-    const updated = data.filter((t) => t.id !== id);
-    setData(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  const resetReportView = () => {
+    setActiveReport(null);
   };
-
-  const handleUpdateTrip = (updatedTrip) => {
-    const updated = data.map((t) =>
-      t.id === updatedTrip.id ? updatedTrip : t
-    );
-    setData(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  };
-
-  /* ===================== UI ===================== */
-
+  
   return (
-    <div className="controller">
-      <div className="controller-container">
-        <div className="controller-content">
+    <div className="emptyAccount">
+      <div className="emptyAccount-container">
+        <div className="emptyAccount-content">
 
-          {(view === "empty" || view === "table") && (
+          {/* TOP BAR */}
+          {!activeReport && (
             <div className="top-content">
               <div className="top-content-wrapper">
                 <div className="left-wrapper" />
-
                 <div className="right-wrapper">
-                  <div className="right-wrapper-input">
-                    <Search className="input-icon" />
-                    <input type="text" placeholder="Search" />
-                  </div>
-
-                  <div className="select-input">
-                    <div className="filter">
-                      <span>Add Filter</span>
-                      <Filter />
-                    </div>
-                  </div>
-
-                  <div className="select-input">
-                    <div className="select-input-field">
-                      <span>All Field</span>
-                      <ChevronDown />
-                    </div>
-                  </div>
-
-                  <div className="import-input">
-                    <p>Import</p>
-                  </div>
-
-                  <div
-                    className="import-input"
-                    onClick={() => setView("export")}
-                  >
-                    <p>Export</p>
-                  </div>
-
-                  <button onClick={() => setView("create")}>
+                  {/* <button onClick={() => setView("create")}>
                     Create Report
-                  </button>
+                  </button> */}
                 </div>
+              </div>
+              <div className="top-content-account">
+                <div className="top-content-account-wrappper">
+                    {reportTypes.map(({ icon: Icon, label, submenu }) => (
+                      <div
+                        key={label}
+                        className="account-grid"
+                        onClick={() => handleReportClick(submenu)} // entire box clickable
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Icon/>
+                        <span>{label}</span>
+                      </div>
+                    ))}
+                    </div>
+
               </div>
             </div>
           )}
 
+          {/* MAIN CONTENT */}
           <div className="main-content">
-            {view === "empty" && (
-              <div className="main-content-image">
-                <div className="main-content-image-text">
-                  <p>No Report Created Yet</p>
-                  <span>A Report created would be saved here automatically</span>
-                </div>
-              </div>
-            )}
-
-{view === "table" && (
-  <ReportTable
-    data={data}
-    onDelete={handleDeleteTrip}
-    onRowClick={(trip) => {
-      setSelectedTrip(trip);
-      setView("details");
-    }}
-  />
-)}
-{/* {view === "details" && selectedTrip && (
-  <TripDetails
-    trip={selectedTrip}
-    goBack={() => {
-      setSelectedTrip(null);
-      setView("table");
-    }}
-  />
-)} */}
-
-            {view === "create" && (
-              <CreateReport
-                onCreate={handleAddTrip}
-                setView={setView}
-                openSubmenu={openSubmenu}
-              />
-            )}
-
-          </div>
+  {activeReport === "container-sale" &&
+   <ContainerSaleReport goBack={resetReportView}  />}
+  {activeReport === "report-partner" && <div>Partner Report</div>}
+  {activeReport === "report-invest" && <div>Hynvest Report</div>}
+</div>
 
         </div>
       </div>

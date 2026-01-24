@@ -38,13 +38,13 @@ const SignUp = () => {
             <h1>Hydevest</h1>
             </div>
             <div className="registerSidebartext">
-                <h1>Register to open account</h1>
+                <h1>Login to open account</h1>
                 <p>Welcome to Hydevest lorem jsjkodvn aocnkcnol</p>
             </div>
         </div>
             <div className="registerChild col-lg-9 col-md-9 col-sm-9">
                 <div className="registerChildTop">
-                    <h1>Register</h1>
+                    <h1>Login</h1>
                     <p>Identity Infomation</p>
                 </div>
                 <form action="">
@@ -52,7 +52,7 @@ const SignUp = () => {
                     <p>PLease enter your valid identity information below.</p>
                     </div>
                     <div className="formInput">
-                    <div className="fillWrapper">
+                    {/* <div className="fillWrapper">
                       <div className="leftwrapper">
                         <h3>first name</h3>
                         <input type="name" 
@@ -67,7 +67,7 @@ const SignUp = () => {
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}/>
                       </div>
-                    </div>
+                    </div> */}
                       <div className="fillWrapper">
                       <div className="leftwrapper">
                         <h3>email address</h3>
@@ -77,14 +77,14 @@ const SignUp = () => {
                         onChange={(e) => setEmail(e.target.value)}/>
                       </div>
                       <div className="rightWrapper">
-                        <h3>phone number</h3>
-                        <input type="pnone_no" 
-                        placeholder='Enter Phone Number'
-                        value={phone_no}
-                        onChange={(e) => setPhone_no(e.target.value)}/>
+                        <h3>UserName</h3>
+                        <input type="username" 
+                        placeholder='Enter userName'
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}/>
                       </div>
                     </div>
-                      <div className="fillWrapper">
+                      {/* <div className="fillWrapper">
                       <div className="leftwrapper">
                         <h3>location</h3>
                         <input type="location" 
@@ -99,7 +99,7 @@ const SignUp = () => {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}/>
                       </div>
-                    </div>
+                    </div> */}
                       <div className="fillWrapper">
                       <div className="leftwrapper">
                         <h3>password</h3>
@@ -119,12 +119,14 @@ const SignUp = () => {
                     </div>
                     <div className="robotHoman">
                       <div className="iconvarify">
-                        <div className={varify ? 'd-none' : "clickIcons"} onClick={handleVarify}></div>
+                        <div style={{
+                          border:"1px solid #000"
+                        }} className={varify ? 'd-none' : "clickIcons"} onClick={handleVarify}></div>
                         <div className={varify ? "unClickIcons" : "d-none"} onClick={handleVarify}> <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M10.5725 0.570312L4.28683 6.85603L1.42969 3.99888" stroke="#999999" stroke-linecap="round" stroke-linejoin="round"/> </svg>  </div>
                       </div>
                       <p> varify that you are not a Robot.</p>
                     </div>
-                    <button onClick={handlePop}>Register</button>
+                    <button onClick={handlePop}>Login</button>
                 </form>
             </div>
         </div>
@@ -132,8 +134,8 @@ const SignUp = () => {
       <div className={hidepop ? "registerpop" : "d-none"}>
         <div className="popmessageContainer">
       <div className={hidemessage ? "d-none " : 'popmessage'}>
-        <h1>Registered Successfully</h1>
-        <p>You have successfully registered . Please check your email to confirm your account</p>
+        <h1>Login Successfully</h1>
+        <p>You have successfully Login . Please check your email to confirm your account</p>
         <div className="popwrapper">
         <Link className='leftboton Link' onClick={hanldeMessage}>Goto Email</Link>
         </div>

@@ -4,17 +4,17 @@ import "../../../../assets/Styles/dashboard/Expensify/controller.scss";
 import CreateFinance from "./CreateFinance";
 import FinanceTable from "./FinanceTable";
 
-const STORAGE_KEY = "data_storage"; 
+const FINANCE_KEY = "finance_data"; 
 const SALE_KEY = "sales_data";
 
 const FinanceController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
   // Initialize data from localStorage
   const [data, setData] = useState(() => {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    return JSON.parse(localStorage.getItem( FINANCE_KEY)) || [];
   });
   // Set view based on existing data
   const [view, setView] = useState(() => {
-    const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    const savedData = JSON.parse(localStorage.getItem( FINANCE_KEY)) || [];
     return savedData.length ? "table" : "empty";
   });
 
@@ -48,7 +48,7 @@ const FinanceController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
   const handleAddData = (newData) => {
     const updatedData = [...data, newData];
     setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData)); // save immediately
+    localStorage.setItem( FINANCE_KEY, JSON.stringify(updatedData)); // save immediately
     setView("table");
   };
 
@@ -56,7 +56,7 @@ const FinanceController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
   const handleDeleteData = (id) => {
     const updatedData = data.filter(d => d.id !== id);
     setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+    localStorage.setItem( FINANCE_KEY, JSON.stringify(updatedData));
 
     // Update view if no data left
     if (updatedData.length === 0) {
@@ -69,7 +69,7 @@ const FinanceController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
     );
   
     setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+    localStorage.setItem( FINANCE_KEY, JSON.stringify(updatedData));
   };
   
   return (

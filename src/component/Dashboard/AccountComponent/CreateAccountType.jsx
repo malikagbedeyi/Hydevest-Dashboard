@@ -81,12 +81,12 @@ export const BdcOperator = ({ onCreate, onCancel }) => {
 /* ================= Entity ================= */
 // export const Entity = ({ onCreate, onCancel }) => {
 //   const [form, setForm] = useState({
-//     name: "",
-//     email: "",
-//     phone: "",
-//     address: "",
-//     director: "",
-//     otherDirector: "",
+    // name: "",
+    // email: "",
+    // phone: "",
+    // address: "",
+    // director: "",
+    // otherDirector: "",
 //   });
 
 //   const handleChange = (e) =>

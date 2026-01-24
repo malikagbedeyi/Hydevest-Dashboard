@@ -126,6 +126,13 @@ const avgPricePerKg =
     );
   }
 
+  const formatMoneyNGN = (value) =>
+  value === "" ? "" : "₦" + Number(value).toLocaleString("en-NG");
+  
+  const formatNumber = (value) =>
+  value === "" ? "" : Number(value).toLocaleString("en-NG");
+  
+
   return (
     <>
       <div className="userTable">
@@ -197,11 +204,11 @@ const avgPricePerKg =
                     <td>{sale.saleOption}</td>
                     <td>{sale.containerNames?.join(", ")}</td>
                     <td>{sale.wcAverageWeight}</td>
-                    <td>{sale.wcPieces}</td>
-                    <td>{sale.pricePerPic}</td>
-                    <td>{sale.pricePerKg}</td>
+                    <td>{formatNumber(sale.wcPieces)}</td>
+                    <td>{formatMoneyNGN(sale.pricePerPic)}</td>
+                    <td>{formatMoneyNGN(sale.pricePerKg)}</td>
                     <td>{sale.noOfPallets || "-"}</td>
-                    <td>{sale.expectedRevenue}</td>
+                    <td>{formatMoneyNGN(sale.expectedRevenue)}</td>
                     <td>{sale.status}</td>
                     <td>{new Date(sale.createdAt).toLocaleDateString()}</td>
 

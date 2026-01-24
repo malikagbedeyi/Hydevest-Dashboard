@@ -20,6 +20,11 @@ import AccInvest from './Pages/Account/AccInvest'
 import Report from './Pages/Report/Report'
 import Allocation from './Pages/PartnerShip/Allocation'
 import Profit from './Pages/PartnerShip/Profit'
+import Entity from './Pages/Admin/Entity'
+import PartnerLot from './Pages/PartnerShip/PartnerLot'
+import RoleSetup from './Pages/Admin/RoleSetup'
+import BankAccount from './Pages/Admin/BankAccount'
+import Bonus from './Pages/Admin/Bonus'
 
 const DashboardPage = () => {
     const [sidebarCollapsed , setSidebarCollapsed] = useState(false)
@@ -77,6 +82,16 @@ const DashboardPage = () => {
         return <Allocation />;
         case "profit":
         return <Profit />;
+        case "partnerlot":
+        return <PartnerLot />;
+        case "entity":
+        return <Entity />;
+        case "role-setup":
+        return <RoleSetup />;
+        case "bonus":
+          return <Bonus />;
+        case "bank-account":
+        return <BankAccount />;
       default:
         return <h2>Page Not Found</h2>;
     }

@@ -47,15 +47,15 @@ const [error, setError] = useState("");
   /* ===================== SALES BY CUSTOMER ===================== */
   const customerSales = useMemo(() => {
     if (!selectedCustomer) return [];
-
-    return SalesData
-      .map((sale, index) => ({ ...sale, sn: index + 1,}))
-      .filter(
-        sale => sale.customer?.name === selectedCustomer.name &&
-                sale.customer?.phone === selectedCustomer.phone
-      );
+  
+    return SalesData.filter(
+      sale =>
+        sale.customer?.name === selectedCustomer.name &&
+        sale.customer?.phone === selectedCustomer.phone &&
+        Number(sale.balance || 0) > 0
+    );
   }, [selectedCustomer, SalesData]);
-
+  
   /* ===================== CREATE RECOVERY ===================== */
   const handleCreateRecovery = () => {
     if (!selectedCustomer || !selectedSale) return;
@@ -75,25 +75,25 @@ const [error, setError] = useState("");
   
     const newBalance = saleBalance - paid;
   
-    const payload = {
-  id: Date.now(),
-  customerName: selectedCustomer.name,
-  customerPhone: selectedCustomer.phone,
-  saleSN: selectedSale.sn,
-  amountPaid: Number(amountPaid || 0),
-  balance: selectedSale.balance - Number(amountPaid || 0),
-  status: "Pending", // ✅ ALWAYS START AS PENDING
-  createdAt: new Date().toISOString(),
-  attachments,
-};
-
-      
+    // 🔹 1. Create recovery record
+    const recoveryPayload = {
+      id: Date.now(),
+      customerName: selectedCustomer.name,
+      customerPhone: selectedCustomer.phone,
+      saleSN: selectedSale.sn,
+      saleId: selectedSale.id,
+      amountPaid: paid,
+      balanceAfter: newBalance,
+      status: "Pending",
+      createdAt: new Date().toISOString(),
+      attachments,
+    };
+    // 🔹 3. Save recovery
+    onCreate(recoveryPayload);
   
-    onCreate(payload);
     setShowPopup(true);
   };
   
-
   const closePopup = () => {
     setShowPopup(false);
     setView("table");
@@ -228,7 +228,7 @@ const [error, setError] = useState("");
           </div>
           {/* ================= SALE DETAILS ================= */}
           {selectedSale && (
-            <div className="grid-3">
+            <div className="sale-grid-3">
             <div className="container-details">
             <div className="collapsed-container">
             <h4>Sale Details</h4> 
@@ -252,7 +252,7 @@ const [error, setError] = useState("");
           )}
 
           {/* ================= RECOVERY SECTION & PAYMENT ================= */}
-          <div className="grid-3">
+          <div className="sale-grid-3">
             <div className="payment-header">
                 <h5>Payment Details</h5>
             </div>

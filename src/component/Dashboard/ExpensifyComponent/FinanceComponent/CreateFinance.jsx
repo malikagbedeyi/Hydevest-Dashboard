@@ -1,71 +1,145 @@
 import React, { useState } from "react";
-import "../../../../assets/Styles/dashboard/Expensify/create.scss";
 import { ChevronDown, Paperclip, Trash2 } from "lucide-react";
+import "../../../../assets/Styles/dashboard/Expensify/create.scss";
 
-const typeOptions = ["Asset", "Liability", "Equity", "Income", "Expense"];
+const typeOptions = ["Expense"];
 
-const CreateFinance = ({ setView, onCreate }) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [type, setType] = useState("");
+const CURRENCIES = [
+  { country: "United States", code: "USD", symbol: "$", rate: 1550 },
+  { country: "United Kingdom", code: "GBP", symbol: "£", rate: 1950 },
+  { country: "European Union", code: "EUR", symbol: "€", rate: 1700 },
+  { country: "China", code: "CNY", symbol: "¥", rate: 215 },
+  { country: "Japan", code: "JPY", symbol: "¥", rate: 10.5 },
+  { country: "Canada", code: "CAD", symbol: "$", rate: 1150 },
+  { country: "South Africa", code: "ZAR", symbol: "R", rate: 85 },
+  { country: "Ghana", code: "GHS", symbol: "₵", rate: 130 },
+  { country: "Nigeria", code: "NGN", symbol: "₦", rate: 1 },
+];
+
+const CreateFinance = ({setView, onCreate, }) => {
   const [openTypeSelect, setOpenTypeSelect] = useState(false);
-  const [typeSearch, setTypeSearch] = useState("");
+  const [typeSearch, setTypeSearch] = useState(false);
+  const [openCurrencySelect, setOpenCurrencySelect] = useState(false);
 
-  const [date, setDate] = useState("");
-  const [budgetedAmount, setBudgetedAmount] = useState("");
-  const [advanceAmount, setAdvanceAmount] = useState("");
-  const [currency, setCurrency] = useState("$ dollar");
-  const [rate, setRate] = useState("");
-  const [attachments, setAttachments] = useState([]);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    type: "",
+    date: "",
+    amount: "",
+    checkbox:false,
+    currency: CURRENCIES[0],
+    rate: CURRENCIES[0].rate,
+    amountNGN: 0,
+    attachments: [],
+  });
 
-  const handleCreateFinance = () => {
-    const payload = {
-      id: Date.now(),
-      title,
-      description,
-      type,
-      date,
-      amount: Number(advanceAmount),
+  /** ---------- handlers ---------- */
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setForm((prev) => {
+      const updated = { ...prev, [name]: value };
+
+      if (name === "amount") {
+        updated.amountNGN = Number(value || 0) * prev.rate;
+      }
+
+      return updated;
+    });
+  };
+  const formatCurrency = (value, currencyCode) => {
+    const SAFE_CURRENCY_CODES = ["USD", "GBP", "EUR", "CAD", "AUD", "JPY", "CNY", "ZAR", "GHS", "AED"];
+  
+    const safeCode = SAFE_CURRENCY_CODES.includes(currencyCode)
+      ? currencyCode
+      : "USD"; // fallback
+  
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: safeCode,
+      minimumFractionDigits: 2,
+    }).format(Number(value || 0));
+  };
+  
+  const handleCurrencySelect = (currency) => {
+    setForm((prev) => ({
+      ...prev,
       currency,
-      rate,
-      attachments,
+      rate: currency.rate,
+      amountNGN: Number(prev.amount || 0) * currency.rate,
+    }));
+  
+    setOpenCurrencySelect(false); // ✅ CLOSE dropdown
+  };
+  
+  const handleCreate = () => {
+    onCreate({
+      id: Date.now(),
+      ...form,
+      amount: Number(form.amount),
+      currency: form.currency.code,
+      currencySymbol: form.currency.symbol,
+  
+      // ✅ THIS IS THE KEY PART
+      check: form.checkbox ? "Container Payment" : "General",
+  
       status: "Pending",
       createdAt: new Date().toISOString(),
-    };
-    
-    onCreate?.(payload);
-    setView("table");
+    });
+
   };
+  
 
-  const filteredTypeOptions = typeOptions.filter((opt) =>
-    opt.toLowerCase().includes(typeSearch.toLowerCase())
-  );
-
+  /** ---------- render ---------- */
   return (
     <div className="trip-modal">
-      <div className="create-container-modal">
-        <div className="create-container-card">
-          <h2>Create Finance</h2>
+    <div className="create-container-modal">
+      <div className="create-container-card">
+        <h2>Create Finance</h2>
+          <div className="" style={{
+            display:"flex",
+            justifyContent:"space-between",
+            alignItems:"center",
+          }}>
           <p>Enter finance details</p>
+          <div className=""  style={{
+            display:"flex",
+            gap:"10px",
+            alignItems:"center",
+          }}>
+         <input
+  type="checkbox"
+  checked={form.checkbox}
+  onChange={(e) =>
+    setForm((prev) => ({
+      ...prev,
+      checkbox: e.target.checked,
+    }))
+  }
+/>
+<span>Container Payment</span>
 
+          </div>
+          </div>
           {/* Title & Description */}
           <div className="grid-2">
             <div className="form-group">
               <label>Title</label>
               <input
-                type="text"
+                name="title"
+                value={form.title}
+                onChange={handleChange}
                 placeholder="Enter item name"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
               />
             </div>
 
             <div className="form-group">
               <label>Description</label>
               <textarea
-                placeholder="Enter item description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                name="description"
+                value={form.description}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -80,28 +154,20 @@ const CreateFinance = ({ setView, onCreate }) => {
                   onClick={() => setOpenTypeSelect(!openTypeSelect)}
                 >
                   <div className="select-box">
-                    {type ? <span>{type}</span> : <span className="placeholder">Select Type</span>}
+                    {form.type || "Select Type"}
                   </div>
-                  <ChevronDown className={openTypeSelect ? "up" : "down"} />
+                  <ChevronDown />
                 </div>
 
                 {openTypeSelect && (
-                  <div className="select-dropdown"  style={{zIndex:"99"}}>
-                    <input
-                      type="text"
-                      placeholder="Search Type..."
-                      value={typeSearch}
-                      onChange={(e) => setTypeSearch(e.target.value)}
-                      className="search-input"
-                    />
-                    {filteredTypeOptions.map((opt) => (
+                  <div className="select-dropdown">
+                    {typeOptions.map((opt) => (
                       <div
                         key={opt}
                         className="option-item"
                         onClick={() => {
-                          setType(opt);
+                          setForm((p) => ({ ...p, type: opt }));
                           setOpenTypeSelect(false);
-                          setTypeSearch("");
                         }}
                       >
                         {opt}
@@ -111,46 +177,64 @@ const CreateFinance = ({ setView, onCreate }) => {
                 )}
               </div>
             </div>
+
             <div className="form-group">
               <label>Date</label>
               <input
                 type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                name="date"
+                value={form.date}
+                onChange={handleChange}
               />
             </div>
           </div>
 
-         
-          {/* Currency & Rate */}
+          {/* Amount / Currency / Rate */}
           <div className="grid-4">
-          <div className="form-group">
-              <label> Amount</label>
+            <div className="form-group">
+              <label>Amount</label>
               <input
                 type="number"
-                value={advanceAmount}
-                onChange={(e) => setAdvanceAmount(e.target.value)}
-                placeholder="Enter  Amount"
+                name="amount"
+                value={form.amount}
+                onChange={handleChange}
               />
             </div>
-          <div className="form-group-select">
+
+            <div className="form-group-select">
               <label>Currency</label>
               <div className="custom-select">
-                <div className="custom-select-drop">
-                  <div className="select-box" >{currency}</div>
-                  <ChevronDown />
+              <div
+  className="custom-select-drop"
+  onClick={() => setOpenCurrencySelect((prev) => !prev)}
+>
+  <div className="select-box">
+    {form.currency
+      ? `${form.currency.symbol} ${form.currency.code}`
+      : "Select Currency"}
+  </div>
+  <ChevronDown />
+</div>
+
+                {openCurrencySelect && (
+                <div className="select-dropdown">
+                  {CURRENCIES.map((cur) => (
+                    <div
+                      key={cur.code}
+                      className="option-item"
+                      onClick={() => handleCurrencySelect(cur)}
+                    >
+                      {cur.country} ({cur.symbol} {cur.code})
+                    </div>
+                  ))}
                 </div>
+                )}
               </div>
             </div>
-            
+
             <div className="form-group">
               <label>Rate</label>
-              <input
-                type="number"
-                value={rate}
-                onChange={(e) => setRate(e.target.value)}
-                placeholder="2"
-              />
+              <input value={form.rate} readOnly />
             </div>
           </div>
           <div className="grid-2">
@@ -158,35 +242,40 @@ const CreateFinance = ({ setView, onCreate }) => {
               <label htmlFor="">comment</label>
               <textarea name=""></textarea>
             </div>
-            <section className="attachments">
-            <div className="grid-3">
               <div className="form-group upload-box">
                 <label>Upload</label>
-                <input  type="file" hidden
-                  id="finance-attachment"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files);
-                    const mapped = files.map((file) => ({
+                <input
+              type="file"
+              hidden
+              id="finance-attachment"
+              onChange={(e) => {
+                const files = Array.from(e.target.files);
+                setForm((prev) => ({
+                  ...prev,
+                  attachments: [
+                    ...prev.attachments,
+                    ...files.map((f) => ({
                       id: crypto.randomUUID(),
-                      name: file.name,
-                      size: file.size,
-                      file,
-                    }));
-                    setAttachments((prev) => [...prev, ...mapped]);
-                  }}
-                />
-                <button
-                  type="button"
-                  className="attach-link"
-                  onClick={() => document.getElementById("finance-attachment").click()}
-                >
-                  <Paperclip size={14} /> Attach File
-                </button>
+                      name: f.name,
+                      size: f.size,
+                      file: f,
+                    })),
+                  ],
+                }));
+              }}
+            />
+            <button type="button" className="attach-link"
+              onClick={() =>
+                document.getElementById("finance-attachment").click()
+              }
+            >
+              <Paperclip size={14} /> Attach File
+            </button>
                 <div className="recent-files">
-                  {attachments.length === 0 && (
+                  {form.attachments.length === 0 && (
                     <small style={{ color: "#999", marginLeft: "-10px" }}>No attachments added</small>
                   )}
-                  {attachments.map((f) => (
+                  {form.attachments.map((f) => (
                     <div key={f.id} className="file-row">
                       <div>
                         <div className="small-muted">{f.name}</div>
@@ -195,27 +284,26 @@ const CreateFinance = ({ setView, onCreate }) => {
                       <Trash2
                         size={16}
                         style={{ cursor: "pointer" }}
-                        onClick={() => setAttachments((prev) => prev.filter((a) => a.id !== f.id))}
+                        onClick={() => form.attachments((prev) => prev.filter((a) => a.id !== f.id))}
                       />
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
-          </section>
           </div>
 
           {/* Actions */}
-          <div className="btn-row" style={{marginTop:"10%"}}>
-            <button className="cancel" onClick={() => setView("table")}>
+          <div className="btn-row">
+            <button
+              className="cancel"
+              onClick={() => {
+                setView('table')
+              }}
+            >
               Cancel
             </button>
-            <button
-              className="create"
-              disabled={!title || !advanceAmount || !type}
-              onClick={handleCreateFinance}
-            >
-              Submit 
+            <button className="create" onClick={handleCreate}>
+              Submit
             </button>
           </div>
         </div>
@@ -223,5 +311,6 @@ const CreateFinance = ({ setView, onCreate }) => {
     </div>
   );
 };
+
 
 export default CreateFinance;

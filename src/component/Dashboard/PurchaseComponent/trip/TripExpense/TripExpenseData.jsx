@@ -84,7 +84,7 @@ const TripExpenseData = ({handleRowClick,currentData , openDeletePopup , finance
 
                            <td>{item.rate}</td>
                             <td>{formatNGN(item.amountNGN)}</td>
-                            <td>{item.check||"other"}</td>
+                            <td>{item.check||"Other"}</td>
                           <td>
                             {item.status === "Approved" ? (
                               <span style={{ color: "green", fontWeight: 600 }}>Approved</span>

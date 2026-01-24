@@ -1,131 +1,167 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
 import "../../../../assets/Styles/dashboard/controller.scss";
-import CreateProfit from "./CreateProfit";
 import ProfitTable from "./ProfitTable";
 
+const ALLOCATION_KEY = "allocation_data";
+const TRIP_KEY = "trip_data";
 
-const STORAGE_KEY = "profit_storage"; 
+/* ================= HELPERS ================= */
 
-const ProfitController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
-  // Initialize data from localStorage
-  const [data, setData] = useState(() => {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  });
-  // Set view based on existing data
-  const [view, setView] = useState(() => {
-    const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    return savedData.length ? "table" : "empty";
-  });
+const getAvgContainerRateByTrip = (tripId) => {
+  const finance =
+    JSON.parse(localStorage.getItem(`trip-${tripId}-finance`)) || [];
 
+  const containerPayments = finance.filter(
+    (f) => f.check === "Container Payment"
+  );
 
-  // Keep view in sync with data
+  if (containerPayments.length === 0) return 0;
+
+  return (
+    containerPayments.reduce(
+      (sum, f) => sum + Number(f.rate || 0),
+      0
+    ) / containerPayments.length
+  );
+};
+
+const ProfitController = () => {
+  /* ================= STATE ================= */
+  const [containers, setContainers] = useState([]);
+  const [allocations, setAllocations] = useState([]);
+  const [tripRates, setTripRates] = useState({});
+  const normalizeTN = (tn) =>
+  String(tn).startsWith("TN") ? tn : `TN${tn}`;
+
+  /* ================= LOAD CONTAINERS ================= */
   useEffect(() => {
-    if (data.length === 0) {
-      setView("empty");
-    } else if (view === "empty") {
-      setView("table");
-    }
-  }, [data]);
+    const trips = JSON.parse(localStorage.getItem(TRIP_KEY)) || [];
+    let allContainers = [];
+  
+    trips.forEach(trip => {
+      const tripContainers =
+        JSON.parse(localStorage.getItem(`trip-${trip.id}-container`)) || [];
+  
+      tripContainers.forEach(c => {
+        allContainers.push({
+          ...c,
+          tripId: trip.id, // 🔑 REQUIRED FOR RATE LOOKUP
+        });
+      });
+    });
+  
+    setContainers(allContainers);
+  }, []);
 
-  // Auto-open create modal if requested
   useEffect(() => {
-    if (autoOpenCreate) {
-      setView("create");
-      setAutoOpenCreate(false);
-    }
-  }, [autoOpenCreate, setAutoOpenCreate]);
-
-  // Add a new data entry
-  const handleAddData = (newData) => {
-    const updatedData = [...data, newData];
-    setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData)); // save immediately
-    setView("table");
-  };
-
-  // Delete a data entry
-  const handleDeleteData = (id) => {
-    const updatedData = data.filter(d => d.id !== id);
-    setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
-
-    // Update view if no data left
-    if (updatedData.length === 0) {
-      setView("empty");
-    }
-  };
-  const handleUpdateRecovery = (updatedRecovery) => {
-    const updatedData = data.map((rec) =>
-      rec.id === updatedRecovery.id ? updatedRecovery : rec
-    );
+    const trips = JSON.parse(localStorage.getItem(TRIP_KEY)) || {};
+    const rates = {};
   
-    setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
-  };
+    trips.forEach(trip => {
+      const finance =
+        JSON.parse(localStorage.getItem(`trip-${trip.id}-finance`)) || [];
   
+      const payments = finance.filter(f => f.check === "Container Payment");
+  
+      rates[trip.id] =
+        payments.length === 0
+          ? 0
+          : payments.reduce((s, f) => s + Number(f.rate || 0), 0) / payments.length;
+    });
+  
+    setTripRates(rates);
+  }, []);
+  
+  /* ================= LOAD ALLOCATIONS ================= */
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem(ALLOCATION_KEY)) || [];
+    setAllocations(saved);
+  }, []);
+
+  /* ================= DERIVED PROFIT DATA ================= */
+  const profitRows = useMemo(() => {
+    const map = {};
+  
+    allocations.forEach(allocation => {
+      const container = containers.find(
+        c =>
+          normalizeTN(c.trackingNumber) ===
+          normalizeTN(allocation.containerTrackingNumber)
+      );
+  
+      if (!container) return;
+  
+      const rate = tripRates[container.tripId] || 0;
+  
+      const deliveryNGN =
+        Number(container.amountUsd ?? container.amountUSD ?? 0) * rate;
+  
+      const quotedNGN =
+        Number(container.quotedAmountUsd ?? container.quotedUSD ?? 0) * rate;
+  
+      const diff = deliveryNGN - quotedNGN;
+  
+      const key = normalizeTN(container.trackingNumber);
+  
+      if (!map[key]) {
+        map[key] = {
+          id: key,
+          containerTrackingNumber: key,
+          containerDeliveryAmount: deliveryNGN,
+          quotedAmount: quotedNGN,
+          difference: diff,
+          status:
+            diff === 0 ? "Balanced" : diff > 0 ? "Profit" : "Loss",
+        };
+      }
+    });
+  
+    return Object.values(map);
+  }, [allocations, containers, tripRates]);
+    
+  
+  /* ================= UI ================= */
   return (
     <div className="controller">
       <div className="controller-container">
         <div className="controller-content">
-          {(view === "empty" || view === "table") && (
-            <div className="top-content">
-              <div className="top-content-wrapper">
-                <div className="left-wrapper" />
 
-                <div className="right-wrapper">
-                  <div className="right-wrapper-input">
-                    <Search className="input-icon" />
-                    <input type="text" placeholder="Search" />
+          {/* TOP BAR */}
+          <div className="top-content">
+            <div className="top-content-wrapper">
+              <div className="left-wrapper" />
+
+              <div className="right-wrapper">
+                <div className="right-wrapper-input">
+                  <Search className="input-icon" />
+                  <input type="text" placeholder="Search" />
+                </div>
+
+                <div className="select-input">
+                  <div className="filter">
+                    <span>Add Filter</span>
+                    <Filter />
                   </div>
+                </div>
 
-                  <div className="select-input">
-                    <div className="filter">
-                      <span>Add Filter</span>
-                      <Filter />
-                    </div>
+                <div className="select-input">
+                  <div className="select-input-field">
+                    <span>All Fields</span>
+                    <ChevronDown />
                   </div>
+                </div>
 
-                  <div className="select-input">
-                    <div className="select-input-field">
-                      <span>All Field</span>
-                      <ChevronDown />
-                    </div>
-                  </div>
-
-                  <div className="import-input"><p>Import</p></div>
-                  <div className="import-input"><p>Export</p></div>
-                  <button onClick={() => setView("create")}>Create Profit</button>
+                <div className="import-input">
+                  <p>Export</p>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+
+          {/* TABLE */}
           <div className="main-content">
-            {data.length === 0 && view === "empty" && (
-              <div className="main-content-image">
-                <div className="main-content-image-text">
-                  <p>No Data Created Yet</p>
-                  <span>A data created would be saved here automatically</span>
-                </div>
-              </div>
-            )}
-
-            {data.length > 0 && view === "table" && (
-              <ProfitTable
-               data={data} 
-              oProfitDelete={handleDeleteData}
-              onUpdate={handleUpdateRecovery} />
-            )}
-
-            {view === "create" && (
-              <CreateProfit
-                data={data}
-                setData={setData}
-                setView={setView}
-                openSubmenu={openSubmenu}
-                onCreate={handleAddData}
-              />
-            )}
+            <ProfitTable data={profitRows} />
           </div>
         </div>
       </div>
@@ -133,4 +169,4 @@ const ProfitController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =>
   );
 };
 
-export default ProfitController
+export default ProfitController;

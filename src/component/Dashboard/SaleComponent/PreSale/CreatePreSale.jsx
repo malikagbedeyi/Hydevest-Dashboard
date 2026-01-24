@@ -9,19 +9,25 @@ export const saleType = [
 ];
 
 const CreatePreSale = ({ users, setUsers, setView, openSubmenu,containersData }) => {
+  
   const [form, setForm] = useState({
-    saleOption: "",
-    containerOption:"",
-    wcAverageWeight: "",
-    wcPieces: "",
-    pricePerKg: "",
-    pricePerPic:"",
-    noOfPallets: "",
+    saleOption: "",containerOption:"", wcAverageWeight: "", wcPieces: "",
+    pricePerKg: "", pricePerPic:"", noOfPallets: "",
     pallets: [{ pieces: "", count: "" }],
   });
 
   const [successMessage, setSuccessMessage] = useState(null);
+  const [popupMessage, setPopupMessage] = useState(null);
+  const [popupType, setPopupType] = useState(null); // "error" | "success"
 
+  const getContainerFxRate = (container) => {
+    return (
+      Number(
+        localStorage.getItem(`trip-${container.tripId}-avg_container_rate`)
+      ) || 0
+    );
+  };
+  
   // -----------------------------
   // SALE OPTION SELECT
   // -----------------------------
@@ -55,9 +61,6 @@ const CreatePreSale = ({ users, setUsers, setView, openSubmenu,containersData })
       modelName.toLowerCase().includes(search.toLowerCase())
     );
   })
-  // .slice(0, 5);
-
-
   const toggleSelect = (item) => {
     setSelectedValues((prev) => {
       const exists = prev.some((v) => v.id === item.id);
@@ -72,11 +75,24 @@ const CreatePreSale = ({ users, setUsers, setView, openSubmenu,containersData })
   // -----------------------------
   // FORM HANDLERS
   // -----------------------------
+  const cleanNumber = (value) => value.replace(/[^\d.]/g, "");
+
+  const formatMoneyNGN = (value) =>
+  value === "" ? "" : "₦" + Number(value).toLocaleString("en-NG");
+  
+  const formatNumber = (value) =>
+  value === "" ? "" : Number(value).toLocaleString("en-NG");
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const cleaned = cleanNumber(value);
+  
+    setForm((prev) => ({
+      ...prev,
+      [name]: cleaned,
+    }));
   };
-
+  
   const handlePalletChange = (index, field, value) => {
     const updated = [...form.pallets];
     updated[index][field] = value;
@@ -89,12 +105,10 @@ const CreatePreSale = ({ users, setUsers, setView, openSubmenu,containersData })
       pallets: [...prev.pallets, { pieces: "", count: "" }],
     }));
   };
-
   const removePallet = (index) => {
     const updated = form.pallets.filter((_, i) => i !== index);
     setForm((prev) => ({ ...prev, pallets: updated }));
   };
-
   const expectedRevenue = () => {
     const totalPieces = parseFloat(form.wcPieces) || 0;
     const price = parseFloat(form.pricePerPic) || 0;
@@ -104,50 +118,132 @@ const CreatePreSale = ({ users, setUsers, setView, openSubmenu,containersData })
   // -----------------------------
   // CREATE PRE-SALE (Corrected)
   // -----------------------------
+  // -----------------------------
+// DERIVED TOTALS
+// -----------------------------
+const totalPalletCount = form.pallets.reduce(
+  (sum, p) => sum + Number(p.count || 0),
+  0
+);
+
+const totalPalletPieces = form.pallets.reduce(
+  (sum, p) => sum + Number(p.pieces || 0) * Number(p.count || 0),
+  0
+);
+
+const maxPalletsAllowed = Number(form.noOfPallets || 0);
+const maxPiecesAllowed = Number(form.wcPieces || 0);
+
+const palletCountExceeded =
+  maxPalletsAllowed > 0 && totalPalletCount > maxPalletsAllowed;
+
+const palletPiecesExceeded =
+  maxPiecesAllowed > 0 && totalPalletPieces > maxPiecesAllowed;
+  const getValidationError = () => {
+    if (palletCountExceeded) {
+      return `❌ Total pallets entered (${totalPalletCount}) must not exceed Total Number of Pallets (${maxPalletsAllowed})`;
+    }
+  
+    if (palletPiecesExceeded) {
+      return `❌ Total pallet pieces (${totalPalletPieces}) must not exceed WC Pieces (${maxPiecesAllowed})`;
+    }
+  
+    return null; // no error
+  };
+  
   const handleCreate = () => {
+    const error = getValidationError();
+  
+    // ❌ Error → show popup, DO NOT navigate
+    if (error) {
+      setPopupMessage(error);
+      setPopupType("error");
+      return;
+    }
+  
+    // ✅ Success
     const newSale = {
       ...form,
-
       saleOption: selectedValues2[0]?.saleName || "",
       selectedContainers: selectedValues,
-
       noOfPallets: form.noOfPallets,
       containerNames: selectedValues.map((c) => c.title),
-
       expectedRevenue: expectedRevenue(),
       status: "Pending",
       createdAt: new Date().toISOString(),
     };
+  
+    setUsers((prev) => [newSale, ...prev]);
+    setPopupMessage("✅ Pre-sale successfully created");
+    setPopupType("success");
+  };
+  
+  const closePopup = () => {
+    setPopupMessage(null);
+  
+    // ✅ Only go to table IF success
+    if (popupType === "success") {
+      setView("table");
+    }
+  
+    setPopupType(null);
+  };
+  
+  const selectedSale = selectedValues2[0]?.saleName;
 
-   setUsers(prev => [newSale, ...prev]);
-setSuccessMessage("Pre-sale successfully created");
+  const deriveAmountUsd = (container) => {
+    return (
+      Number(container.amountUsd) ||
+      Number(container.unitPrice) * Number(container.unitpieces) ||
+      0
+    );
   };
 
- const closePopup = () => {
-  setSuccessMessage(null);
-  setView("table"); 
-  if (openSubmenu) openSubmenu("users");
+const getSafeFxRate = (container) => {
+
+  return (
+    Number(container.avgRate) ||
+    Number(localStorage.getItem(`trip-${container.tripId}-avg_container_rate`)) ||
+    1
+  );
 };
 
-  const selectedSale = selectedValues2[0]?.saleName;
+// Helper: calculate USD amount safely
+const getUsdAmount = (container) => {
+  // Prefer amountUsd, else calculate from unitPrice * unitpieces
+  const amountUsd = Number(container.amountUsd ?? 0);
+  if (amountUsd > 0) return amountUsd;
+
+  const unitPrice = Number(container.unitPrice ?? 0);
+  const unitPieces = Number(container.unitpieces ?? 0);
+  return unitPrice * unitPieces;
+};
 
   // -----------------------------
   // SUCCESS POPUP
   // -----------------------------
-  if (successMessage) {
+  if (popupMessage) {
     return (
       <div className="trip-card-popup">
         <div className="trip-card-popup-container">
           <div className="popup-content">
-            <div onClick={closePopup} className="delete-box">✕</div>
+            <div onClick={closePopup} className="delete-box" style={{color:"red"}}>✕</div>
             <div className="popup-proceeed-wrapper">
-              <span>{successMessage}</span>
+              <span
+                style={{
+                  color: popupType === "error" ? "red" : "green",
+                  fontWeight: 600,
+                }}
+              >
+                {popupMessage}
+              </span>
             </div>
           </div>
         </div>
       </div>
     );
   }
+  
 
   // -----------------------------
   // JSX
@@ -258,26 +354,38 @@ setSuccessMessage("Pre-sale successfully created");
 
                 </div>
               </div>
-
             </div>
 
             {/* Container Details */}
-            <div className="grid-3">
-              {selectedValues.map((container) => (
-                <div key={container.id} className="container-details">
-                  <h4>{container.title}</h4>
-                  <ul>
-                    <li>Container ID: {container.sn}</li>
-                    <li>Description: {container.description}</li>
-                    <li>Tracking Number:TN {container.trackingNumber}</li>
-                    <li>Unit Pieces: {container.unitpieces}</li>
-                    <li>Unit Price: {container.unitPrice}</li>
-                    <li>AmountUsd: {container.amountUsd}</li>
-                    <li>Quoted AmountUsd: {container.quotedAmountUsd}</li>
-                    <li>Created Date: {formatDate(container.createdAt)}</li>
-                  </ul>
-                </div>
-              ))}
+            <div className="">
+            {selectedValues.map((container) => {
+  // FX rate safely
+  const fxRate = getSafeFxRate(container);
+
+  // Amount calculations
+  const amountNGN = getUsdAmount(container) * fxRate;
+  const quotedAmountNGN = Number(container.quotedAmountUsd ?? 0) * fxRate;
+
+  return (
+    <div className="sale-grid-3" key={container.id}>
+      <div className="container-details">
+        <h4>{container.title}</h4>
+        <ul>
+          <li>Container ID: {container.id}</li> 
+          <li>Description: {container.description}</li>
+          <li>Tracking Number: TN {container.trackingNumber}</li>
+          <li>Unit Pieces: {container.unitpieces}</li>
+          <li>Unit Price: {container.unitPrice}</li>
+          <li>Amount (NGN): ₦{amountNGN.toLocaleString("en-NG")}</li>
+          <li>Quoted Amount (NGN): ₦{quotedAmountNGN.toLocaleString("en-NG")}</li>
+          <li>Created Date: {formatDate(container.createdAt)}</li>
+        </ul>
+      </div>
+    </div>
+  );
+})}
+
+
             </div>
 
             {/* Pre-sale details section */}
@@ -306,13 +414,12 @@ setSuccessMessage("Pre-sale successfully created");
                     />
                   </div>
                 </div>
-
                 <div className="grid-split-3">
                   <div className="form-group">
                     <label>Price Per Pic (NGN)</label>
                     <input
                       name="pricePerPic"
-                      value={form.pricePerPic}
+                      value={formatMoneyNGN(form.pricePerPic)}
                       onChange={handleChange}
                       placeholder="Enter Price Per Pic"
                     />
@@ -322,7 +429,7 @@ setSuccessMessage("Pre-sale successfully created");
                     <label>WC Pieces</label>
                     <input
                       name="wcPieces"
-                      value={form.wcPieces}
+                      value={formatNumber(form.wcPieces)}
                       onChange={handleChange}
                       placeholder="Enter WC Pieces"
                     />
@@ -331,18 +438,30 @@ setSuccessMessage("Pre-sale successfully created");
                     <label>Price Per Kg (NGN)</label>
                     <input
                       name="pricePerKg"
-                      value={form.pricePerKg}
+                      value={formatMoneyNGN(form.pricePerKg)}
                       onChange={handleChange}
                       placeholder="Enter Price Per KG"
                     />
                   </div>
                 </div>
-
                 <div className="pallet-section">
                   <div className="header">
                     <label>Pallet Distribution</label>
                     <button type="button" onClick={addPallet}>Add Pallet</button>
                   </div>
+                  {palletCountExceeded && (
+  <p className="error-text" style={{color:"red"}}>
+    ❌ Total pallets entered ({totalPalletCount}) must not  exceeds
+    Total Number of Pallets ({maxPalletsAllowed})
+  </p>
+)}
+
+{palletPiecesExceeded && (
+  <p className="error-text" style={{color:"red"}}>
+    ❌ Total pallet pieces ({totalPalletPieces}) must not exceeds
+    WC Pieces ({maxPiecesAllowed})
+  </p>
+)}
 
                   {form.pallets.map((pallet, index) => (
                     <div key={index}>
@@ -381,7 +500,7 @@ setSuccessMessage("Pre-sale successfully created");
 
                 <div className="form-group">
                     <label>Expected Sale Revenue (NGN)</label>
-                    <input value={expectedRevenue()} readOnly placeholder="Auto-calculated" />
+                    <input value={formatMoneyNGN(expectedRevenue())} readOnly placeholder="Auto-calculated" />
                   </div>
               </div>
             )}
@@ -407,8 +526,7 @@ setSuccessMessage("Pre-sale successfully created");
                       onChange={handleChange}
                       placeholder="Enter Price Per KG"
                     />
-                  </div>
-                 
+                  </div>        
                 </div>
                 <div className="grid-split-3">
                  
@@ -442,9 +560,11 @@ setSuccessMessage("Pre-sale successfully created");
              <button className="cancel" onClick={() => setView("table")}>
               Cancel
               </button>
-              <button className="create" onClick={handleCreate}>
-                Create Pre-sale
-              </button>
+              <button className="create" onClick={handleCreate}
+              //  disabled={palletCountExceeded || palletPiecesExceeded}
+              >
+                Create Pre-sale </button>
+
             </div>
 
           </div>

@@ -3,25 +3,26 @@ import { ChevronDown, Filter, Search } from "lucide-react";
 import "../../../../assets/Styles/dashboard/Expensify/controller.scss";
 import CreatePayroll from "./CreatePayroll";
 import PayrollTable from "./PayrollTable";
+import PayrollDrillDown from "./PayrollDrillDown";
 
-const STORAGE_KEY = "data_storage"; 
+const PAYROLL_KEY = "payroll_data"; 
 const SALE_KEY = "sales_data";
 
 const PayrollController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
   const [payrolldrop,setPayrolldrop] = useState(false)
+  const [selectedPayroll, setSelectedPayroll] = useState(null);
   // Initialize data from localStorage
   const [data, setData] = useState(() => {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    return JSON.parse(localStorage.getItem(PAYROLL_KEY)) || [];
   });
   // Set view based on existing data
   const [view, setView] = useState(() => {
-    const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    const savedData = JSON.parse(localStorage.getItem(PAYROLL_KEY)) || [];
     return savedData.length ? "table" : "empty";
   });
 
   const [sales, setsales] = useState([]);
 
-  // Load presales and add serial number (S/N)
   useEffect(() => {
     const savedsales = JSON.parse(localStorage.getItem(SALE_KEY)) || [];
     const salesWithSN = savedsales.map((p, index) => ({ ...p, sn: index + 1 }));
@@ -49,7 +50,7 @@ const PayrollController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
   const handleAddData = (newData) => {
     const updatedData = [...data, newData];
     setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData)); // save immediately
+    localStorage.setItem(PAYROLL_KEY, JSON.stringify(updatedData)); // save immediately
     setView("table");
   };
 
@@ -57,7 +58,7 @@ const PayrollController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
   const handleDeleteData = (id) => {
     const updatedData = data.filter(d => d.id !== id);
     setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+    localStorage.setItem(PAYROLL_KEY, JSON.stringify(updatedData));
 
     // Update view if no data left
     if (updatedData.length === 0) {
@@ -70,7 +71,11 @@ const PayrollController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
     );
   
     setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+    localStorage.setItem(PAYROLL_KEY, JSON.stringify(updatedData));
+  };
+  const handleRowClick = (payroll) => {
+    setSelectedPayroll(payroll);
+    setView("drilldown");
   };
   
   return (
@@ -116,11 +121,11 @@ const PayrollController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
                 </div>
               </div>
             )}
-
-            {data.length > 0 && view === "table" && (
+            {data.length > 0 && view === "table"  && (
               <PayrollTable data={data} 
               onDelete={handleDeleteData}
-              onUpdate={handleUpdateRecovery} />
+              onUpdate={handleUpdateRecovery}
+                handleRowClick={handleRowClick} />
             )}
 
             {view === "create" && (
@@ -133,6 +138,20 @@ const PayrollController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
                 onCreate={handleAddData}
               />
             )}
+            {view === "drilldown" && selectedPayroll && (
+              <PayrollDrillDown
+                payroll={selectedPayroll}
+                goBack={() => {
+                  setSelectedPayroll(null);
+                  setView("table");
+                }}
+                handleUpdateRecovery={(updated) => {
+                  handleUpdateRecovery(updated);
+                  setSelectedPayroll(updated);
+                }}
+              />
+            )}
+            
           </div>
         </div>
       </div>

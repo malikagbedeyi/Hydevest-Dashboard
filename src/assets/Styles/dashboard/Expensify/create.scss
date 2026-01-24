@@ -314,8 +314,6 @@
   /* ================================
      ATTACHMENTS
   ================================ */
-  .attachments {
-    margin-top: 20px;
   
     .attach-link {
       margin-left: auto;
@@ -338,6 +336,7 @@
     .recent-files {
       margin-top: 10px;
       padding: 10px;
+      
     }
   
     .file-row {
@@ -359,7 +358,6 @@
         }
       }
     }
-  }
   
   /* ================================
      BUTTONS

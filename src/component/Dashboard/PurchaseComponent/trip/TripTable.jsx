@@ -43,7 +43,7 @@ import "../../../../assets/Styles/dashboard/Purchase/table.scss";
               ) : (
                 data.map((trip, idx) => (
                   <tr key={trip.id} onClick={() =>onRowClick({...trip,sn: idx + 1,})}>
-                    <td>{idx + 1}</td>
+                    <td>{String(idx + 1).padStart(2, "0")}</td>
                     <td>{trip.title}</td>
                     <td>{trip.location}</td>
                     <td>{trip.startDate}</td>

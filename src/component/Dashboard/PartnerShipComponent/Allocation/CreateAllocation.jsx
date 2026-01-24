@@ -1,291 +1,545 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import "../../../../assets/Styles/dashboard/create.scss";
-import { ChevronDown, Paperclip, Trash2 } from "lucide-react";
+import { ChevronDown, Trash2 } from "lucide-react";
 
-const typeOptions = ["Asset", "Liability", "Equity", "Income", "Expense"];
+const CreateAllocation = ({drilldownMode = false,containersData,data,setData,setView,onCreate,}) => {
+  
+  const partners = JSON.parse(localStorage.getItem("partner_data")) || [];
+  const Entity = JSON.parse(localStorage.getItem("entity_data")) || [];
 
-const CreateAllocation = ({  containersData,data,setData,setView,onCreate,}) => {
+  // core state
+  const [selectedContainer, setSelectedContainer] = useState(null);
+  const [selectedEstimated, setSelectedEstimated] = useState(0);
+  const [allocations, setAllocations] = useState([]);
 
-    const partners = JSON.parse(localStorage.getItem("partner_data")) || [];
+  // ui state
+  const [openContainerSelect, setOpenContainerSelect] = useState(false);
+  const [openAllocationPopup, setOpenAllocationPopup] = useState(false);
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
+  const [infoMessage, setInfoMessage] = useState("");
+  const [search, setSearch] = useState("");
 
-    const [selectedContainer, setSelectedContainer] = useState(null);
-    const [selectedEstimated, setSelectedEstimated] = useState(0);
-    
-    const [openContainerSelect, setOpenContainerSelect] = useState(false);
-    const [openPartnerSelect, setOpenPartnerSelect] = useState(false);
-    
-    const [search, setSearch] = useState("");
-    const [selectedPartner, setSelectedPartner] = useState(null);
-    const [allocations, setAllocations] = useState([]);
+  // editing state
+  const [draftAllocations, setDraftAllocations] = useState([]);
+  const [editMode, setEditMode] = useState(false);
+  const [editingDraftId, setEditingDraftId] = useState(null);
 
-  const [openSelect, SetOpenSelect] = useState(false);
- const eligibleContainers = (containersData ?? [])
- .filter((c) => {
-    return (
-      c.funding === "partner" &&
-      Array.isArray(c.partners) &&
-      c.partners.length > 0
+  const eligibleContainers = (containersData ?? [])
+    .filter(
+      c =>
+        c.funding === "partner" &&
+        Array.isArray(c.partners) &&
+        c.partners.length > 0
+    )
+    .filter(c =>
+      String(c.trackingNumber ?? "")
+        .toLowerCase()
+        .includes(search.toLowerCase())
     );
-  })
-  .filter((item) => {
-    const tracking = item.trackingNumber ?? "";
-    return tracking.toLowerCase().includes(search.toLowerCase());
-  });
-
+    useEffect(() => {
+      if (!drilldownMode || !data?.length) return;
+  
+      const record = data[0];
+  
+      const container = containersData.find(
+        c => `TN${c.trackingNumber}` === record.containerTrackingNumber
+      );
+  
+      if (container) {
+        setSelectedContainer(container);
+        setSelectedEstimated(record.estimatedAmount);
+      }
+  
+      setAllocations(
+        record.allocations.map(a => ({
+          id: crypto.randomUUID(),
+          assignee: {
+            id: a.assigneeId,
+            name: a.assigneeName,
+            type: a.assigneeType,
+          },
+          amount: a.amount,
+          percentage: a.percentage,
+        }))
+      );
+    }, [drilldownMode, data, containersData]);
+  
   const handleSelectContainer = (item) => {
-    setSelectedContainer(item);
-  
-    setSelectedEstimated(
-      item.extimated !== undefined && item.extimated !== null
-        ? item.extimated
-        : 0
+    const previousAllocations = data.filter(
+      d => d.containerTrackingNumber === `TN${item.trackingNumber}`
     );
   
+    const totalInvested = previousAllocations.reduce(
+      (sum, r) =>
+        sum +
+        r.allocations.reduce((s, a) => s + Number(a.amount || 0), 0),
+      0
+    );
+  
+    const remaining = Math.max(
+      (item.estimatedAmount || item.extimated || 0) - totalInvested,
+      0
+    );
+    
+  
+    setSelectedContainer(item);
+    setSelectedEstimated(remaining);
+    setAllocations([]);
     setOpenContainerSelect(false);
   };
-  const totalAllocatedAmount = allocations.reduce(
-    (sum, a) => sum + (Number(a.amount) || 0),
-    0
-  );
-  
-  const totalPercentage = allocations.reduce(
-    (sum, a) => sum + (Number(a.percentage) || 0),
-    0
-  );
-  
+  const totals = useMemo(() => {
+    const amount = allocations.reduce(
+      (s, a) => s + Number(a.amount || 0),
+      0
+    );
+    const percentage = allocations.reduce(
+      (s, a) => s + Number(a.percentage || 0),
+      0
+    );
+    return { amount, percentage };
+  }, [allocations]);
+
   const remainingAmount = Math.max(
-    selectedEstimated - totalAllocatedAmount,
+    selectedEstimated - totals.amount,
     0
   );
-  
-  const remainingPercentage = Math.max(100 - totalPercentage, 0);
+  const remainingPercentage = Math.max(
+    100 - totals.percentage,
+    0
+  );
   const handleSubmit = () => {
-    if (!selectedContainer || allocations.length === 0) return;
+    if (!selectedContainer) return;
+
+    if (totals.amount > selectedEstimated) {
+      setInfoMessage("Total allocation exceeds estimated amount.");
+      setShowInfoPopup(true);
+      return;
+    }
+
+    if (totals.percentage > 100) {
+      setInfoMessage("Total allocation percentage cannot exceed 100%.");
+      setShowInfoPopup(true);
+      return;
+    }
+
+    const payload = buildAllocationPayload();
+
+    drilldownMode ? setData([payload]) : onCreate(payload);
+  };
+  const buildAllocationPayload = () => {
+    const total = allocations.reduce(
+      (s, a) => s + Number(a.amount || 0),
+      0
+    );
   
-    const payload = {
-      id: crypto.randomUUID(),
+    return {
+      id: drilldownMode ? data[0].id : crypto.randomUUID(),
+      __version: crypto.randomUUID(), // 👈 ADD THIS      
       containerTrackingNumber: `TN${selectedContainer.trackingNumber}`,
       estimatedAmount: selectedEstimated,
-      remainingAmount,
-      remainingPercentage,
-      allocations: allocations.map((a) => ({
-        partnerId: a.partner?.id,
-        partnerName: a.partner?.fullName,
-        amount: a.amount,
-        percentage: a.percentage
+      remainingAmount: Math.max(selectedEstimated - total, 0),
+      remainingPercentage:
+        selectedEstimated > 0
+          ? Number(
+              (((selectedEstimated - total) / selectedEstimated) * 100).toFixed(2)
+            )
+          : 0,
+      allocations: allocations.map(a => ({
+        assigneeId: a.assignee.id,
+        assigneeName: a.assignee.name,
+        assigneeType: a.assignee.type,
+        amount: Number(a.amount),
+        percentage: Number(a.percentage)
       })),
-      createdAt: new Date().toISOString()
+      createdAt: drilldownMode
+        ? data[0].createdAt
+        : new Date().toISOString()
     };
-  
-    onCreate(payload);     // 👈 send to controller
   };
-  
+
+  const assigneeOptions = [
+    ...partners.map((p) => ({
+      id: p.id,
+      name: p.fullName,
+      type: "partner"
+    })),
+    ...Entity.map((e) => ({
+      id: e.id,
+      name: e.name,
+      type: "entity"
+    }))
+  ];
+    const assigneeOptionsFiltered = assigneeOptions;
+      const handleEditDraftRow = (row) => {
+        setEditMode(true);
+        setEditingDraftId(row.id);
+        setOpenAllocationPopup(true);
+      
+        setDraftAllocations([
+          {
+            ...row,
+            openPartnerDropdown: false,
+            error: ""
+          }
+        ]);
+      };
+
   return (
     <div className="trip-modal">
       <div className="create-container-modal">
         <div className="create-container-card">
         <div className="drill-summary-grid">
-      <div className="drill-summary">
-      <div className="summary-item">
-  <p className="small">Estimated Amount (NGN)</p>
-  <h2>{Number(selectedEstimated).toLocaleString("en-NG")}</h2>
-</div>
-      <div className="summary-item">
-  <p className="small">Remaining Estimated Amount</p>
-  <h2>{Number(remainingAmount).toLocaleString("en-NG")}</h2>
-</div>
-<div className="summary-item">
-  <p className="small">Remaining Percentage</p>
-  <h2>{`${remainingPercentage.toFixed(2)}%`}</h2>
-</div>
-<div className="summary-item">
-  <p className="small">Total Percentage</p>
-  <h2>{`${totalPercentage.toFixed(2)}%`}</h2>
-
-</div>
-
-
-    </div>
+  <div className="drill-summary">
+    <div className="summary-item">
+      <p className="small">Estimated Believing Amount (NGN)</p>
+      <h2>{Number(selectedEstimated).toLocaleString("en-NG")}</h2>
     </div>
 
-        <header>
-            <div className=".header-content">
-          <h2>Create Allocation</h2>
-          <p>Enter Allocation details</p>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10 }}>
-            <button type="button" className="create"
-           disabled={!selectedContainer || remainingPercentage === 0}
-           onClick={() =>
-            setAllocations((prev) => [
-              ...prev,
-              {
-                id: crypto.randomUUID(),
-                partner: null,
-                amount: "",
-                percentage: "",
-                error: "",
-                openPartnerDropdown: false
-              }
-            ])
-          }          
+    <div className="summary-item">
+      <p className="small">Outstanding Estimated Amount</p>
+      <h2>{Number(remainingAmount).toLocaleString("en-NG")}</h2>
+    </div>
+
+    <div className="summary-item">
+      <p className="small">Allocated Percentage</p>
+      <h2>{`${totals.percentage.toFixed(2)}%`}</h2>
+    </div>
+
+    <div className="summary-item">
+      <p className="small">Outstanding Percentage</p>
+      <h2>{`${remainingPercentage.toFixed(2)}%`}</h2>
+    </div>
+  </div>
+</div>
+<header className="header">
+  <div className="header-content">
+    <h2>{drilldownMode ? "Allocation Details" : "Create Allocation"}</h2>
+    {!drilldownMode && <p>Enter allocation details</p>}
+  </div>
+
+  <button
+    className="create"
+    onClick={() => {
+      if (!selectedContainer) {
+        setInfoMessage("Please select a container first.");
+        setShowInfoPopup(true);
+        return;
+      }
+
+      if (remainingAmount === 0) {
+        setInfoMessage("Estimated amount has been fully allocated.");
+        setShowInfoPopup(true);
+        return;
+      }
+
+      setDraftAllocations([
+        {
+          id: crypto.randomUUID(),
+          assignee: null,
+          amount: "",
+          percentage: "",
+          error: "",
+          openPartnerDropdown: false,
+        },
+      ]);
+      setOpenAllocationPopup(true);
+    }}
   >
-    + Add Partner Allocation
+    Add Allocation
   </button>
-</div>
+</header>
 
-          </header>
-          <div className="grid-2">
-          <div className="form-group-select">
-  <label>Container</label>
-  <div className="custom-select">
-    <div
-      className="custom-select-drop"
-      onClick={() => setOpenContainerSelect(!openContainerSelect)}
-    >
-      <div className="select-box">
-        {selectedContainer ? (
-          <span>TN{selectedContainer.trackingNumber}</span>
-        ) : (
-          <span className="placeholder">Select Container</span>
-        )}
+<div className="grid-2">
+  <div className="form-group-select">
+    <label>Container</label>
+
+    <div className="custom-select">
+      <div
+        className="custom-select-drop"
+        onClick={() => setOpenContainerSelect(v => !v)}
+      >
+        <div className="select-box">
+          {selectedContainer ? (
+            <span>TN{selectedContainer.trackingNumber}</span>
+          ) : (
+            <span className="placeholder">Select Container</span>
+          )}
+        </div>
+        <ChevronDown className={openContainerSelect ? "up" : "down"} />
       </div>
-      <ChevronDown className={openContainerSelect ? "up" : "down"} />
+
+      {openContainerSelect && (
+        <div className="select-dropdown">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+
+          {eligibleContainers.map(item => (
+            <div
+              key={item.id}
+              className="option-item"
+              onClick={() => handleSelectContainer(item)}
+            >
+              TN{item.trackingNumber}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
+  </div>
 
-    {openContainerSelect && (
-      <div className="select-dropdown">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        {eligibleContainers.map((item) => (
-          <div
-            key={item.id}
-            className="option-item"
-            onClick={() => handleSelectContainer(item)}
-          >
-            TN{item.trackingNumber}
-          </div>
-        ))}
-      </div>
-    )}
+  <div className="form-group">
+    <label>Estimated Believing Amount (NGN)</label>
+    <input
+      type="text"
+      readOnly
+      value={Number(selectedEstimated).toLocaleString("en-NG")}
+    />
   </div>
 </div>
 
-<div className="form-group">
-  <label>Estimated Amount (NGN)</label>
-  <input
-    type="text"
-    value={Number(selectedEstimated).toLocaleString("en-NG")}
-    readOnly
-  />
-</div>
-          </div>
+          {openAllocationPopup && (
+  <div className="popup-overlay">
+    <div className="popup">
+    <div style={{ display: "flex", justifyContent: "flex-end", marginButtom: 10 }}
+    className={editMode ? "d-none" : ""}>
+    <button
+  type="button"
+  className="create"
+  disabled={!selectedContainer || selectedEstimated === 0 || remainingPercentage === 0}
+  onClick={() => {
+    setDraftAllocations(prev => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        assignee: null,
+        amount: "",
+        percentage: "",
+        error: "",
+        openPartnerDropdown: false
+      }
+    ]);
+  }}
+  >+ Add  Allocation
+        {selectedContainer && selectedEstimated === 0 && (
+  <small className="error">
+    Allocation completed for this container
+  </small>
+)}
 
-          {allocations.map((row, index) => (
+</button>
+          </div>
+      <div className="popup-header">
+      <h3>{editMode ? "Edit Allocation" : "Add Allocation"}</h3>
+        <button onClick={() => {
+            setOpenAllocationPopup(false);
+            setEditMode(false);
+            setEditingDraftId(null);
+            setDraftAllocations([]);
+        }} >✕</button>
+      </div>
+            <div className="popup-content">
+            {draftAllocations.map((row, index) => (
   <div className="grid-cover" key={row.id} style={{ marginTop: 15 }}>
     <div className="grid-cover-container">
     <div className="form-group-select">
-  <label>Partner</label>
-
+    <label>Partner / Entity</label>
   <div className="custom-select">
-    <div
-      className="custom-select-drop"
-      onClick={() => {
-        const updated = [...allocations];
+    <div className="custom-select-drop" onClick={() => {
+        const updated = [...draftAllocations];
         updated[index].openPartnerDropdown =
           !updated[index].openPartnerDropdown;
-        setAllocations(updated);
-      }}
-    >
+        setDraftAllocations(updated)      
+      }}>
       <div className="select-box">
-        {row.partner ? (
-          <span>{row.partner.fullName}</span>
-        ) : (
-          <span className="placeholder">Select Partner</span>
-        )}
+      {row.assignee ? (
+      <span>  {row.assignee.name} <small style={{ marginLeft: 6, opacity: 0.6 }}> ({row.assignee.type})</small> </span>
+       ) : ( <span className="placeholder">Select Partner or Entity</span>
+)}
       </div>
-
-      <ChevronDown
-        className={row.openPartnerDropdown ? "up" : "down"}
-      />
+      <ChevronDown className={row.openPartnerDropdown ? "up" : "down"}/>
     </div>
-
     {row.openPartnerDropdown && (
       <div className="select-dropdown">
-        {partners.map((p) => (
-          <div
-            key={p.id}
-            className="option-item"
-            onClick={() => {
-              const updated = [...allocations];
-              updated[index].partner = p;
-              updated[index].openPartnerDropdown = false;
-              setAllocations(updated);
-            }}
-          >
-            {p.fullName}
-          </div>
-        ))}
-      </div>
+       {assigneeOptionsFiltered.map((item) => (
+     <div key={`${item.type}-${item.id}`} className="option-item" onClick={() => {
+            const updated = [...draftAllocations];
+            updated[index].assignee = item;
+            updated[index].openPartnerDropdown = false;
+            setDraftAllocations(updated);
+        }} >
+     <span>{item.name}</span> <small style={{ marginLeft: 8, opacity: 0.6 }}>
+      {item.type === "partner" ? "Partner" : "Entity"}
+    </small>
+  </div>
+  ))}
+   </div>
     )}
   </div>
 </div>
     <div className="form-group">
       <label>Amount</label>
-      <input
-        type="number"
-        value={row.amount}
-        onChange={(e) => {
-          const value = Number(e.target.value);
-          const updated = [...allocations];
+      <input type="number"  value={row.amount}onChange={(e) => {
+  const value = Number(e.target.value);
+  const updated = [...draftAllocations];
 
-          if (value > remainingAmount + (row.amount || 0)) {
-            updated[index].error =
-              "Amount input must not be greater than estimated amount";
-          } else {
-            updated[index].error = "";
-            updated[index].amount = value;
-            updated[index].percentage =
-              selectedEstimated > 0
-                ? ((value / selectedEstimated) * 100).toFixed(2)
-                : 0;
-          }
+  if (value > remainingAmount) {
+    updated[index].error = "Amount exceeds Estimate Amount ";
+  } else {
+    updated[index].error = "";
+    updated[index].amount = value;
+    updated[index].percentage =
+      selectedEstimated > 0
+        ? ((value / selectedEstimated) * 100).toFixed(2)
+        : 0;
+  }
 
-          setAllocations(updated);
-        }}
-        placeholder="Enter amount"
-      />
-
-      {row.error && <small className="error">{row.error}</small>}
+  setDraftAllocations(updated);
+}}
+placeholder="Enter amount" /> 
+        {row.error && <small className="error">{row.error}</small>}
     </div>
     <div className="form-group">
       <label>Percentage</label>
       <input type="text" value={row.percentage} readOnly />
-    </div>
-    <button type="button" className="remove" onClick={() => setAllocations((prev) =>
-          prev.filter((a) => a.id !== row.id)
-        )
-      }
-    >
-      <Trash2 size={16} />
-    </button>
+    </div>  
+    <button type="button" className={editMode ? "d-none" : "remove"} onClick={() => {
+  setDraftAllocations(prev =>
+    prev.filter(a => a.id !== row.id)
+  );
+}}
+> <Trash2 size={16} /></button>
     </div>
   </div>
-))}
+   ))}
+      </div>
+      <div className="popup-footer">
+  <button
+    className="remove"
+    onClick={() => {
+      setOpenAllocationPopup(false);
+      setDraftAllocations([]);
+      setEditMode(false);
+      setEditingDraftId(null);
+    }}
+  >
+    Cancel
+  </button>
 
-          
+  <button
+    className="create"
+    onClick={() => {
+      if (editMode && editingDraftId) {
+        setAllocations(prev =>
+          prev.map(a =>
+            a.id === editingDraftId
+              ? {
+                  ...a,
+                  assignee: draftAllocations[0].assignee,
+                  amount: Number(draftAllocations[0].amount),
+                  percentage: Number(draftAllocations[0].percentage),
+                }
+              : a
+          )
+        );
+      } else {
+        setAllocations(prev => [...prev, ...draftAllocations]);
+      }
+
+      setDraftAllocations([]);
+      setOpenAllocationPopup(false);
+      setEditMode(false);
+      setEditingDraftId(null);
+    }}
+  >
+    {editMode ? "Update Allocation" : "Submit Added Allocation"}
+  </button>
+</div>
+
+    </div>
+  </div>
+)}
+{allocations.length > 0 && (
+ <div className="userTable">
+      <div className="table-wrap">
+        <table className="table">
+      <thead>
+        <tr>
+          <th>S/N</th>
+          <th>Partner / Entity</th>
+          <th>Amount</th>
+          <th>Percentage</th>
+        </tr>
+      </thead>
+      <tbody>
+        {allocations.map((row, i) => (
+            <tr key={row.id} onClick={() => handleEditDraftRow(row)}
+            style={{ cursor: "pointer" }}>
+            <td>{i + 1}</td>
+            <td>{row.assignee.name} ({row.assignee.type})</td>
+            <td>{Number(row.amount).toLocaleString("en-NG")}</td>
+            <td>{row.percentage}%</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+  </div>
+)}
+{showInfoPopup && (
+  <div className="popup-overlay">
+    <div className="popup">
+      <div className="popup-header">
+        <h3>Notice</h3>
+        <button onClick={() => setShowInfoPopup(false)}>✕</button>
+      </div>
+
+      <div className="popup-content">
+        <p style={{ textAlign: "center", fontSize: 16 }}>
+          {infoMessage}
+        </p>
+      </div>
+
+      <div className="popup-footer">
+        <button
+          className="create"
+          onClick={() => setShowInfoPopup(false)}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
           {/* Actions */}
-          <div className="btn-row" style={{marginTop:"10%"}}>
-            <button className="cancel" onClick={() => setView("table")}>
-              Cancel</button>
-              <button className="create" onClick={handleSubmit}>Submit</button>
-          </div>
+          <div className="btn-row" style={{ marginTop: "10%" }}>
+  {!drilldownMode ? (
+    <>
+      <button className="cancel" onClick={() => setView("table")}>
+        Cancel
+      </button>
+      <button className="create" onClick={handleSubmit}>
+        Submit
+      </button>
+    </>
+  ) : (
+    <button
+      className="create"
+      disabled={!selectedContainer || allocations.length === 0}
+      onClick={handleSubmit}
+    >
+      Update Allocation
+    </button>
+  )}
+</div>
+
+
+
         </div>
       </div>
     </div>

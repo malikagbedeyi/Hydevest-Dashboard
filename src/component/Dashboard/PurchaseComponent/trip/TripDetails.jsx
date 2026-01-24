@@ -96,8 +96,9 @@ const handleDeleteFinance = (id) => {
   }, [containerData]);
  
   const handleAddContainer = (container) => {
-    setContainerData((prev) => [...prev, container]);
-  
+    const containerWithTripId = { ...container, tripId: trip.id }; // <-- add tripId
+    setContainerData((prev) => [...prev, containerWithTripId]);
+    
     addLog({
       module: "Container",
       action: "Created",
@@ -107,6 +108,7 @@ const handleDeleteFinance = (id) => {
     setShowItemData(true);
     setShowModal(false);
   };
+  
   const handleDeleteContainer = (id) => {
     const item = containerData.find((i) => i.id === id);
   
@@ -121,12 +123,25 @@ const handleDeleteFinance = (id) => {
     }
   };
   const handleUpdateContainer = (updatedContainer) => {
+    const containerWithRate = {
+      ...updatedContainer,
+    };
+  
     setContainerData((prev) =>
       prev.map((item) =>
-        item.id === updatedContainer.id ? updatedContainer : item
+        item.id === updatedContainer.id ? containerWithRate : item
       )
     );
+  
+    // Save to localStorage
+    localStorage.setItem(
+      `trip-${trip.id}-container`,
+      JSON.stringify(containerData.map(c =>
+        c.id === updatedContainer.id ? containerWithRate : c
+      ))
+    );
   };
+  
   const totalAmountUSD = containerData.reduce((sum, item) => {
     const value = Number(item.amountUsd) || 0;
     return sum + value;
@@ -137,7 +152,7 @@ const handleDeleteFinance = (id) => {
   }, 0);
   const formatNumber = (num) =>
   num.toLocaleString("en-US", {
-    minimumFractionDigits: 0,
+    // minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
     
@@ -236,36 +251,72 @@ const prevLogPage = () =>
         .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
         .replace(/ /g, "-")
     : "-";
-/* ================== EXPENSE CATEGORIES ================== */
+/* ================== CALCULATIONS ================== */
+
+// Trip Expense categories
 const containerExpenses = financeData.filter(
   (item) => item.check === "Container Payment"
 );
 
 const generalExpenses = financeData.filter(
-  (item) => item.check === "General"
+  (item) => item.check !== "Container Payment"
 );
+
+// Average FX rate for container payments
 
 const avgContainerRate =
   containerExpenses.length > 0
     ? containerExpenses.reduce((sum, item) => sum + Number(item.rate || 0), 0) /
       containerExpenses.length
     : 0;
+    useEffect(() => { 
+      localStorage.setItem(`trip-${trip.id}-avg_container_rate`,avgContainerRate);      
+    }, [avgContainerRate]);
+    
 
-    const totalContainerExpenseAmount = containerExpenses.reduce(
-      (sum, item) => sum + Number(item.amount || 0),
-      0
-    );
-    const totalGeneralExpenseNGN = generalExpenses.reduce(
-      (sum, item) => sum + Number(item.amountNGN || 0),
-      0
-    );
-    const totalContainers = containerData.length;
+// Total container USD
+const totalContainerUSD = containerData.reduce(
+  (sum, item) => sum + Number(item.amountUsd || 0),
+  0
+);
 
-    const totalAmountNGN =
-  totalContainers > 0
-    ? totalContainerExpenseAmount * avgContainerRate +
-      totalGeneralExpenseNGN / totalContainers
-    : totalContainerExpenseAmount * avgContainerRate;
+// Total general expense NGN
+const totalGeneralExpenseNGN = generalExpenses.reduce(
+  (sum, item) => sum + Number(item.amountNGN || 0),
+  0
+);
+
+const totalContainers = containerData.length;
+
+// Calculate totals based on active tab
+let totalAmountNGN = 0;
+let displayTotalUSD = 0;
+
+if (activeTab === "finance") {
+  const containerPayments = financeData.filter(
+    (item) => item.check === "Container Payment"
+  );
+
+  totalAmountNGN = containerPayments.reduce(
+    (sum, item) => sum + Number(item.amountNGN || 0),
+    0
+  );
+
+  displayTotalUSD = containerPayments.reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0
+  );
+}
+else if (activeTab === "container") {
+  // NGN = avg container rate * total container USD
+  totalAmountNGN = avgContainerRate * totalContainerUSD;
+
+  // USD = total general expenses / total containers
+  displayTotalUSD =
+    totalContainers > 0
+      ? totalGeneralExpenseNGN / totalContainers
+      : 0;
+}
 
   /* ================== UTILITY FUNCTIONS ================== */
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
@@ -334,20 +385,18 @@ const avgContainerRate =
     <div className="drill-summary-grid">
       <div className="drill-summary">
       <div className="summary-item">
-  <p className="small">Total Amount (USD)</p>
-  <h2>{formatNumber(totalAmountUSD)}</h2>
+  <p className="small">Total Amount (NGN)</p>
+  <h2>{"₦" + totalAmountNGN.toLocaleString("en-NG", { minimumFractionDigits: 0 })}</h2>
+
 </div>
 
 <div className="summary-item">
-  <p className="small">Total Amount (NGN)</p>
-  <h2>
-    {new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      maximumFractionDigits: 2,
-    }).format(totalAmountNGN)}
-  </h2>
+  <p className="small">
+    {activeTab === "container" ? "Average Expense (USD)" : "Total Amount (USD)"}
+  </p>
+  <h2>{formatNumber(displayTotalUSD)}</h2>
 </div>
+
 
 <div className="summary-item">
   <p className="small">Total Container</p>
@@ -388,7 +437,7 @@ const avgContainerRate =
             </div>
             <div className="title-header">
               <h4>Trip ID :</h4>
-              <p>{trip?.sn}</p>
+              <p>{trip?.id}</p>
             </div>
           </div>
 
@@ -536,7 +585,8 @@ const avgContainerRate =
         {activeTab === "container" && showItemData && (
         <div className="finance-section">
           <TripContainerData  containerData={containerData} 
-          handleContainerRowClick={handleContainerRowClick} handleDeleteContainer={handleDeleteContainer} />
+          handleContainerRowClick={handleContainerRowClick} 
+          avgContainerRate={avgContainerRate} handleDeleteContainer={handleDeleteContainer} />
         </div>
         )}
 {activeTab === "tripFile" && showItemData && (
@@ -666,6 +716,7 @@ const avgContainerRate =
       onCreate={handleAddContainer}   // ✅ CORRECT
       setShowItemData={setShowItemData}
       setShowModal={setShowModal}
+
     />
   </div>
 )}

@@ -54,9 +54,9 @@ const Sidebar = ({ collapsed, onToggle, currentPage, openSidebarMenu, onPageChan
       submenu: [
         { id: "allocation", label: "Allocation" },
         { id: "profit", label: "Profit" },
+        { id: "partnerlot", label: "Partner lot" },
       ],
     },
-
     {
       id: "hynvest",
       icons: TrendingUp,
@@ -87,15 +87,16 @@ const Sidebar = ({ collapsed, onToggle, currentPage, openSidebarMenu, onPageChan
       label: "Admin",
       submenu: [
         { id: "role-setup", label: "Role Setup" },
-        { id: "acc-entity", label: "entity" },
-        { id: "acc-bank-account", label: "Bank Account" },
+        { id: "bonus", label: "Bonus" },
+        { id: "entity", label: "entity" },
+        { id: "bank-account", label: "Bank Account" },
       ],
     },
-    {
-      id: "settings",
-      icons: Settings,
-      label: "Settings",
-    },
+    // {
+    //   id: "settings",
+    //   icons: Settings,
+    //   label: "Settings",
+    // },
   ];
 
   const [submenu, setSubmenu] = useState(null);

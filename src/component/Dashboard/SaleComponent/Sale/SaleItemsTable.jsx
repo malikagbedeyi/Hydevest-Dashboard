@@ -12,9 +12,12 @@ const SaleItemsTable = ({ items = [], onDelete, onEdit }) => {
   };
   
   return (
+    <>
     <div className="userTable mt-3">
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" style={{
+          maxWidth:"100%"
+        }}>
           <thead>
             <tr>
               <th>S/N</th>
@@ -58,6 +61,8 @@ const SaleItemsTable = ({ items = [], onDelete, onEdit }) => {
         </table>
       </div>
     </div>
+    
+    </> 
   );
 };
 

@@ -52,7 +52,7 @@
         scrollbar-width: none;
       }
       .table {
-        min-width: 120%;
+        width: 120%;
         border-collapse: collapse;
         font-size: 14px;
         thead th {
@@ -71,6 +71,10 @@
           color: #333;
           margin: 20px 0!important;
           cursor:pointer;
+          button{
+            border: none;
+            color: red;
+          }
         }
 
         tbody tr {
@@ -83,7 +87,6 @@
         tbody tr:hover {
           background: #fbfbff;
         }
-
         /* TEXT SHORTENER */
         .td-desc {
           max-width: 100px;
@@ -125,6 +128,82 @@
           visibility: visible;
           transform: translateX(0);
         }
+}
+.pagination{
+  padding:10px 20px;
+  width: 100%;
+  position: sticky;
+  left: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  button{
+    background: #fff;
+    color: #581aae;
+    border: 1px solid #581aae;
+    padding:5px 10px;
+    border-radius: 5px;
+    align-items: center;
+    margin: 0;
+    &:disabled{
+      background: #fff;
+      color: gray;
+      border: 1px solid gray;
+    }
+  }
+  p{
+    margin: 0;
+
+  }
+}
+.popup-overlay{
+  background: rgb(0, 0, 0,0.5);
+  height: 100vh;
+  width: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  margin: 0 auto;
+  padding: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 999;
+   display: flex;
+      justify-content: center;
+      align-items: center;
+  .popup{
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      width: 50%;
+      margin: auto;
+      .popup-header{
+          display: flex;
+          justify-content:center;
+          align-items: center;
+    
+          h3{
+            max-width: 500px;
+            text-align: center;
+              color: #581aae;
+          }
+          button{
+              background: inherit;
+              color: red;
+              border: none;
+          }
+      }
+     
+      .popup-footer{
+          margin-top: 30px;
+          margin-left: auto;
+          align-items: flex-end;
+          display: flex;
+          justify-content: flex-end;
+          gap: 20px;
+      }
+  }
 }
 
 }

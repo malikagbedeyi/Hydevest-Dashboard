@@ -3,7 +3,7 @@ import '../../../../assets/Styles/dashboard/Sale/presaleTable.scss';
 import { Trash2 } from "lucide-react";
 import DrilldownSale from "./DrildownSale";
 
-const SaleTable = ({ sales, onDelete, onUpdate }) => {
+const SaleTable = ({ sales, onDelete, onUpdate ,handleRowClick}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [tableData, setTableData] = useState([]);
@@ -42,9 +42,9 @@ const SaleTable = ({ sales, onDelete, onUpdate }) => {
     setSaleToDelete(null);
   };
 
-  const handleRowClick = (sale) => {
-    setSelectedSale(sale);
-  };
+  // const handleRowClick = (sale) => {
+  //   setSelectedSale(sale);
+  // };
 
   const handleUpdate = (updatedSale) => {
     if (onUpdate) onUpdate(updatedSale);
@@ -65,9 +65,10 @@ const SaleTable = ({ sales, onDelete, onUpdate }) => {
     }).replace(/ /g, "-");
   };
   
-  if (selectedSale) {
-    return <DrilldownSale data={selectedSale} goBack={() => setSelectedSale(null)} onUpdate={handleUpdate} />;
-  }
+  // if (selectedSale) {
+  //   return <DrilldownSale data={selectedSale}
+  // goBack={() => setSelectedSale(null)} onUpdate={handleUpdate} />;
+  // }
 
   return (
     <>
@@ -80,12 +81,13 @@ const SaleTable = ({ sales, onDelete, onUpdate }) => {
                 <th>S/N</th>
                 {/* <th>Sale Option</th> */}
                 <th>Container</th>
+                <th>Container Tracking Number</th>
                 <th>No. of Pallets</th>
                 <th>Purchase Price Per Price </th>
                 <th>Customer Name</th>
                 <th>Customer Phone</th> 
                 <th>Total Sale Amount</th>
-                <th>Amount Paid</th>
+                <th>Total Amount Paid</th>
                  <th>Balance</th>
                 <th>Date Created</th>
                 <th>Action</th>
@@ -100,8 +102,8 @@ const SaleTable = ({ sales, onDelete, onUpdate }) => {
                 currentData.map((sale, idx) => (
                   <tr key={sale.id} onClick={() => handleRowClick(sale)}>
                     <td>{startIndex + idx + 1}</td>
-                    {/* <td>{sale.saleOption}</td> */}
                     <td>{sale.containers?.map(c => c.name).join(", ")}</td>
+                    <td>{sale.containers?.map(c =>`TN${ c.trackingNumber || "N/A"}`).join(", ")}</td>
                     <td>{sale.noOfPallets}</td>
                     <td>{sale.purchasePricePerPiece}</td>
                     <td>{sale.customer?.name}</td>
@@ -112,7 +114,7 @@ const SaleTable = ({ sales, onDelete, onUpdate }) => {
                      : formatCurrency(sale.balance)
                     }</td>
                     <td>{formatDate(sale.createdAt)}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
+                    <td onClick={(e) => e.stopPropagation()}>   
                       <button 
                         className="delete-btn"
                         onClick={(e) => openDeletePopup(e, sale)}

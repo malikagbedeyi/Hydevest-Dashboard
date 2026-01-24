@@ -4,40 +4,28 @@ import "../../../../assets/Styles/dashboard/Sale/presaleController.scss";
 import CreateRecovery from "./CreateRecovery";
 import RecoveryTable from "./RecoveryTable";
 
-const STORAGE_KEY = "data_storage"; // renamed to reflect data
-const SALE_KEY = "sales_data";
+const STORAGE_KEY = "data_storage"; // recoveries
+const SALE_KEY = "sales_data"; // sales
 
 const RecoveryController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
-  // Initialize data from localStorage
-  const [data, setData] = useState(() => {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  });
+  const [data, setData] = useState(() => JSON.parse(localStorage.getItem(STORAGE_KEY)) || []);
+  const [sales, setSales] = useState([]);
 
-  // Set view based on existing data
-  const [view, setView] = useState(() => {
-    const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    return savedData.length ? "table" : "empty";
-  });
+  const [view, setView] = useState(data.length ? "table" : "empty");
 
-  const [sales, setsales] = useState([]);
-
-  // Load presales and add serial number (S/N)
+  // Load sales for dropdowns
   useEffect(() => {
-    const savedsales = JSON.parse(localStorage.getItem(SALE_KEY)) || [];
-    const salesWithSN = savedsales.map((p, index) => ({ ...p, sn: index + 1 }));
-    setsales(salesWithSN);
+    const savedSales = JSON.parse(localStorage.getItem(SALE_KEY)) || [];
+    setSales(savedSales.map((p, index) => ({ ...p, sn: index + 1 })));
   }, []);
 
-  // Keep view in sync with data
+  // Sync view with data
   useEffect(() => {
-    if (data.length === 0) {
-      setView("empty");
-    } else if (view === "empty") {
-      setView("table");
-    }
+    if (data.length === 0) setView("empty");
+    else if (view === "empty") setView("table");
   }, [data]);
 
-  // Auto-open create modal if requested
+  // Auto-open create modal
   useEffect(() => {
     if (autoOpenCreate) {
       setView("create");
@@ -45,34 +33,53 @@ const RecoveryController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) 
     }
   }, [autoOpenCreate, setAutoOpenCreate]);
 
-  // Add a new data entry
-  const handleAddData = (newData) => {
-    const updatedData = [...data, newData];
-    setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData)); // save immediately
-    setView("table");
-  };
-
-  // Delete a data entry
-  const handleDeleteData = (id) => {
-    const updatedData = data.filter(d => d.id !== id);
+  const handleAddData = (newRecovery) => {
+    const updatedData = [...data, newRecovery];
     setData(updatedData);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
 
-    // Update view if no data left
-    if (updatedData.length === 0) {
-      setView("empty");
-    }
+    // Update sale balance
+    const updatedSales = sales.map((sale) => {
+      if (sale.id === newRecovery.saleId) {
+        const updatedPaid = Number(sale.amountPaid || 0) + Number(newRecovery.amountPaid);
+        return {
+          ...sale,
+          amountPaid: updatedPaid,
+          balance: Math.max(Number(sale.totalSaleAmount || 0) - updatedPaid, 0),
+        };
+      }
+      return sale;
+    });
+
+    setSales(updatedSales);
+    localStorage.setItem(SALE_KEY, JSON.stringify(updatedSales));
+    setView("table");
   };
+
+  const handleDeleteData = (id) => {
+    const updatedData = data.filter((d) => d.id !== id);
+    setData(updatedData);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+    if (updatedData.length === 0) setView("empty");
+  };
+
   const handleUpdateRecovery = (updatedRecovery) => {
     const updatedData = data.map((rec) =>
       rec.id === updatedRecovery.id ? updatedRecovery : rec
     );
-  
     setData(updatedData);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
   };
+  const enrichedRecoveries = data.map((rec) => {
+    const sale = sales.find((s) => s.id === rec.saleId);
   
+    return {
+      ...rec,
+      saleSN: sale?.sn || sale?.id || "—",
+    };
+  });
+  
+
   return (
     <div className="emptysale">
       <div className="emptysale-container">
@@ -115,16 +122,18 @@ const RecoveryController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) 
             {data.length === 0 && view === "empty" && (
               <div className="main-content-image">
                 <div className="main-content-image-text">
-                  <p>No Data Created Yet</p>
-                  <span>A data entry created would be saved here automatically</span>
+                  <p>No Recoveries Yet</p>
+                  <span>A recovery record will appear here automatically after a sale payment.</span>
                 </div>
               </div>
             )}
 
             {data.length > 0 && view === "table" && (
-              <RecoveryTable data={data} 
+              <RecoveryTable
+              data={enrichedRecoveries}
               onDelete={handleDeleteData}
-              onUpdate={handleUpdateRecovery} />
+              onUpdate={handleUpdateRecovery}
+            />            
             )}
 
             {view === "create" && (

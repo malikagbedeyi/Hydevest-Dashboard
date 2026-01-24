@@ -105,12 +105,10 @@ const containerExpenses = financeData.filter(
   
   const totalContainers = containers.length;
   
-  const totalAmountNGN =
-    totalContainers > 0
-      ? totalContainerExpenseAmount * avgContainerRate +
-        totalGeneralExpenseNGN / totalContainers
-      : totalContainerExpenseAmount * avgContainerRate;
-  
+  const totalAmountNGN = containers.reduce(
+    (sum, item) => sum + Number(item.amountNGN || 0),
+    0
+  )
   const totalAmountUSD = containers.reduce(
     (sum, item) => sum + Number(item.amountUsd || 0),
     0

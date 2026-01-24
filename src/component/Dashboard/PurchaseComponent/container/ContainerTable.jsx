@@ -29,11 +29,12 @@ const ContainerTable = ({ containers, onDelete, onRowClick ,avgContainerRate = 0
 <div className="summary-item">
   <p className="small">Total Amount (NGN)</p>
   <h2>
-    {new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      maximumFractionDigits: 2,
-    }).format(totalAmountNGN)}
+  ₦{safeFormatNumber(
+      containers.reduce(
+        (sum, c) => sum + (Number(c.amountUsd) || 0) * (Number(avgContainerRate) || 0),
+        0
+      )
+    )}
   </h2>
 </div>
 <div className="summary-item">
@@ -70,7 +71,9 @@ const ContainerTable = ({ containers, onDelete, onRowClick ,avgContainerRate = 0
               <th>Pieces</th>
               <th>Unit Price(USD)</th>
               <th>Amount (USD)</th>
-              <th>Qouted Amount (USD)</th>
+              <th>Amount (NGN)</th>
+              <th>Quoted Amount (USD)</th>
+              <th> Quoted Amount (NGN)</th>
               <th>Created Date</th>
               <th>Status</th>
               <th>Action</th>
@@ -87,16 +90,18 @@ const ContainerTable = ({ containers, onDelete, onRowClick ,avgContainerRate = 0
             ) : (
               containers.map((c, idx) => (
                 <tr key={c.id} onClick={() => onRowClick(c)}>
-                  <td>{idx + 1}</td>
-                  <td>{c.sn}</td>
+                  <td>{String(idx + 1).padStart(2, "0")}</td>
+                  <td>{c.id}</td>
                   <td>{c.description}</td>
                   <td>{c.title}</td>
                   <td>TN{c.trackingNumber}</td> 
                   <td>{c.modelName}</td>
                   <td>{c.unitpieces || "0"}</td>
-                  <td>{c.unitPrice || "0.00"}</td>
-                  <td>{c.amountUsd || "0.00"} </td>
-                  <td>{c.quotedAmountUsd || "0.00"} </td>
+                  <td>{c.unitPrice || "0"}</td>
+                  <td>{safeFormatNumber(Number(c.amountUsd || "0"))} </td>
+                  <td>{safeFormatNumber((Number(c.amountUsd) || 0) * (Number(avgContainerRate) || 0))}</td>
+                  <td>{safeFormatNumber(Number(c.quotedAmountUsd || "0"))} </td>
+                  <td>{safeFormatNumber((Number(c.quotedAmountUsd) || 0) * (Number(avgContainerRate) || 0))}</td>
                   <td>{formatDate(c.createdAt)}</td>
                    <td>
                     <span style={{ color: "orange", fontWeight: 600 }}>
