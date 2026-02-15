@@ -1,37 +1,112 @@
-import { HashRouter, Routes, Route, useLocation,useNavigate } from 'react-router-dom';
-import SignUp from './component/Authentication/SignUp';
-import DashboardPage from './component/Dashboard/DashboardPage';
+import { HashRouter, Routes, Route } from "react-router-dom";
+import SignUp from "./component/Authentication/SignUp";
+import DashboardPage from "./component/Dashboard/DashboardPage";
 
+// Purchase
+import Trip from "./component/Dashboard/Pages/Purchase/Trip";
+import Container from "./component/Dashboard/Pages/Purchase/Container";
 
-function AppContent() {
-  return (
-    <>
-      {/* {loading ? (
-        <LoadingSpinner /> // Show only the spinner until loading is complete
-      ) : ( */}
-      <Routes>
-        <Route path='/' element={<SignUp />} />
-          <Route path='/dashboard' element={<DashboardPage />} />
-      </Routes>
-      {/* )} */}
-    </>
-      
-  );
-}
+// Sales
+import PreSale from "./component/Dashboard/Pages/Sale/PreSale";
+import Sale from "./component/Dashboard/Pages/Sale/Sale";
+import Recovery from "./component/Dashboard/Pages/Sale/Recovery";
+
+// Expensify
+import Finance from "./component/Dashboard/Pages/Expensify/Finance";
+import PayRoll from "./component/Dashboard/Pages/Expensify/PayRoll";
+
+// Accounts
+import Account from "./component/Dashboard/Pages/Account/Account";
+import AccUser from "./component/Dashboard/Pages/Account/AccUser";
+import AccPartner from "./component/Dashboard/Pages/Account/AccPartner";
+import AccInvest from "./component/Dashboard/Pages/Account/AccInvest";
+import AccRetailer from "./component/Dashboard/Pages/Account/AccRetailer";
+import AccSupplier from "./component/Dashboard/Pages/Account/AccSupplier";
+import AccAgent from "./component/Dashboard/Pages/Account/AccAgent";
+import AccOperator from "./component/Dashboard/Pages/Account/AccOperator";
+
+// Reports
+import Report from "./component/Dashboard/Pages/Report/Report";
+
+// Partnership
+import Allocation from "./component/Dashboard/Pages/PartnerShip/Allocation";
+import Profit from "./component/Dashboard/Pages/PartnerShip/Profit";
+import PartnerLot from "./component/Dashboard/Pages/PartnerShip/PartnerLot";
+
+// Admin
+import Entity from "./component/Dashboard/Pages/Admin/Entity";
+import RoleSetup from "./component/Dashboard/Pages/Admin/RoleSetup";
+import Bonus from "./component/Dashboard/Pages/Admin/Bonus";
+import BankAccount from "./component/Dashboard/Pages/Admin/BankAccount";
+import ProtectedRoute from "./component/ProtectedRoute";
+import Permission from "./component/Dashboard/Pages/Admin/Permission";
+import PartnerPayment from "./component/Dashboard/Pages/Expensify/PartnerPayment";
+import Inbox from "./component/Dashboard/Pages/Inbox/Requestbox";
+import Requestbox from "./component/Dashboard/Pages/Inbox/Requestbox";
 
 function App() {
-
   return (
-    <div className="App">
-       <HashRouter>
-        <AppContent />
-      </HashRouter>
-    </div>
+    <HashRouter>
+      <Routes>
+        <Route path="/login" element={<SignUp />} />
+
+        {/* DASHBOARD LAYOUT */}
+        <Route
+  path="/dashboard"
+  element={
+    <ProtectedRoute>
+      <DashboardPage />
+    </ProtectedRoute>}>
+
+          {/* Purchase */}
+          <Route path="trip" element={<Trip />} />
+          <Route path="container" element={<Container />} />
+
+          {/* Sales */}
+          <Route path="pre-sale" element={<PreSale />} />
+          <Route path="sales" element={<Sale />} />
+          <Route path="recovery" element={<Recovery />} />
+
+          {/* Expensify */}
+          <Route path="finance" element={<Finance />} />
+          <Route path="payroll" element={<PayRoll />} />
+          <Route path="partner_payment" element={<PartnerPayment />} />
+
+          {/* Reports */}
+          <Route path="report" element={<Report />} />
+           {/* Inbox */}
+          <Route path="requestbox" element={<Requestbox />} />
+
+          {/* Partnership */}
+          <Route path="allocation" element={<Allocation />} />
+          <Route path="profit" element={<Profit />} />
+          <Route path="partnerlot" element={<PartnerLot />} />
+
+          {/* Accounts */}
+          <Route path="/dashboard/accounts" element={<Account   />}>
+  <Route path="system-user" element={<AccUser />} />
+  <Route path="partner" element={<AccPartner />} />
+  <Route path="invest" element={<AccInvest />} />
+  <Route path="retailer" element={<AccRetailer />} />
+  <Route path="supplier" element={<AccSupplier />} />
+  <Route path="clearing-agent" element={<AccAgent />} />
+  <Route path="bdc-operator" element={<AccOperator />} />
+</Route>
+
+
+          {/* Admin */}
+          <Route path="admin/entity" element={<Entity />} />
+          <Route path="admin/role" element={<RoleSetup />} />
+          <Route path="admin/permission" element={<Permission />} />
+          <Route path="admin/bonus" element={<Bonus />} />
+          <Route path="admin/bank-account" element={<BankAccount />} />
+
+          {/* Catch-all for unknown pages */}
+      <Route path="*" element={<h2>Page Not Found</h2>} />
+        </Route>
+      </Routes>
+    </HashRouter>
   );
 }
-export default App;
-// git add .
-// git commit -m "Your commit message"
-// git push
 
-//eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZW5kcG9pbnRzLmh5ZGV2ZXN0LmNvbVwvYXBpXC92MlwvYXBwXC9hdXRoXC9sb2dpbiIsImlhdCI6MTc2ODY3MjA0MywiZXhwIjoxODAwMjA4MDQzLCJuYmYiOjE3Njg2NzIwNDMsImp0aSI6ImdPaktBWGpQb0tiWHBKWXIiLCJzdWIiOjEsInBydiI6Ijg3ZTBhZjFlZjlmZDE1ODEyZmRlYzk3MTUzYTE0ZTBiMDQ3NTQ2YWEifQ.WfdZTjMHV55EmXxmun6SJJk1KI2_TgXHA8WFOu1KBAk
+export default App;

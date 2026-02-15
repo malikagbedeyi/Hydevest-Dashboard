@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
-import "../../../../assets/Styles/dashboard/Sale/presaleController.scss";
+import "../../../../assets/Styles/dashboard/controller.scss";
 import CreateRecovery from "./CreateRecovery";
 import RecoveryTable from "./RecoveryTable";
 
-const STORAGE_KEY = "data_storage"; // recoveries
+const RECOVERY_KEY = "recovery_storage"; // recoveries
 const SALE_KEY = "sales_data"; // sales
 
 const RecoveryController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
-  const [data, setData] = useState(() => JSON.parse(localStorage.getItem(STORAGE_KEY)) || []);
+  const [data, setData] = useState(() => JSON.parse(localStorage.getItem(RECOVERY_KEY)) || []);
   const [sales, setSales] = useState([]);
 
   const [view, setView] = useState(data.length ? "table" : "empty");
@@ -36,7 +36,7 @@ const RecoveryController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) 
   const handleAddData = (newRecovery) => {
     const updatedData = [...data, newRecovery];
     setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+    localStorage.setItem(RECOVERY_KEY, JSON.stringify(updatedData));
 
     // Update sale balance
     const updatedSales = sales.map((sale) => {
@@ -59,7 +59,7 @@ const RecoveryController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) 
   const handleDeleteData = (id) => {
     const updatedData = data.filter((d) => d.id !== id);
     setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+    localStorage.setItem(RECOVERY_KEY, JSON.stringify(updatedData));
     if (updatedData.length === 0) setView("empty");
   };
 
@@ -68,7 +68,7 @@ const RecoveryController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) 
       rec.id === updatedRecovery.id ? updatedRecovery : rec
     );
     setData(updatedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
+    localStorage.setItem(RECOVERY_KEY, JSON.stringify(updatedData));
   };
   const enrichedRecoveries = data.map((rec) => {
     const sale = sales.find((s) => s.id === rec.saleId);
@@ -81,9 +81,9 @@ const RecoveryController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) 
   
 
   return (
-    <div className="emptysale">
-      <div className="emptysale-container">
-        <div className="emptysale-content">
+    <div className="controller">
+      <div className="controller-container">
+        <div className="controller-content">
           {(view === "empty" || view === "table") && (
             <div className="top-content">
               <div className="top-content-wrapper">

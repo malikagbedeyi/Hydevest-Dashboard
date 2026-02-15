@@ -1,11 +1,11 @@
 import React from 'react'
-import '../../../../assets/Styles/dashboard/Sale/sales.scss'
+import '../../../../assets/Styles/dashboard/page.scss'
 import profile from '../../../../assets/Images/profile-img.png'
 import { ChevronRight } from 'lucide-react'
 import PreSaleController from '../../SaleComponent/PreSale/PreSaleController'
 const PreSale = ({autoOpenCreate, setAutoOpenCreate}) => {
   return (
-    <div className='sale'>
+    <div className='page'>
         <div className="headerContainer row">
         <div className="headerParent col-lg-12">
           <div className="headerChild">

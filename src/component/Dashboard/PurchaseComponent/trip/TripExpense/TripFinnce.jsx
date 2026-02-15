@@ -1,110 +1,123 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useEffect } from 'react';
 import "../../../../../assets/Styles/dashboard/Purchase/tripFinance.scss";
-import { Paperclip, CalendarDays,ChevronRight,SendHorizontal, Eye, Trash2, Edit } from 'lucide-react'
+import { Paperclip, CalendarDays, ChevronRight, SendHorizontal, Eye, Trash2, Edit } from 'lucide-react';
+import { ExpenseServices } from '../../../../../services/Trip/expense';
+import TripExpenseLog from './TripExpenseLog';
+import TripComment from './TripComment';
+import FileAttachment from "./FileAttachment";
 
-const TripFinnce = ({ setTrip,trip, goBack }) => {
-    
- // Editable states
- const [approved, setApproved] = useState(false);
-const scrollRef = useRef(null);
-   const [title, setTitle] = useState(trip?.title || "No Title Set");
+const TripFinnce = ({ setTrip, trip, goBack }) => {
+  const scrollRef = useRef(null);
+
+  // Initialize states from trip
+  const [approved, setApproved] = useState(trip?.approved || false);
+  const [title, setTitle] = useState(trip?.title || "No Title Set");
   const [type, setType] = useState(trip?.location || "type not set");
   const [startDate, setStartDate] = useState(trip?.startDate || "2025-02-21");
+  const [description, setDescription] = useState(trip?.desc || "");
   const [activeTab, setActiveTab] = useState("comments");
-  const typeBase = trip?.typeBase || trip.type; 
-const amountBase = trip?.amountBase || trip.amount;
-const rateBase = trip?.rateBase || trip.rate;
-
-const typeOptions = generateFiveOptions(typeBase);
-const amountOptions = generateFiveOptions(amountBase);
-const rateOptions = generateFiveOptions(rateBase);
+  const [loading, setLoading] = useState(false);
 
   // Individual edit states
-   const [editTitle , setEditTitle] = useState(false);
-  const [editBudget, setEditBudget] = useState(false);
+  const [editTitle, setEditTitle] = useState(false);
+  const [editDescription, setEditDescription] = useState(false);
   const [editStartDate, setEditStartDate] = useState(false);
-  const [editType, setEditType] = useState(false);
-  const [editEndDate, setEditEndDate] = useState(false);
-const [description, setDescription] = useState(trip?.description || "");
-const [editDescription, setEditDescription] = useState(false);
 
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
-function generateFiveOptions(baseValue) {
-  if (Array.isArray(baseValue)) return baseValue;
 
-  return [
-    baseValue,
-    `${baseValue} 2`,
-    `${baseValue} 3`,
-    `${baseValue} 4`,
-    `${baseValue} 5`,
-  ];
-}
-  const handleChange = (e) => {
-  const { name, value } = e.target;
+  /** ---------- EDIT / UPDATE HANDLER ---------- */
+  const handleUpdate = async () => {
+    try {
+      setLoading(true);
+      if (!trip?.expense_uuid) return;
 
-  // Keep original values untouched
-  if (name === "type") {
-    setTrip({ 
-      ...trip, 
-      type: value,
-      typeBase: typeBase   // <-- BASE NEVER CHANGES
-    });
-    return;
-  }
+      const payload = {
+        expense_uuid: trip.expense_uuid,
+        title,
+        desc: description,
+        amount: trip.amount,
+        currency: trip.currency || "NGN",
+        rate: trip.rate,
+        date: startDate,
+        is_container_payment: trip.is_container_payment || 0,
+      };
 
-  if (name === "amount") {
-    setTrip({ 
-      ...trip, 
-      amount: value,
-      amountBase: amountBase
-    });
-    return;
-  }
+      const res = await ExpenseServices.edit(payload);
 
-  if (name === "rate") {
-    setTrip({ 
-      ...trip, 
-      rate: value,
-      rateBase: rateBase
-    });
-    return;
-  }
+      setTrip({
+        ...trip,
+        ...payload,
+        updated_at: res.data.updated_at || new Date().toISOString(),
+        approved, // keep approval state
+      });
 
-  setTrip({ ...trip, [name]: value });
-};
+      scrollToTop();
+      goBack(true);
+    } catch (err) {
+      console.error("Error updating expense:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** ---------- APPROVE / CHANGE APPROVAL HANDLER ---------- */
+  const handleApprovalChange = async () => {
+    try {
+      setLoading(true);
+      if (!trip?.expense_uuid) return;
+
+      const newStatus = approved ? 0 : 1;
+
+      const payload = {
+        expense_uuid: trip.expense_uuid,
+        status: newStatus,
+      };
+
+      const res = await ExpenseServices.change_approval(payload);
+
+      setApproved(newStatus === 1);
+
+      setTrip({
+        ...trip,
+        approved: newStatus === 1,
+        updated_at: res.data.updated_at || new Date().toISOString(),
+      });
+    } catch (err) {
+      console.error("Error changing approval:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="finance-wrapper" ref={scrollRef}>
       {/* Header */}
       <div className="finance-header">
         <div className="breadcrumb">
-            <strong>Trip</strong> 
-             <ChevronRight size={16} /> 
-             <span>Expense</span></div>
+          <strong>Trip</strong>
+          <ChevronRight size={16} />
+          <span>Expense</span>
+        </div>
         <div className="actions">
-            {!approved && (
-            <button className="primary" onClick={() => setApproved(!approved)}>
-                Approve
-</button>
-)}
-         <div className="status">
-  <span>{approved ? "Approved" : "Not Approve"}</span>
-</div>
-
+          <button className="primary" onClick={handleApprovalChange} disabled={loading}>
+            {approved ? "Unapprove" : "Approve"}
+          </button>
+          <div className="status">
+            <span>{approved ? "Approved" : "Not Approved"}</span>
+          </div>
         </div>
       </div>
 
       <div className="finance-card">
-
         {/* Title */}
         <div className="form-group">
-             <label>Title <span>*</span></label>
-           <div className="info-content-data">
-              {editTitle ? (
-                <input
+          <label>Title <span>*</span></label>
+          <div className="info-content-data">
+            {editTitle ? (
+              <input
                 type="text"
                 value={title}
                 autoFocus
@@ -113,57 +126,53 @@ function generateFiveOptions(baseValue) {
                 onKeyDown={(e) => e.key === "Enter" && setEditTitle(false)}
               />
             ) : (
-                 <span>{title}</span>
-             )}
-              <Edit className="edit-icon" size={16} onClick={() => setEditTitle(true)} />
-                 </div>
+              <span>{title}</span>
+            )}
+            <Edit className="edit-icon" size={16} onClick={() => setEditTitle(true)} />
+          </div>
         </div>
-        
+
         {/* Description */}
         <div className="form-group">
           <div className="trip-description">
-                  <div className="desc-header">
-                      <label>Description <span>*</span></label>
-             {!editDescription && (
-               <Edit
-                 size={16}
-                 className="edit-icon"
-                 onClick={() => setEditDescription(true)}
-               />
-             )}
-           </div>
-           <div className="desc-body">
-             {editDescription ? (
-               <textarea
-                 className="desc-textarea"
-                 value={description}
-                 autoFocus
-                 onChange={(e) => setDescription(e.target.value)}
-                 onBlur={() => setEditDescription(false)}
-                 onKeyDown={(e) => {
-                   if (e.key === "Enter" && !e.shiftKey) {
-                     e.preventDefault();
-                     setEditDescription(false);
-                   }
-                 }}
-               />
-             ) : (
-               <p>{description}</p>
-             )}
-           </div>
-                   </div>
-              </div>
+            <div className="desc-header">
+              <label>Description <span>*</span></label>
+              {!editDescription && (
+                <Edit size={16} className="edit-icon" onClick={() => setEditDescription(true)} />
+              )}
+            </div>
+            <div className="desc-body">
+              {editDescription ? (
+                <textarea
+                  className="desc-textarea"
+                  value={description}
+                  autoFocus
+                  onChange={(e) => setDescription(e.target.value)}
+                  onBlur={() => setEditDescription(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      setEditDescription(false);
+                    }
+                  }}
+                />
+              ) : (
+                <p>{description}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Type & Amount */}
-        <div className="grid-2">
+        <div className="grid-2" style={{ marginBottom: "0.7vw" }}>
           <div className="form-group">
             <label>Type</label>
             <input type="text" value={type} />
-
           </div>
 
           <div className="form-group">
             <label>Amount</label>
-            <input type="text" value={trip?.amount}  />
+            <input type="text" value={trip?.amount} />
           </div>
         </div>
 
@@ -173,114 +182,64 @@ function generateFiveOptions(baseValue) {
             <label>Date</label>
             <div className="date-input">
               <div className="info-content-data">
-                              {editStartDate ? (
-                                <input
-                                  type="date"
-                                  value={startDate}
-                                  autoFocus
-                                  onChange={(e) => setStartDate(e.target.value)}
-                                  onBlur={() => setEditStartDate(false)}
-                                  onKeyDown={(e) => e.key === "Enter" && setEditStartDate(false)}
-                                />
-                              ) : (
-                                <h2>{startDate}</h2>
-                              )}
-                              <Edit className="edit-icon" size={16} onClick={() => setEditStartDate(true)} />
-                            </div>
+                {editStartDate ? (
+                  <input
+                    type="date"
+                    value={startDate}
+                    autoFocus
+                    onChange={(e) => setStartDate(e.target.value)}
+                    onBlur={() => setEditStartDate(false)}
+                    onKeyDown={(e) => e.key === "Enter" && setEditStartDate(false)}
+                  />
+                ) : (
+                  <h2>{startDate}</h2>
+                )}
+                <Edit className="edit-icon" size={16} onClick={() => setEditStartDate(true)} />
+              </div>
               <CalendarDays size={18} />
             </div>
           </div>
           <div className="form-group">
             <label>Rate</label>
             <input type="text" value={trip.rate} />
-
           </div>
         </div>
 
         {/* Attachments */}
-        <div className="attachment">
-          <div className="attach-head">
-            <h4>Attachment</h4>
-            <button className="attach-btn"><Paperclip size={16}/> Attach File</button>
-          </div>
+        <FileAttachment expense_uuid={trip?.expense_uuid} />
 
-          <div className="recent-files">
-            <p>Recent Files Attached</p>
-            <div className="file-row">
-              <span>File A</span>
-              <div className="icons">
-                <Eye size={16} />
-                <Edit size={16} />
-                <Trash2 size={16} />
-              </div>
-            </div>
 
-            <div className="file-row">
-              <span>File B</span>
-              <div className="icons">
-                <Eye size={16} />
-                <Edit size={16} />
-                <Trash2 size={16} />
-              </div>
-            </div>
-
-            <span className="view-all">View all</span>
-          </div>
-        </div>
         {/* Activity / Comments */}
         <div className="activity">
           <div className="tabs">
-             <span
-                className={activeTab === "comments" ? "active" : ""}
-                onClick={() => setActiveTab("comments")}
-              >
-                Comments
-              </span>
-              <span
-                className={activeTab === "activity" ? "active" : ""}
-                onClick={() => setActiveTab("activity")}
-              >
-                Activity Log
-              </span>
+            <span className={activeTab === "comments" ? "active" : ""} onClick={() => setActiveTab("comments")}>Comments</span>
+            <span className={activeTab === "activity" ? "active" : ""} onClick={() => setActiveTab("activity")}>Activity Log</span>
           </div>
-          {activeTab === "comments" &&  (
-             <div className="">
-          <div className="comment-box">
-            <textarea placeholder="Add your comment"></textarea>
-            <button><SendHorizontal size={16}/></button>
-          </div>
-          <div className="recent">
-            <p className="recent-title">Recent</p>
-            <div className="user">
-              <strong>Joel Kay</strong>
-              <span>02:30 pm</span>
-            </div>
-            <p className="text">Review the list of users with access to privileged functions</p>
-          </div>
-          <div className="recent">
-            <div className="user">
-              <strong>Joel Kay</strong>
-            </div>
-            <p className="text">Review the list of users with access to privileged functions</p>
-          </div>
-    </div>
-          )}
-           {activeTab === "activity" &&  (
-            <div className="">
+
+          {activeTab === "comments" && (
+  <TripComment expense_uuid={trip?.expense_uuid} />
+)}
+
+
+          {activeTab === "activity" && (
+            <div className="activity-logs">
+           {activeTab === "activity" && (
+  <TripExpenseLog expense_uuid={trip?.expense_uuid} />
+)}
 
             </div>
-           )}
+          )}
         </div>
- <div className="footer-btns">
-          <button onClick={()=>goBack(true)} className="preview">Preview</button>
-          <button   onClick={() => {
-    scrollToTop();
-    setApproved(false); 
-  }} className="create">Update</button>
+
+        <div className="footer-btns">
+          <button onClick={() => goBack(true)} className="preview">Preview</button>
+          <button className="create" onClick={handleUpdate} disabled={loading}>
+            {loading ? "Updating..." : "Update"}
+          </button>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TripFinnce
+export default TripFinnce;

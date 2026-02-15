@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../../../../assets/Styles/dashboard/Sale/presaleTable.scss";
+import "../../../../assets/Styles/dashboard/table.scss";
 import DrilldownPresale from "./DrilldownPresale";
 import CreateSale from "../Sale/CreateSale";
 import { Trash2, X } from "lucide-react";
@@ -135,7 +135,7 @@ const avgPricePerKg =
 
   return (
     <>
-      <div className="userTable">
+      <div className="userTable mt-5">
       <div className="drill-summary-grid">
   <div className="drill-summary">
 
@@ -167,9 +167,8 @@ const avgPricePerKg =
 
   </div>
 </div>
-
         <div className="table-wrap">
-          <table className="table">
+          <table className="table"  style={{width:"150%",minWidth:"150%",maxWidth:"135%"}}>
             <thead>
               <tr>
                 <th>S/N</th>

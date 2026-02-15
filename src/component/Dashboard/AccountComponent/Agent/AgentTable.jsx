@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import "../../../../assets/Styles/dashboard/account/userTable.scss";
-import { TheaterIcon } from "lucide-react";
 
-const AgentTable = ({ users }) => {
+const AgentTable = ({ data = [], onEdit, loading }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentUsers = users.slice(startIndex, startIndex + itemsPerPage);
+  const currentData = data.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div className="userTable">
@@ -16,40 +15,49 @@ const AgentTable = ({ users }) => {
           <thead>
             <tr>
               <th>S/N</th>
-              <th>Name</th>
+              <th>Full Name</th>
               <th>Email</th>
               <th>Phone</th>
-              <th>Privilege</th>
-              <th>Status</th>
-              <th>Personnel Name</th>
-               <th>Bank Name</th>
-               <th>Bank Number</th>
-               <th>Agent Contact</th>
-               <th>Address</th>
+              <th>Bank Name</th>
+              <th>Bank Account</th>
+              <th>Company Reg. No</th>
+              <th>Address</th>
               <th>Date Created</th>
             </tr>
           </thead>
 
           <tbody>
-            {currentUsers.length === 0 ? (
+          {loading ? (
               <tr>
                 <td colSpan="7" style={{ textAlign: "center" }}>
-                  No users created yet
+                  Loading...
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: "center" }}>
+                  No Clearning Agent Found
                 </td>
               </tr>
             ) : (
-              currentUsers.map((user, idx) => (
-                <tr key={user.id}>
+              currentData.map((agent, idx) => (
+                <tr
+                  key={agent.user_uuid}
+                  onClick={() => onEdit?.(agent)}
+                  style={{ cursor: onEdit ? "pointer" : "default" }} >
                   <td>{startIndex + idx + 1}</td>
-                  <td>{user.firstName} {user.lastName}</td>
-                  <td>{user.email}</td>
-                  <td>{user.phone}</td>
-                  <td>{user.personnelName}</td>
-                   <td>{user.bankName}</td>
-                   <td>{user.bankNumber}</td>
-                   <td>{user.agentContact}</td>
-                   <td>{user.address}</td>
-                  <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                  <td>{agent.firstname} {agent.lastname} </td>
+                  <td>{agent.email}</td>
+                  <td>{agent.phone_no}</td>
+                  <td>{agent.clearing_agent_bank?.bank_name}</td>
+                  <td>{agent.clearing_agent_bank?.bank_account}</td>
+                  <td>{agent.clearing_agent_bank?.company_registration_number}</td>
+                  <td>{agent.address}</td>
+                  <td>
+                    {agent.created_at
+                      ? new Date(agent.created_at).toLocaleDateString()
+                      : "--"}
+                  </td>
                 </tr>
               ))
             )}

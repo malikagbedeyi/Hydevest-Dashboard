@@ -9,7 +9,7 @@ const TripDocumentTable = ({tripFileData,handleDeleteTripFile,handleDocumentRowC
     <div>
       <div className="userTable">
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" style={{width:"100%",maxWidth:"100%",minWidth:"100%"}}>
           <thead>
             <tr>
               <th>S/N</th>

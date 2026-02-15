@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
-import "../../../../assets/Styles/dashboard/Expensify/controller.scss";
+import "../../../../assets/Styles/dashboard/controller.scss";
 import CreateFinance from "./CreateFinance";
 import FinanceTable from "./FinanceTable";
 
@@ -103,7 +103,7 @@ const FinanceController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
 
                   <div className="import-input"><p>Import</p></div>
                   <div className="import-input"><p>Export</p></div>
-                  <button onClick={() => setView("create")}>Create Entry</button>
+                  <button onClick={() => setView("create")}>Create Finance</button>
                 </div>
               </div>
             </div>

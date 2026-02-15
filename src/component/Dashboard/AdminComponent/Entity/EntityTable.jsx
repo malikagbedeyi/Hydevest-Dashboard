@@ -1,53 +1,80 @@
 import React, { useState } from "react";
 import "../../../../assets/Styles/dashboard/account/userTable.scss";
 
-const EntityTable = ({  data }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+const EntityTable = ({  data , page,setpage,loading,onEdit}) => {
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = data.slice(startIndex, startIndex + itemsPerPage);
+const itemsPerPage = 10
+const startIndex = (page - 1 ) * itemsPerPage
 
+if (loading) {
   return (
     <div className="userTable">
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" style={{width:"100%",maxWidth:"100%",minWidth:"100%"}}>
+          <tbody>
+            {[...Array(1)].map((_, i) => (
+              <tr key={i}>
+                <td>loading</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+  return (
+    <div className="userTable">
+      <div className="table-wrap">
+        <table className="table" style={{width:"110%",minWidth:"110%",maxWidth:"110%"}}>
           <thead>
             <tr>
               <th>S/N</th>
               <th>Name</th>
               <th>Email</th>
               <th>Phone</th>
-              <th>Address</th>
-              <th>Director</th>
-              <th>Other Director</th>
+              <th>Bank Name</th>
+              <th>Bank Account</th>
+              <th>Created by</th>
               <th>Date Created</th>
+              <th>Status</th>
             </tr>
           </thead>
 
           <tbody>
-            {currentData.length === 0 ? (
+            {data.length === 0 ? (
               <tr>
                 <td colSpan="7" style={{ textAlign: "center" }}>
                   No Entity created yet
                 </td>
               </tr>
             ) : (
-              currentData.map((data, idx) => (
-                <tr key={data.id}>
+              data.map((data, idx) => (
+                <tr key={data.id} onClick={() => onEdit(data)}>
                   <td>{startIndex + idx + 1}</td>
-                  <td>{data.name} </td>
+                  <td>{data.firstname} {data.lastname} </td>
                   <td>{data.email}</td>
-                  <td>{data.phone}</td>
-                  <td>{data.address}</td>
-                  <td>{data.director}</td>
-                  <td>{data.otherDirector} </td>
-                  <td>{new Date(data.createdAt).toLocaleDateString()}</td>
+                  <td>{data.phone_no}</td>
+                  <td>{data.entity_bank?.bank_name}</td>
+                  <td>{data.entity_bank?.bank_account}</td>
+                  <td>{data.creator_info?.firstname} {data.creator_info?.lastname}</td>
+                  <td>{new Date(data.created_at).toLocaleDateString()}</td>
+                  <td>
+  <span className={`status ${data.status === 1 ? "active" : "pending"}`} 
+  style={{color:data.status === 1 ? "green":"red"}}>
+    {data.status === 1 ? "Active" : "Pending"}
+  </span>
+</td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
+        <div className="pagination" >
+          <button disabled={ page===1 }  onClick={() => setpage(page -1)}>Prev </button>
+          <span> {page} </span>
+          <button  disabled={data.length < 10 } onClick={() => setpage(page +1)}>Next </button>
+        </div>
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ const PartnerLotTable = ({ data =[],onRowClick }) => {
   return (
     <div className="userTable">
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" style={{width:"100%" , maxWidth:"100%",minWidth:"100%"}}>
           <thead>
             <tr>
               <th>S/N</th>
@@ -27,7 +27,7 @@ const PartnerLotTable = ({ data =[],onRowClick }) => {
               </tr>
             ) : (
               data.map((row, idx) => (
-                <tr key={row.id}   onClick={() => onRowClick(row)}>
+                <tr key={`partnerlot-${row.id}`}   onClick={() => onRowClick(row)}>
                   <td>{idx + 1}</td>
                   <td>{row.name}<small style={{ marginLeft: 6, opacity: 0.6 }}> ({row.assigneeType}) </small> </td>
                   <td>{formatMoney(row.totalInvestment)}</td>

@@ -1,8 +1,12 @@
 import React, { useState,useRef, useEffect } from "react";
 import "../../../../assets/Styles/dashboard/Purchase/drildowncontainer.scss";
 import {ChevronLeft,ChevronDown, ChevronUp, Paperclip, Download,  Edit,  Trash2,  X,  Eye,  File,  Plus, Calendar, SendHorizontal} from "lucide-react";
+import { ContainerServices } from "../../../../services/Trip/container";
+import Attachment from "./Attachment";
+import Comment from "./Comment";
+import ContainerLog from "./ContainerLog";
 
-const fundingOption = ["partner" ," entity "]
+const fundingOption = ["partner", "entity"];
 
 const DrildownContainer = ({container = {},goBack = () => {},onUpdate,avgContainerRate = 0,formatNumber,}) => {
 
@@ -16,27 +20,21 @@ const DrildownContainer = ({container = {},goBack = () => {},onUpdate,avgContain
           maximumFractionDigits: 2,
         });
 
-  const [form, setForm] = useState({
-    description:container?.description, averageWeight:container?.averageWeight , maxWeight:container?.maxWeight,
-    entity:container?.entity , invoiceNumber:container?.invoiceNumber ,trackingNumber: container?.trackingNumber ,
-    piece: container.piece, pricePerPieces: container.pricePerPieces,sourceNation: container.sourceNation,
-    sourceLocation : container.sourceLocation ,sourcePort: container.sourcePort,destinationPort: container.destinationPort ,supplyCode: container.supplyCode,unitpieces: container?.unitpieces,
-    unitPrice: container?.unitPrice,amountUsd: container?.amountUsd ,
-    warehouseChargeNGN: container.warehouseChargeNGN,offloadAndSorting: container.offloadAndSorting,
-    quotedPriceUsd: container?.quotedPriceUsd , quotedAmountUsd: container?.quotedAmountUsd , 
-    surcharge: container?.surcharge,extimated:container?.extimated,
-     funding: container.funding || "",
-     partners: [
-      { id: Date.now(), name: "", amount: "", Percentage: "" },
-    ],
-    
-  });
+const [form, setForm] = useState({
+  description: container?.desc || "",trackingNumber: container?.tracking_number || "",averageWeight: container?.average_weight || "",maxWeight: container?.max_weight || "",
+ entity: container?.entity_id || null,invoiceNumber: container?.invoice_number || "",sourceNation: container?.source_nation || "",sourcePort: container?.source_port || "",
+  destinationPort: container?.destination_port || "",supplyCode: container?.supplier_code || "",
+  unitpieces: container?.pieces || "",unitPrice: container?.unit_price_usd || "",warehouseChargeNGN: container?.warehouse_charge_ngn || "",offloadAndSorting: container?.offload_and_sorting || "",
+  shipping_amount_usd: container?.shipping_amount_usd || "",funding: container?.funding || "",
+});
+
+
   /* EDIT STATES */
   const [edit, setEdit] = useState({
     description: false, destination: false,
     trackingNumber: false, sourceNation: false, unitpieces:false, sourcePart: false, supplyCode: false,
     destinationCountry: false, destinationPort: false, funding: false,  piece: false,
-    unitPrice: false, warehouseChargeNGN: false,  offloadAndSorting:false ,
+    unitPrice: false, warehouseChargeNGN: false,  offloadAndSorting:false ,shipping_amount_usd:false,
   });
 
 const scrollRef = useRef(null);
@@ -48,41 +46,21 @@ const scrollRef = useRef(null);
   const [showAttachments, setShowAttachments] = useState(false);
  const [approved, setApproved] = useState(false);
  const [showPartnerSection, setShowPartnerSection] = useState(false);
+const [entities, setEntities] = useState([]);
+const [entitySearch, setEntitySearch] = useState("");
+const [openEntityDrop, setOpenEntityDrop] = useState(false);
 
-    const filteredFundingdrop = fundingOption.filter((opt) =>
-    opt.toLowerCase());
+const [loading, setLoading] = useState(false);
+
+const filteredFundingdrop = fundingOption.filter((opt) =>
+  opt.toLowerCase().includes(fundingdrop.toLowerCase())
+);
+
 
 useEffect(() => {
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
 }, []);
-useEffect(() => {
-  const pieces = Number(form.unitpieces);
-  const unitPrice = Number(form.unitPrice);
-
-  if (!isNaN(pieces) && !isNaN(unitPrice)) {
-    setForm((prev) => ({
-      ...prev,
-      amountUsd: pieces * unitPrice,
-    }));
-  } else {
-    setForm((prev) => ({ ...prev, amountUsd: "" }));
-  }
-}, [form.unitpieces, form.unitPrice]);
-
-useEffect(() => {
-  const pieces = Number(form.unitpieces);
-  const quotedPrice = Number(form.quotedPriceUsd);
-
-  if (!isNaN(pieces) && !isNaN(quotedPrice)) {
-    setForm((prev) => ({
-      ...prev,
-      quotedAmountUsd: pieces * quotedPrice,
-    }));
-  } else {
-    setForm((prev) => ({ ...prev, quotedAmountUsd: "" }));
-  }
-}, [form.unitpieces, form.quotedPriceUsd]);
 
 
 const scrollToTop = () => {
@@ -93,52 +71,113 @@ const scrollToTop = () => {
     { id: 2, name: "File B", size: "80KB" },
   ]);
  
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    if (onUpdate)onUpdate({
-      ...container,
-      ...form,
-      updatedAt: new Date().toISOString(),
-    });
-    
-  };
+const handleChange = (e) => {
+  const { name, value } = e.target;
+  setForm((prev) => ({ ...prev, [name]: value }));
+};
 
   const toggleEdit = (field) => {
     setEdit((s) => ({ ...s, [field]: !s[field] }));
   };
-  const renderEditable = (field, type = "text") => {
-    return edit[field] ? (
-      <input
-        type={type}
-        name={field}
-        value={form[field]}
-        autoFocus
-        onChange={handleChange}
-        onBlur={() => toggleEdit(field)}
-      />
-    ) : (
-      <span>{form[field]}</span>
+const handleUpdate = async () => {
+  try {
+    if (!container?.container_uuid) return;
+
+    const payload = {
+      container_uuid: container.container_uuid,
+      title: container.title || "",
+      desc: form.description || "",
+      tracking_number: form.trackingNumber || "",
+      average_weight: form.averageWeight ? Number(form.averageWeight) : 0,
+      max_weight: form.maxWeight ? Number(form.maxWeight) : 0,
+      entity_uuid: form.entity || null,
+      invoice_number: form.invoiceNumber || "",
+      source_nation: form.sourceNation || "",
+      source_port: form.sourcePort || "",
+      destination_port: form.destinationPort || "",
+      funding: form.funding ? form.funding.toLowerCase() : "",
+      supplier_code: form.supplyCode || "",
+      pieces: form.unitpieces ? Number(form.unitpieces) : 0,
+      unit_price_usd: form.unitPrice ? Number(form.unitPrice) : 0,
+      warehouse_charge_ngn: form.warehouseChargeNGN
+        ? Number(form.warehouseChargeNGN)
+        : 0,
+      offload_and_sorting: form.offloadAndSorting
+        ? Number(form.offloadAndSorting)
+        : 0,
+      shipping_amount_usd: form.shipping_amount_usd
+        ? Number(form.shipping_amount_usd)
+        : 0,
+    };
+
+    console.log("UPDATE PAYLOAD", payload); // 🔹 check before sending
+    
+    const res = await ContainerServices.edit(payload);
+
+    const updated = {
+      ...container,
+      ...payload,
+    };
+
+    onUpdate(updated);
+    goBack();
+  } catch (err) {
+    console.error("Container update failed:", err.response?.data || err);
+    alert(
+      "Update failed. Check the console for details or verify the data you're sending."
     );
-  };
-  const addPartner = () => {
-    setForm((prev) => ({
-      ...prev,
-      partners: [
-        ...prev.partners,
-        { id: Date.now(), name: "", amount: "", Percentage: "" },
-      ],
-    }));
-  };
-  
-  const removePartner = (id) => {
-    setForm((prev) => ({
-      ...prev,
-      partners: prev.partners.filter((p) => p.id !== id),
-    }));
+  }
+};
+
+  /** ---------- APPROVE / CHANGE APPROVAL HANDLER ---------- */
+const handleApprovalChange = async () => {
+  try {
+    if (!container?.container_uuid) return;
+
+    setLoading(true);
+
+    const newStatus = approved ? 0 : 1;
+
+    const payload = {
+      container_uuid: container.container_uuid,
+      status: newStatus,
+    };
+
+    await ContainerServices.change_approval(payload);
+
+    setApproved(newStatus === 1);
+
+    onUpdate({
+      ...container,
+      approved: newStatus === 1,
+    });
+  } catch (err) {
+    console.error("Error changing approval:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+useEffect(() => {
+  const fetchEntities = async () => {
+    try {
+      const res = await ContainerServices.entityList();
+
+      const record = res?.data?.record;
+
+      // Normalize to array
+      const entityArray = Array.isArray(record) ? record : record ? [record] : [];
+
+      setEntities(entityArray);
+
+      console.log("Normalized Entities:", entityArray);
+    } catch (err) {
+      console.error("Failed to fetch entities:", err);
+    }
   };
 
-  
+  fetchEntities();
+}, []);
+
   return (
   <div className="drill-container" ref={scrollRef}>
       {/* HEADER */}
@@ -150,8 +189,14 @@ const scrollToTop = () => {
         <div className="right-title">
              <div className="actions">
             {!approved && (
-            <button className="primary" onClick={() => setApproved(!approved)}>
-                Approve  </button>
+<button
+  className="primary"
+  onClick={handleApprovalChange}
+  disabled={loading}
+>
+  {loading ? "Approving..." : "Approve"}
+</button>
+
             )}
                  <div className="status">
                     <span>{approved ? "Approved" : "Not Approved"}</span>
@@ -159,18 +204,17 @@ const scrollToTop = () => {
 
         </div>
         </div>
-      </div>
+      </div>  
       <div className="drill-summary-grid">
       <div className="drill-summary">
       <div className="summary-item">
   <p className="small"> Amount (NGN)</p>
   <h2>
-    ₦{safeFormatNumber(
-      (Number(form.amountUsd) || 0) * (Number(avgContainerRate) || 0)
-    )}
-  </h2>
+  ₦{safeFormatNumber(
+    (Number(form.amountUsd) || 0) * (Number(avgContainerRate) || 0) +
+    (form.funding === "partner" ? Number(form.surcharge || 0) : 0))}
+</h2>
 </div>
-
 <div className="summary-item">
   <p className="small">Unit Price (USD)</p>
   <h2>{form.unitPrice}</h2>
@@ -235,11 +279,53 @@ const scrollToTop = () => {
             <input type="text" value={form.maxWeight}   placeholder="Enter Max Weight"
             onChange={(e) =>  setForm({ ...form, maxWeight: e.target.value })}/>
             </div>
-            <div className="form-group">
-            <label htmlFor="">Entity</label>
-            <input type="text" value={form.entity}   placeholder="Enter Entity"
-            onChange={(e) =>  setForm({ ...form, entity: e.target.value })}/>
+<div className="form-group-select">
+  <label>Entity</label>
+
+  <div className="custom-select">
+    <div
+      className="custom-select-drop"
+      onClick={() => setOpenEntityDrop(!openEntityDrop)}
+    >
+      <div className="select-box">
+        {form.entity ? (
+          <span>
+            {(() => {
+              const selected = entities.find((e) => e.id === form.entity);
+              return selected
+                ? `${selected.firstname || ""} ${selected.lastname || ""}`.trim()
+                : "—";
+            })()}
+          </span>
+        ) : (
+          <span className="placeholder">Select Entity</span>
+        )}
+      </div>
+
+      <ChevronDown className={openEntityDrop ? "up" : "down"} />
+    </div>
+
+    {openEntityDrop && (
+      <div className="select-dropdown" style={{ zIndex: 99 }}>
+        {entities.length === 0 ? (
+          <div className="option-item">No entities found</div>
+        ) : (
+          entities.map((entity) => (
+            <div
+              key={entity.uuid || entity.id}
+              className="option-item"
+             onClick={() => {setForm((prev) => ({ ...prev, entity: entity.uuid }));
+              setOpenEntityDrop(false);}}>
+              {`${entity.firstname || ""} ${entity.lastname || ""}`.trim() || "—"}
             </div>
+          ))
+        )}
+      </div>
+    )}
+  </div>
+</div>
+
+
             <div className="form-group">
             <label htmlFor="">Invoice Number</label>
             <input type="text" value={form.invoiceNumber}  placeholder="Enter Invoice Number"
@@ -247,17 +333,9 @@ const scrollToTop = () => {
             </div>
             <div className="form-group">
           <label>Tracking Number</label>
-          {edit.trackingNumber ? (
-            <input
-              name="trackingNumber"
-              value={form.trackingNumber}
-              onChange={handleChange}
-              onBlur={() => toggleEdit("trackingNumber")}
-              autoFocus
-            />
-          ) : (
-            <p onClick={() => toggleEdit("trackingNumber")}>{form.trackingNumber}</p>
-          )}
+            <input  name="trackingNumber"   value={form.trackingNumber}
+            onChange={(e) =>  setForm({ ...form, trackingNumber: e.target.value })}/>
+
         </div>
             <div className="form-group">
             <label htmlFor="">Source Nation</label>
@@ -382,6 +460,12 @@ const scrollToTop = () => {
               value={form.offloadAndSorting} placeholder="Enter Offload And Sorting"
                onChange={(e) =>  setForm({ ...form, offloadAndSorting: e.target.value })} />
               </div>
+                   <div className="form-group">
+              <label htmlFor="">Shipping Amount USD</label>
+              <input type="text" 
+              value={form.shipping_amount_usd} placeholder="Enter Shipping Amount"
+               onChange={(e) =>  setForm({ ...form, shipping_amount_usd: e.target.value })} />
+              </div>
           </div>
         )}
       </section>
@@ -389,36 +473,7 @@ const scrollToTop = () => {
 
       {/* ================= ATTACHMENTS ================= */}
       <section className="section attachments">
-        <header className="section-head">
-          <h3>Attachments</h3>
-          <button onClick={() => setShowAttachments(!showAttachments)}>
-            {showAttachments ? <ChevronUp /> : <ChevronDown />}
-          </button>
-        </header>
-
-        {showAttachments && (
-          <>
-            <button className="attach-link">
-              <Paperclip size={14} /> Attach File
-            </button>
-
-            <div className="recent-files">
-              {attachments.map((f) => (
-                <div key={f.id} className="file-row">
-                  <div>
-                    <div className="small-muted">{f.name}</div>
-                  </div>
-
-                  <div className="file-actions">
-                    <Eye size={16} />
-                    <File size={16} />
-                    <Trash2 size={16} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+       <Attachment container_uuid={container.container_uuid} />
       </section>
          {/* Activity / Comments */}
                 <div className="activity">
@@ -437,49 +492,17 @@ const scrollToTop = () => {
                       </span>
                   </div>
                   {activeTab === "comments" &&  (
-                     <div className="">
-                  <div className="comment-box">
-                    <textarea placeholder="Add your comment"></textarea>
-                    <button><SendHorizontal size={16}/></button>
-                  </div>
-                  <div className="recent">
-                    <p className="recent-title">Recent</p>
-                    <div className="user">
-                      <strong>Joel Kay</strong>
-                      <span>02:30 pm</span>
-                    </div>
-                    <p className="text">Review the list of users with access to privileged functions</p>
-                  </div>
-                  <div className="recent">
-                    <div className="user">
-                      <strong>Joel Kay</strong>
-                    </div>
-                    <p className="text">Review the list of users with access to privileged functions</p>
-                  </div>
-            </div>
+                    <Comment container_uuid={container.container_uuid} />
                   )}
                    {activeTab === "activity" &&  (
-                    <div className="">
-        
-                    </div>
+                    <ContainerLog container_uuid={container.container_uuid} />
                    )}
                 </div>
       {/* FOOTER */}
-      <div className="drill-footer">
-        <button className="btn outline" onClick={goBack}>Previous</button>
-        <button
-  className="btn primary"
-  onClick={() => {
-    const updatedContainer = {
-      ...container,  
-      ...form,   // edited fields overwrite only what changed
-      updatedAt: new Date().toISOString(),
-    };
-    onUpdate(updatedContainer); goBack();                  
-  }}
->
-  Update
-</button>
+      <div className="footer-btns">
+        <button className="preview" onClick={goBack}>Previous</button>
+  <button className="create" onClick={handleUpdate}>Update</button>
+
 
       </div>
       </div>

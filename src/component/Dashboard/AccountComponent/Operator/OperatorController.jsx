@@ -1,26 +1,67 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
+import "../../../../assets/Styles/dashboard/account/emptyAccount.scss";
 import CreateOperator from "./CreateOperator";
 import OperatorTable from "./OperatorTable";
-import "../../../../assets/Styles/dashboard/account/emptyAccount.scss";
+import { BdcOperatorService } from "../../../../services/Account/BdcOperatorService";
 
-const OperatorController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) => {
-  const [view, setView] = useState("empty");
-  const [users, setUsers] = useState([]);
+const OperatorController = ({ autoOpenCreate, setAutoOpenCreate }) => {
+  const [view, setView] = useState("table");
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const [searchEmail, setSearchEmail] = useState("");
+  const [searchName, setSearchName] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [editData, setEditData] = useState(null);
+
+  const fetchOperators = async (page = 1) => {
+    try {
+      setLoading(true);
+      const res = await BdcOperatorService.list({
+        search_email: searchEmail,
+        search_fullname: searchName,
+        page,
+      });
+
+      setData(res.data.record?.data || []);
+      setCurrentPage(res.data.record?.current_page || 1);
+      setTotalPages(res.data.record?.last_page || 1);
+    } catch (err) {
+      console.error("Failed to fetch BDC operators", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-  if (autoOpenCreate) {
+    fetchOperators();
+  }, []);
+
+  useEffect(() => {
+    if (autoOpenCreate) {
+      setView("create");
+      setAutoOpenCreate(false);
+    }
+  }, [autoOpenCreate]);
+
+  const handleSearch = () => fetchOperators(1);
+
+  const handleEdit = (operator) => {
+    setEditData(operator);
     setView("create");
-    setAutoOpenCreate(false); 
-  }
-}, [autoOpenCreate]);
+  };
 
   return (
     <div className="emptyAccount">
       <div className="emptyAccount-container">
         <div className="emptyAccount-content">
+
           {/* TOP BAR */}
-          {(view === "empty" || view === "table") && (
+          {view === "table" && (
             <div className="top-content">
               <div className="top-content-wrapper">
                 <div className="left-wrapper" />
@@ -28,32 +69,27 @@ const OperatorController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) 
                 <div className="right-wrapper">
                   <div className="right-wrapper-input">
                     <Search className="input-icon" />
-                    <input type="text" placeholder="Search" />
+                    <input
+                      placeholder="Search email"
+                      value={searchEmail}
+                      onChange={(e) => setSearchEmail(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    />
                   </div>
 
-                  <div className="select-input">
-                    <div className="filter">
-                      <span>Add Filter</span>
-                      <Filter />
-                    </div>
+                  <div className="right-wrapper-input">
+                    <input
+                      placeholder="Search name"
+                      value={searchName}
+                      onChange={(e) => setSearchName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    />
                   </div>
 
-                  <div className="select-input">
-                    <div className="select-input-field">
-                      <span>All Field</span>
-                      <ChevronDown />
-                    </div>
-                  </div>
-
-                  <div className="import-input">
-                    <p>Import</p>
-                  </div>
-
-                  <div onClick={() => setView("export")} className="import-input">
-                    <p>Export</p>
-                  </div>
-
-                  <button onClick={() => setView("create")}>
+                  <button onClick={() => {
+                    setEditData(null);
+                    setView("create");
+                  }}>
                     Create BDC Operator
                   </button>
                 </div>
@@ -63,28 +99,24 @@ const OperatorController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) 
 
           {/* MAIN CONTENT */}
           <div className="main-content">
-            {/* Empty State */}
-            {users.length === 0 && view === "empty" && (
-              <div className="main-content-image">
-                <div className="main-content-image-text">
-                  <p>No BDC Operator Created Yet</p>
-                  <span>A BDC Operator created would be saved here automatically</span>
-                </div>
-              </div>
+            {loading && <p style={{ textAlign: "center" }}>Loading...</p>}
+
+            {!loading && view === "table" && (
+              <OperatorTable
+                data={data}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={fetchOperators}
+                onEdit={handleEdit}
+              />
             )}
 
-            {/* Table */}
-            {users.length > 0 && (view === "table" || view === "empty") && (
-              <OperatorTable users={users} />
-            )}
-
-            {/* Create User Form */}
             {view === "create" && (
               <CreateOperator
-                users={users}
-                setUsers={setUsers}
+                editData={editData}
                 setView={setView}
-                openSubmenu={openSubmenu}
+                refresh={fetchOperators}
+                mode="submenu"
               />
             )}
           </div>

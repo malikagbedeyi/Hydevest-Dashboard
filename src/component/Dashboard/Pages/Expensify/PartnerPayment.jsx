@@ -1,10 +1,8 @@
 import React from 'react'
-// import '../../../../assets/Styles/dashboard/finance/account/account.scss'
 import profile from '../../../../assets/Images/profile-img.png'
 import { ChevronRight } from 'lucide-react'
-import ExpensifyController from '../../ExpensifyComponent/ExpensifyPage/ExpensifyController'
-// import EmptyAccount from '../../AccountComponent/AccountsController'
-const Expensify = () => {
+
+const PartnerPayment = () => {
   return (
     <div className='account'>
         <div className="headerContainer row">
@@ -13,8 +11,8 @@ const Expensify = () => {
             <div className="topWrapper">
               <div className="leftTopWrapper">
                 <h1>Expensify</h1>
-                {/* <span> <ChevronRight size={16} /> </span>
-                <span>Account</span> */}
+                <span> <ChevronRight size={16} /> </span>
+                <span>Pertner Payment</span>
               </div>
               <div className="rightTopWrapper">
                 <div className="menuicon">
@@ -35,10 +33,10 @@ const Expensify = () => {
         </div>
         </div>
         <div className="account-component">
-          <ExpensifyController />
+          {/* <FinanceController /> */}
         </div>
     </div>
   )
 }
 
-export default Expensify
+export default PartnerPayment

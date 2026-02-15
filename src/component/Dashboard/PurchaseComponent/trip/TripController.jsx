@@ -2,71 +2,63 @@ import React, { useEffect, useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
 import CreateTrip from "./CreateTrip";
 import TripTable from "./TripTable"; 
-import "../../../../assets/Styles/dashboard/Purchase/trip.scss";
+import "../../../../assets/Styles/dashboard/controller.scss";
 import TripDetails from "./TripDetails";
+import { TripServices } from "../../../../services/Trip/trip";
+import TripLogs from "./TripLogs";
 
 const STORAGE_KEY = "trip_data";
 
-const TripController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
+const TripController = () => {
   // Load trips from storage
-  const [data, setData] = useState(() => {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  });
-
-  // View controller
-  const [view, setView] = useState(() => {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    return saved.length ? "table" : "empty";
-  });
+  const [view, setView] = useState("table");
+   const [trip, setTrip] = useState([])
+    const [search , setSearch ] = useState('')
+    const [page,setPage] = useState(1)
+    const [pagination,setPagination] = useState({})
   const [selectedTrip, setSelectedTrip] = useState(null);
-  
+  const [loading, setLoading] = useState(false);
+ const [activeTab, setActiveTab] = useState("table");
 
-  /* ===================== EFFECTS ===================== */
+  /* ================= FETCH TRIPS ================= */
+  const feacthTrip = async(pageNum = page) => {
 
-  // Keep view in sync with data
-  useEffect(() => {
-    if (data.length === 0) setView("empty");
-    else if (view === "empty") setView("table");
-  }, [data]);
+   try {
+    setLoading(true);
+       const res = await TripServices.list({
+      title: search,
+      location:search,
+      // search_fullname:search,
+      // date_created:search,
+      page : pageNum,
+    });
+    
+    setTrip(res.data?.record.data || [])
+    setPagination(res.data?.record || [])
+   } catch(err) {
+     console.error(err);
+   }finally {
+    setLoading(false);
+   }
+  }
+useEffect(() => {
+  feacthTrip(page)
+},[page])
 
-  // Auto open create
-  useEffect(() => {
-    if (autoOpenCreate) {
-      setView("create");
-      setAutoOpenCreate(false);
-    }
-  }, [autoOpenCreate, setAutoOpenCreate]);
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setPage(1);
+    feacthTrip(1);
+  }, 400);
 
-  const totalTrip = data.length;
-  /* ===================== ACTIONS ===================== */
-
-  const handleAddTrip = (newTrip) => {
-    const updated = [...data, newTrip];
-    setData(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    setView("table");
-  };
-
-  const handleDeleteTrip = (id) => {
-    const updated = data.filter((t) => t.id !== id);
-    setData(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  };
-
-  const handleUpdateTrip = (updatedTrip) => {
-    const updated = data.map((t) =>
-      t.id === updatedTrip.id ? updatedTrip : t
-    );
-    setData(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  };
-
+  return () => clearTimeout(timer);
+}, [search]);
   /* ===================== UI ===================== */
 
   return (
-    <div className="emptyTrip">
-      <div className="emptyTrip-container">
-        <div className="emptyTrip-content">
+    <div className="controller">
+      <div className="controller-container">
+        <div className="controller-content">
 
           {(view === "empty" || view === "table") && (
             <div className="top-content">
@@ -76,7 +68,9 @@ const TripController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
                 <div className="right-wrapper">
                   <div className="right-wrapper-input">
                     <Search className="input-icon" />
-                    <input type="text" placeholder="Search" />
+                   <input  placeholder="Search" value={search}
+                     onChange={(e) => setSearch(e.target.value)}
+                   />
                   </div>
 
                   <div className="select-input">
@@ -109,6 +103,18 @@ const TripController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
                   </button>
                 </div>
               </div>
+                <div className="log-tab-section">
+                <div className="tab-content">
+                  <ul>
+                    <li  className={activeTab === "table" ? "active" : ""}
+                      onClick={() => setActiveTab("table")}> Trip Table
+                    </li>
+                    <li className={activeTab === "logs" ? "active" : ""}
+                      onClick={() => setActiveTab("logs")} >Activity Log
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </div>
           )}
 
@@ -122,33 +128,44 @@ const TripController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
               </div>
             )}
 
-{view === "table" && (
-  <TripTable
-    data={data}
-    onDelete={handleDeleteTrip}
-    onRowClick={(trip) => {
-      setSelectedTrip(trip);
-      setView("details");
-    }}
-  />
-)}
+{(view === "table" || view === "empty") && activeTab === "table" && (
+        <TripTable
+         data={trip}
+              loading={loading}
+                page={page}
+                setPage={setPage}
+                pagination={pagination} 
+                  onRowClick={(trip) => {
+                  setSelectedTrip(trip);
+                  setView("details");
+                }}/>
+      )}
+
+            {(view === "table" || view === "empty") && activeTab === "logs" && (
+              <TripLogs />
+            )}
+  {view === "create" && (
+        <CreateTrip
+         data={trip}
+                setLoading={setLoading}
+                setData={setTrip}
+                setView={setView}
+                onSuccess={() => feacthTrip(page)}
+        />
+      )}
+
 {view === "details" && selectedTrip && (
   <TripDetails
     trip={selectedTrip}
     goBack={() => {
-      setSelectedTrip(null);
+      feacthTrip(page); 
       setView("table");
     }}
   />
 )}
 
-            {view === "create" && (
-              <CreateTrip
-                onCreate={handleAddTrip}
-                setView={setView}
-                openSubmenu={openSubmenu}
-              />
-            )}
+
+
 
           </div>
 

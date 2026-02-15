@@ -1,30 +1,52 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
 import EntityTable from "./EntityTable";
-import "../../../../assets/Styles/dashboard/account/emptyAccount.scss";
+import "../../../../assets/Styles/dashboard/controller.scss";
 import CreateEntity from "./CreateEntity";
+import { EntityServices } from "../../../../services/Admin/EntityServices";
+import EntityLog from "./EntityLog";
 
-const Entity_KEY = "entity_data";
+// const Entity_KEY = "entity_data";
 
 const EntityController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) => {
-  const [view, setView] = useState(() => {
-    const saved = JSON.parse(localStorage.getItem(Entity_KEY)) || [];
-    return saved.length ? "table" : "empty";
-  });
+  const [view, setView] = useState("table")
+  const [entity, setEntity] = useState([])
+  const [search , setSearch ] = useState('')
+  const [page,setPage] = useState(1)
+  const [activeTab, setActiveTab] = useState("table");
+  const [loading,setLoading] = useState(false)
+  const [pagination,setPagination] = useState({})
+  const [selectedEntity, setSelectedEntity] = useState(null);
   
-  const [data, setData] = useState(() => {
-    return JSON.parse(localStorage.getItem(Entity_KEY)) || [];
-  });
-  useEffect(() => {
-    localStorage.setItem(Entity_KEY, JSON.stringify(data));
-  
-    if (data.length === 0) {
-      setView("empty");
-    } else if (view === "empty") {
-      setView("table");
-    }
-  }, [data]);
-  
+  const feacthEntity = async(pageNum = page) => {
+   try {
+    setLoading(true);
+       const res = await EntityServices.list({
+      search_email: search,
+      // search_fullname:search,
+      // date_created:search,
+      page : pageNum,
+    });
+    setEntity(res.data?.record.data || [])
+    setPagination(res.data?.record || [])
+   } catch(err) {
+     console.error(err);
+   }finally {
+    setLoading(false);
+   }
+  }
+useEffect(() => {
+  feacthEntity(page)
+},[page])
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setPage(1);
+    feacthEntity(1);
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [search]);
 
   useEffect(() => {
   if (autoOpenCreate) {
@@ -34,46 +56,46 @@ const EntityController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) =>
 }, [autoOpenCreate]);
 
   return (
-    <div className="emptyAccount">
-      <div className="emptyAccount-container">
-        <div className="emptyAccount-content">
+    <div className="controller">
+      <div className="controller-container">
+        <div className="controller-content">
           {/* TOP BAR */}
           {(view === "empty" || view === "table") && (
             <div className="top-content">
-              <div className="top-content-wrapper">
-                <div className="left-wrapper" />
-
-                <div className="right-wrapper">
-                  <div className="right-wrapper-input">
-                    <Search className="input-icon" />
-                    <input type="text" placeholder="Search" />
-                  </div>
-
-                  <div className="select-input">
-                    <div className="filter">
-                      <span>Add Filter</span>
-                      <Filter />
+             <div className="top-content-wrapper">
+                  <div className="left-wrapper" />
+                  <div className="right-wrapper">
+                    <div className="right-wrapper-input">
+                      <Search className="input-icon" />
+                      <input
+                        placeholder="Search"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                      />
                     </div>
-                  </div>
 
-                  <div className="select-input">
-                    <div className="select-input-field">
-                      <span>All Field</span>
-                      <ChevronDown />
+                    <div className="select-input">
+                      <div className="filter">
+                        <span>Add Filter</span>
+                        <Filter />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="import-input">
-                    <p>Import</p>
+                    <button onClick={() => setView("create")}>
+                      Create Entity
+                    </button>
                   </div>
-
-                  <div onClick={() => setView("export")} className="import-input">
-                    <p>Export</p>
-                  </div>
-
-                  <button onClick={() => setView("create")}>
-                    Create Entity
-                  </button>
+                </div>
+              <div className="log-tab-section">
+                <div className="tab-content">
+                  <ul>
+                    <li  className={activeTab === "table" ? "active" : ""}
+                      onClick={() => setActiveTab("table")}> Permission Table
+                    </li>
+                    <li className={activeTab === "logs" ? "active" : ""}
+                      onClick={() => setActiveTab("logs")} >Activity Log
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -81,8 +103,7 @@ const EntityController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) =>
 
           {/* MAIN CONTENT */}
           <div className="main-content">
-            {/* Empty State */}
-            {data.length === 0 && view === "empty" && (
+            {view === "empty" && (
               <div className="main-content-image">
                 <div className="main-content-image-text">
                   <p>No Entity Created Yet</p>
@@ -91,20 +112,30 @@ const EntityController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) =>
               </div>
             )}
 
-            {/* Table */}
-            {data.length > 0 && (view === "table" || view === "empty") && (
-              <EntityTable  data={data} />
+{(view === "table" || view === "empty") && activeTab === "table" && (
+              <EntityTable  data={entity}
+              loading={loading}
+                page={page}
+                setPage={setPage}
+                pagination={pagination} 
+                  onEdit={(entity) => {
+                  setSelectedEntity(entity);
+                  setView("edit");
+                }}/>
             )}
-
-            {/* Create User Form */}
-            {view === "create" && (
+            {(view === "table" || view === "empty") && activeTab === "logs" && (
+              <EntityLog />
+            )}
+            {view === "create" || view === "edit" ? (
               <CreateEntity
-                data={data}
-                setData={setData}
+              mode={view === "edit" ? "edit" : "create"}
+              data={view === "edit" ? selectedEntity : null}
+                setLoading={setLoading}
+                setData={setEntity}
                 setView={setView}
-                openSubmenu={openSubmenu}
+                onSuccess={() => feacthEntity(page)}
               />
-            )}
+            ) : null}
           </div>
         </div>
       </div>

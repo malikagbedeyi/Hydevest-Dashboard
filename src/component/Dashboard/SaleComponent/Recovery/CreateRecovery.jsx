@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import "../../../../assets/Styles/dashboard/Sale/createPresale.scss";
+import "../../../../assets/Styles/dashboard/create.scss";
 import { ChevronDown, Eye, File, Paperclip, Trash2 } from "lucide-react";
 
 const CreateRecovery = ({ SalesData = [], setView, onCreate }) => {

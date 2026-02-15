@@ -45,63 +45,88 @@
   .drilldown {
     font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue";
     color: #222;
-    padding: 20px 0;
-
-    .drill-summary-grid{
-      margin-bottom: 30px;
-    .drill-summary {
-      width: 100%;
+    padding: 1.4vw 0;
+    @include Destop{
+      padding: 20px 0;
+    }
+    .drill-summary-grid {
+      margin-bottom: 2.1vw;
+    
+      @include Destop {
+        margin-bottom: 30px;
+      }
+    
+      .drill-summary {
+        width: 100%;
         display: flex;
-        gap: 12px;
+        gap: 0.85vw;
         align-items: center;
+    
+        @include Destop {
+          gap: 12px;
+        }
+    
         .summary-item {
           width: 100%;
-          padding: 12px 16px 20px;
+          padding: 0.85vw 1.1vw 1.4vw;
           box-shadow: 0px 4px 16px 0px #0000001F;
           background: #ffffff;
-          gap: 8px;
+          gap: 1vw!important;
           display: flex;
           flex-direction: column;
+          border-radius: 10px;
+          @include Destop {
+            padding: 12px 16px 20px;
+            gap: 8px;
+          }
+    
           .small {
-           font-family: "Roboto",sans-serif;
-           font-weight: 500;
-           font-style: Medium;
-           font-size: 1vw;
-           line-height: 24px;
-           letter-spacing: 0px;
-           color: #8EA396;
-           margin: 0;
-            @include Destop{
+            font-family: "Roboto", sans-serif;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 1vw;
+            line-height: 24px;
+            letter-spacing: 0px;
+            color: #8EA396;
+            margin: 0;
+    
+            @include Destop {
               font-size: 14px;
+            }
           }
-          }
-  
+    
           h2 {
-           font-family: "Poppins",sans-serif;
-           font-weight: 500;
-           font-style: Medium;
-           font-size: 1.5vw;
-           line-height: 100%;
-           letter-spacing: 0px;
-           margin: 0 0 0 30px;
-           color: #581aae;
-           position: relative;
-            @include Destop{
+            font-family: "Poppins", sans-serif;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 1.4vw!important;
+            line-height: 100%;
+            letter-spacing: 0px;
+            margin: 0 0 0 2.1vw;
+            color: #581aae;
+            position: relative;
+    
+            @include Destop {
               font-size: 24px;
-          }
-          span{
-             position: absolute;
-             top: -6px;
-             left: -30px;
+              margin-left: 30px;
+            }
+    
+            span {
+              position: absolute;
+              top: -0.4vw;
+              left: -2.1vw;
               font-size: 0.9vw;
-              @include Destop{
-              font-size: 14px;
-          }
-          }
+    
+              @include Destop {
+                top: -6px;
+                left: -30px;
+                font-size: 14px;
+              }
+            }
           }
         }
       }
-      }
+    }
       .readOnly-details{
         .sale-readOnly-content{
           display: flex;
@@ -1274,6 +1299,7 @@
           display: flex;
           gap: 20px;
           background: #f5f5f7;
+          margin-bottom: 10px;
           // padding: 10px;
           button{
             border: none;
@@ -1281,6 +1307,10 @@
             padding: 10px;
             &.active{
               background: #fff;
+              color: #581aae;
+            }
+            &.active-request{
+              background: #f5f5f7;
               color: #581aae;
             }
           }
@@ -1300,7 +1330,6 @@
           color: #581aae;
         }
   }
-   
   }
   
   /* ======================

@@ -3,7 +3,7 @@ import '../../../../assets/Styles/dashboard/drilldown.scss'
 import '../../../../assets/Styles/dashboard/table.scss'
 
 
-const DrilldownContainerSale = ({ data, goBack , sales, presales, recoveries, }) => {
+const DrilldownContainerSale = ({ data, goBack , sales=[], presales=[], recoveries=[], }) => {
 
   const [activeTab, setActiveTab] = useState("sales");
 
@@ -51,7 +51,7 @@ const DrilldownContainerSale = ({ data, goBack , sales, presales, recoveries, })
           <div className="summary-item">
             <p>Presale Amount</p>
             <h2>
-            ₦{formatMoneyNGN(presaleAmount)}
+            {formatMoneyNGN(presaleAmount)}
             </h2>
           </div>
           </div>
@@ -128,8 +128,8 @@ const DrilldownContainerSale = ({ data, goBack , sales, presales, recoveries, })
           <td>{rec.saleId}</td>
           <td>{rec.customerName}</td>
           <td>{rec.customerPhone}</td>
-          <td>{rec.amountPaid.toLocaleString()}</td>
-          <td>{rec.balanceAfter === 0 ? "Fully Paid" : rec.balanceAfter.toLocaleString()}</td>
+          <td>{formatMoneyNGN(rec.amountPaid)}</td>
+          <td>{formatMoneyNGN(rec.balanceAfter === 0 ? "Fully Paid" : rec.balanceAfter)}</td>
           <td>{new Date(rec.createdAt).toLocaleDateString()}</td>
           <td>{rec.status}</td>
         </tr>

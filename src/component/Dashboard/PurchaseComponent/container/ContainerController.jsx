@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
 import ContainerTable from "./ContainerTable";
-import "../../../../assets/Styles/dashboard/Purchase/container.scss";
+import "../../../../assets/Styles/dashboard/controller.scss";
 import DrildownContainer from "./DrildownContainer";
 
 const ContainerController = () => {
@@ -75,6 +75,31 @@ const ContainerController = () => {
   
     return allFinance;
   });
+  const handleUpdateContainer = (updatedContainer) => {
+    // update containers state
+    setContainers((prev) =>
+      prev.map((c) => (c.id === updatedContainer.id ? updatedContainer : c))
+    );
+  
+    // find the trip this container belongs to
+    const tripContaining = trips.find((trip) => {
+      const tripContainers =
+        JSON.parse(localStorage.getItem(`trip-${trip.id}-container`)) || [];
+      return tripContainers.some((c) => c.id === updatedContainer.id);
+    });
+  
+    if (tripContaining) {
+      const tripContainers =
+        JSON.parse(localStorage.getItem(`trip-${tripContaining.id}-container`)) || [];
+      const updatedTripContainers = tripContainers.map((c) =>
+        c.id === updatedContainer.id ? updatedContainer : c
+      );
+      localStorage.setItem(
+        `trip-${tripContaining.id}-container`,
+        JSON.stringify(updatedTripContainers)
+      );
+    }
+  };
   
 /* ================== EXPENSE CATEGORIES ================== */
 const containerExpenses = financeData.filter(
@@ -150,9 +175,9 @@ const containerExpenses = financeData.filter(
   
 
   return (
-    <div className="emptyTrip">
-    <div className="emptyTrip-container">
-      <div className="emptyTrip-content">
+    <div className="controller">
+    <div className="controller-container">
+      <div className="controller-content">
           {(view === "empty" || view === "table") && (
             <div className="top-content">
               <div className="top-content-wrapper">
@@ -206,6 +231,7 @@ const containerExpenses = financeData.filter(
                 containers={filteredContainers}
                 onDelete={handleDeleteContainer}
                 onRowClick={handleRowClick} 
+                onUpdate={handleUpdateContainer}
                 avgContainerRate={avgContainerRate}
                 totalAmountUSD={totalAmountUSD}
                 totalAmountNGN={totalAmountNGN}

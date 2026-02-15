@@ -1,35 +1,23 @@
 import React, { useState } from "react";
 import { Trash2 } from "lucide-react";
 import TripDetails from "./TripDetails";
-import "../../../../assets/Styles/dashboard/Purchase/table.scss";
+import "../../../../assets/Styles/dashboard/table.scss";
 
-  // if (selectedTrip) {
-  //   return (
-  //   <>
-  //     {view === "details" && selectedTrip && (
-  //       <TripDetails
-  //         trip={selectedTrip}
-  //         goBack={() => {
-  //           setSelectedTrip(null);
-  //           setView("table");
-  //         }}
-  //       />
-  //     )}   
-  //   </>   
-  //   );
-  // }
+
   const TripTable = ({ data, onDelete, onRowClick }) => {
     return (
       <div className="userTable">
         <div className="table-wrap">
-          <table className="table">
+          <table className="table" style={{width:"100%" , maxWidth:"100%",minWidth:"100%"}}>
             <thead>
               <tr>
                 <th>S/N</th>
                 <th>Title</th>
+                <th>description</th>
                 <th>Location</th>
                 <th>Start</th>
                 <th>End</th>
+                <th>Created by</th>
                 <th>Status</th>
                 <th>Action</th>
               </tr>
@@ -42,13 +30,17 @@ import "../../../../assets/Styles/dashboard/Purchase/table.scss";
                 </tr>
               ) : (
                 data.map((trip, idx) => (
-                  <tr key={trip.id} onClick={() =>onRowClick({...trip,sn: idx + 1,})}>
+                  <tr key={trip.id} onClick={() =>onRowClick({...trip,trip_uuid: trip.trip_uuid,})}>
                     <td>{String(idx + 1).padStart(2, "0")}</td>
                     <td>{trip.title}</td>
+                    <td>{trip.desc}</td>
                     <td>{trip.location}</td>
-                    <td>{trip.startDate}</td>
-                    <td>{trip.endDate}</td>
-                    <td>{trip.status}</td>
+                    <td>{trip.start_date}</td>
+                    <td>{trip.end_date}</td>
+                    <td>{trip?.creator_info.firstname} {trip?.creator_info.lastname}</td>
+                  <td><span className={`status ${trip.status === 1 ? "active" : "pending"}`}
+                   style={{color:trip.status === 1 ? "green":"red"}}>
+                    {trip.status === 1 ? "Active" : "Pending"}</span></td>
                     <td onClick={(e) => e.stopPropagation()}>
                       <Trash2
                         size={16}

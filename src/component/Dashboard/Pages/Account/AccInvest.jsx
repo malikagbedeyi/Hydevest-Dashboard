@@ -3,7 +3,10 @@ import '../../../../assets/Styles/dashboard/account/account.scss'
 import profile from '../../../../assets/Images/profile-img.png'
 import { ChevronRight } from 'lucide-react'
 import InvestController from '../../AccountComponent/Invest/InvestController'
-const AccInvest = ({autoOpenCreate, setAutoOpenCreate}) => {
+import { useOutletContext } from "react-router-dom";
+
+const AccInvest = () => {
+  const { autoOpenCreate, setAutoOpenCreate, openSubmenuFromChild } = useOutletContext();
   return (
     <div className='account'>
         <div className="headerContainer row">
@@ -34,8 +37,9 @@ const AccInvest = ({autoOpenCreate, setAutoOpenCreate}) => {
         </div>
         </div>
         <div className="account-component">
-          <InvestController   autoOpenCreate={autoOpenCreate} 
-            setAutoOpenCreate={setAutoOpenCreate} />
+          <InvestController    openSubmenu={openSubmenuFromChild}
+             autoOpenCreate={autoOpenCreate}
+             setAutoOpenCreate={setAutoOpenCreate}/>
         </div>
     </div>
   )

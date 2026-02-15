@@ -1,60 +1,154 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../../../assets/Styles/dashboard/account/createAccount.scss";
-import { ChevronDown, X } from "lucide-react";
+import { X } from "lucide-react";
+import { PartnerService } from "../../../../services/Account/PartnerService";
 
-const PrivilegeOptions = ["NT Admin", "Manager", "User"];
-const statusOptions = ["Active", "Disabled"];
-
-const CreatePartner = ({ data, setData, setView, openSubmenu }) => {
+const CreatePartner = ({data, setView, onSuccess, mode  }) => {
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
+    firstname: "",
+    lastname: "",
     email: "",
-    phone: "",
-    password: "",
-    bankName: "",
-    bankAccount: "",
-    mfa: false,
-    changePassword: false,
+    phone_no: "",
+    password: "", 
+    bank_name: "",
+    bank_account: "",
   });
-  const [successMessage, setSuccessMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [messageType, setMessageType] = useState("success");
+  const [status, setStatus] = useState(data?.status ?? 0);
+const isApproved = status === 1;
 
-  /* ================= HANDLERS ================= */
+  useEffect(() => {
+    if (mode === "edit" && data) {
+      setForm({
+        user_uuid: data.user_uuid,
+        firstname: data.firstname || "",
+        lastname: data.lastname || "",
+        email: data.email || "",
+        phone_no: data.phone_no || "",
+        password: "",
+        bank_name: data.partner_bank?.bank_name || "",
+        bank_account: data.partner_bank?.bank_account || "",
+      });
+    }
+  }, [mode, data]);
+  useEffect(() => {
+    if (mode === "edit" && data) {
+      setStatus(data.status ?? 0);
+    }
+  }, [data, mode]);
+  
+  
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCreate = () => {
-    const newdata = {
-      id: crypto.randomUUID(),
-      ...form,
-      fullName: `${form.firstName} ${form.lastName}`, // 👈 useful later
-      createdAt: new Date().toISOString(),
-    };
+  const handleUpdate = async () => {
+    try {
+      setLoading(true);
   
-    setData((prev) => [newdata, ...prev]);
-    setSuccessMessage("Partner successfully created");
+      await PartnerService.edit({
+        user_uuid: form.user_uuid,
+        firstname: form.firstname,
+        lastname: form.lastname,
+        email: form.email,
+        phone_no: form.phone_no,
+      });
+  
+      await PartnerService.editBank({
+        user_uuid: form.user_uuid,
+        bank_name: form.bank_name,
+        bank_account: form.bank_account,
+      });
+      if (form.password) {
+        await PartnerService.changePassword(
+          form.user_uuid,
+          form.password
+        );
+      }
+  
+      setMessageType("success");
+      setMessage("Partner updated successfully");
+    } catch (err) {
+      setMessageType("error");
+      setMessage(err.response?.data?.message || "Update failed");
+    } finally {
+      setLoading(false);
+    }
   };
   
+  const handleCreate = async () => {
+    try {
+      setLoading(true);
+      setMessage(null);
+  
+      if (mode === "edit") {
+        await handleUpdate();
+      } else {
+        await PartnerService.create(form);
+      }
+      
+
+    } catch (err) {
+      const backendMessage =
+        err.response?.data?.message ||
+        "partner failed. Please check your input.";
+  
+      setMessageType("error");
+      setMessage(backendMessage);
+    } finally {
+      setLoading(false);
+    }
+    if (mode === "submenu" && typeof setView === "function") {
+      setView("table");
+    }
+  }
 
   const handleClosePopup = () => {
-    setSuccessMessage(null);
-    setView("table");
-    openSubmenu?.("data");
+    setMessage(null);
+  
+    if (messageType === "success") {
+      onSuccess?.();        // refresh table
+      setView("table");     // ALWAYS go back
+    }
   };
-
-  /* ================= SUCCESS POPUP ================= */
-  if (successMessage) {
+  
+  const handleCancel = () => {
+    if (mode === "submenu"){
+     setView("table");
+    }
+  };
+  const payload = { ...form };
+  if (mode === "edit" && !payload.password) {
+    delete payload.password;
+  }
+  const handleApprove = async () => {
+    try {
+      setLoading(true);
+      await PartnerService.changeStatus(form.user_uuid, 1);
+      setStatus(1); // approved
+      setMessageType("success");
+      setMessage("Partner approved successfully");
+    } catch (err) {
+      setMessageType("error");
+      setMessage(
+        err.response?.data?.message || "Failed to approve partner"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  /* ================= MESSAGE POPUP ================= */
+  if (message) {
     return (
       <div className="trip-card-popup">
         <div className="trip-card-popup-container">
-          <div className="popup-content">
+          <div className={`popup-content ${messageType}`}>
             <div onClick={handleClosePopup} className="delete-box">✕</div>
-            <span>{successMessage}</span>
+            <span>{message}</span>
           </div>
         </div>
       </div>
@@ -63,90 +157,89 @@ const CreatePartner = ({ data, setData, setView, openSubmenu }) => {
 
   /* ================= UI ================= */
   return (
-    <div className="">
+    <div className="trip-modal">
       <div className="create-container-modal">
         <div className="create-container-card">
+        {mode === "edit" && !isApproved && (
+  <div className="approval-bar">
+    <span className="status-badge pending">Pending</span>
+    <button
+      className="approve-btn"
+      onClick={handleApprove}
+      disabled={loading}
+    >
+      Approve Partner
+    </button>
+  </div>
+)}
 
-          {/* HEADER */}
           <div className="header">
-            <h2>Create Partner</h2>
+          <h3>{mode === "edit" ? "Edit Partner" : "Create New Partner"}</h3>
             <X size={18} className="close" onClick={() => setView("table")} />
           </div>
 
-          <p>Enter the details of new Partner</p>
+          <p>Enter the details for  Partner</p>
 
-          {/* BASIC INFO */}
-          <div className="account-grid">
-            <div className="account-grid-content">
+          <div className="account-grid-content">
             <div className="grid-2">
+              <div className="form-group">
+                <label htmlFor="">First Name</label>
+                <input name="firstname" placeholder="First Name" value={form.firstname} onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label htmlFor="">Last Name</label>
+                <input name="lastname" placeholder="Last Name"  value={form.lastname} onChange={handleChange} />
+              </div>
+            
+              <div className="form-group">
+                <label htmlFor="">Email</label>
+                <input name="email" placeholder="Email" value={form.email} onChange={handleChange} />
+              </div>
+          
             <div className="form-group">
-              <label>First Name</label>
-              <input
-                name="firstName"
-                value={form.firstName}
-                onChange={handleChange}
-                placeholder="Enter First Name"
-              />
+              <label htmlFor="">Phone No</label>
+              <input name="phone_no" placeholder="Phone Number" value={form.phone_no} onChange={handleChange} />
             </div>
-            <div className="form-group">
-              <label>Last Name</label>
-              <input
-                name="lastName"
-                value={form.lastName}
-                onChange={handleChange}
-                placeholder="Enter Last Name"
-              />
-            </div>
-      </div>
-      <div className="form-group mb-4">
-          <label>Email</label>
-          <input name="email"
-           placeholder="Enter Email"
-            value={form.email} onChange={handleChange} type="email" />
-        </div>
-      <div className="grid-2">
-        <div className="form-group highlighted">
-          <label>Phone Number </label>
-          <input name="phone"
-           placeholder="Enter Phone Number"
-            value={form.phone} onChange={handleChange} type="text" />
-        </div>
-        <div className="form-group">
-          <label>Password</label>
-          <input name="password"
-           placeholder="Enter Password"
-            value={form.password} onChange={handleChange} type="password" />
-        </div>
-      </div>
+            {mode !== "edit" && (
+  <div className="form-group">
+    <label>New Password (optional)</label>
+    <input  type="password"  name="password"   placeholder="Enter Password"
+      value={form.password} onChange={handleChange}
+    />
+  </div>
+)}
+            
+             {mode === "edit" && (
+  <div className="form-group">
+    <label>New Password (optional)</label>
+    <input  type="password"  name="password"   placeholder="Enter New Password to Change Password"
+      value={form.password} onChange={handleChange}
+    />
+  </div>
+)}
 
-      <div className="grid-2">
-        <div className="form-group">
-          <label>Bank Name</label>
-          <input name="bankName"
-           placeholder="Enter Bank Name"
-            value={form.bankName} onChange={handleChange} type="text" />
-        </div>
-        <div className="form-group">
-          <label>Bank Account</label>
-          <input name="bankAccount"
-           placeholder="Enter Bank Account"
-            value={form.bankAccount} onChange={handleChange} type="text" />
-        </div>
-      </div>
+            
+              <div className="form-group">
+                <label htmlFor="">Bank Name</label>
+                <input name="bank_name" placeholder="Bank Name" value={form.bank_name} onChange={handleChange} />
+              </div>
+                </div>
+                <div className="form-group">
+                <label htmlFor="">Bank Account Number</label>
+                <input name="bank_account" type="number" placeholder="Bank Account" value={form.bank_account} onChange={handleChange} />          
+              </div>
 
-          {/* ACTIONS */}
-          <div className="btn-row">
-            <button className="cancel" onClick={() => setView("table")}>
-              Cancel
-            </button>
-            <button className="create" onClick={handleCreate}>
-              Create Partner
-            </button>
+           <div className="btn-row">
+                {mode === "submenu" && (
+                  <button className="cancel" onClick={handleCancel}>Cancel</button>
+                )}
+                <button className="create" onClick={handleCreate}>
+                {mode === "edit" ? "Update Partner" : "Create Partner"}
+                </button>
+              </div>
           </div>
         </div>
       </div>
-      </div>
-    </div>
     </div>
   );
 };

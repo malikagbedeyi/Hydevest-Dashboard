@@ -1,7 +1,7 @@
 import React from 'react'
-import profile from '../../../../../assets/Images/profile-img.png'
+import profile from '../../../../assets/Images/profile-img.png'
 import { ChevronRight } from 'lucide-react'
-import PayrollController from '../../../ExpensifyComponent/PayRollComponent/PayrollController'
+import PayrollController from '../../ExpensifyComponent/PayRollComponent/PayrollController'
 
 const PayRoll = () => {
   return (

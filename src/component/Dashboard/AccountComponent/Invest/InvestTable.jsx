@@ -1,17 +1,21 @@
-import React, { useState } from "react";
+import React from "react";
 import "../../../../assets/Styles/dashboard/account/userTable.scss";
+import { InvestorService } from "../../../../services/Account/InvestorService";
 
-const InvestTable = ({ users }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentUsers = users.slice(startIndex, startIndex + itemsPerPage);
+const InvestTable = ({ data, refresh, onEdit, currentPage, totalPages, onPageChange }) => {
+  const toggleStatus = async (user) => {
+    try {
+      await InvestorService.changeStatus(user.user_uuid, user.status === 1 ? 0 : 1);
+      refresh();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="userTable">
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" style={{ width: "110%", minWidth: "110%",maxWidth:"110%" }}>
           <thead>
             <tr>
               <th>S/N</th>
@@ -19,34 +23,55 @@ const InvestTable = ({ users }) => {
               <th>Email</th>
               <th>Phone</th>
               <th>Bank Name</th>
-              <th>Bank Accont</th>
-              <th>Date Created</th>
+              <th>Bank Account Number</th>
+              <th>Status</th>
             </tr>
           </thead>
 
           <tbody>
-            {currentUsers.length === 0 ? (
+            {data.length === 0 ? (
               <tr>
                 <td colSpan="7" style={{ textAlign: "center" }}>
-                  No Invest created yet
+                  No Investor found
                 </td>
               </tr>
             ) : (
-              currentUsers.map((user, idx) => (
-                <tr key={user.id}>
-                  <td>{startIndex + idx + 1}</td>
-                  <td>{user.firstName} {user.lastName}</td>
-                  <td>{user.email}</td>
-                  <td>{user.phone}</td>
-                  <td>{user.bankName}</td>
-                  <td>{user.bankAccount}</td>
-                  <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+              data.map((u, idx) => (
+                <tr key={u.user_uuid} onClick={() => onEdit?.(u)}>
+                  <td>{(currentPage - 1) * 10 + idx + 1}</td>
+                  <td>{u.firstname} {u.lastname}</td>
+                  <td>{u.email}</td>
+                  <td>{u.phone_no}</td>
+                  <td>{u.hynvest_bank?.bank_name || "-"}</td>
+                  <td>{u.hynvest_bank?.bank_account || "-"}</td>
+                  <td>
+                    <button
+                      onClick={() => toggleStatus(u)}
+                      style={{ color: u.status === 1 ? "green" : "red" }}
+                    >
+                      {u.status === 1 ? "Active" : "Disabled"}
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}>
+            Prev
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

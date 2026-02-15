@@ -1,20 +1,20 @@
 import React from 'react'
-import '../../../../assets/Styles/dashboard/Sale/sales.scss'
+import '../../../../assets/Styles/dashboard/page.scss'
 import profile from '../../../../assets/Images/profile-img.png'
 import { ChevronRight } from 'lucide-react'
 import RoleSetupController from '../../AdminComponent/RoleSetUp/RoleSetupController'
 
 const RoleSetup = ({autoOpenCreate, setAutoOpenCreate}) => {
   return (
-    <div className='sale'>
+    <div className='page'>
         <div className="headerContainer row">
         <div className="headerParent col-lg-12">
           <div className="headerChild">
             <div className="topWrapper">
               <div className="leftTopWrapper">
-                <h1>Role & Permission</h1>
+                <h1>Admin</h1>
                   <span> <ChevronRight /> </span>
-                {/* <span>Recovery</span> */}
+                <span>Role</span>
               </div>
               <div className="rightTopWrapper">
                 <div className="menuicon">

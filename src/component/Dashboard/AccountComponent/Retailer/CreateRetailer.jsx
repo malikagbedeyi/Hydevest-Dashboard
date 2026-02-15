@@ -1,128 +1,125 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../../../../assets/Styles/dashboard/account/createAccount.scss";
-import { ChevronDown, X } from "lucide-react";
+import { X } from "lucide-react";
+import { CustomerService } from "../../../../services/Account/CustomerService";
 
-const CreateRetailer = ({ users, setUsers, setView, openSubmenu }) => {
+const CreateRetailer = ({ data = [], setData, setView, openSubmenu, mode = "submenu", fetchData, editData = null }) => {
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
+    firstname: "",
+    lastname: "",
     email: "",
-    phone: "",
+    phone_no: "",
     address: "",
   });
-  const [successMessage, setSuccessMessage] = useState(null);
+  const [message, setMessage] = useState(null);
 
-  /* ================= HANDLERS ================= */
+  useEffect(() => {
+    if (editData) {
+      setForm({
+        firstname: editData.firstname || "",
+        lastname: editData.lastname || "",
+        email: editData.email || "",
+        phone_no: editData.phone_no || "",
+        address: editData.address || "",
+      });
+    }
+  }, [editData]);
+
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCreate = () => {
-    const newdata = {
-      id: crypto.randomUUID(),
-      ...form,
-      createdAt: new Date().toISOString(),
-    };
-
-    setUsers((prev) => [newdata, ...prev]);
-    setSuccessMessage("Partner successfully created");
+  const handleSubmit = async () => {
+    try {
+      if (editData) {
+        await CustomerService.edit({ user_uuid: editData.user_uuid, ...form });
+        setMessage("Customer updated successfully");
+      } else {
+        await CustomerService.create(form);
+        setMessage("Customer created successfully");
+      }
+      if (mode === "account") {
+        openSubmenu("accounts", "/dashboard/accounts/retailer");
+        return;
+      }
+      fetchData?.(); // refresh table
+    } catch (err) {
+      console.error(err);
+      setMessage(err.response?.data?.message || "Operation failed");
+    }
   };
 
   const handleClosePopup = () => {
-    setSuccessMessage(null);
-    setView("table");
-    openSubmenu?.("users");
+    setMessage(null);
+    if (message === "success")setView("table");
+  };
+  const handleCancel = () => {
+    if (mode === "submenu" && setView) setView("table");
   };
 
-  /* ================= SUCCESS POPUP ================= */
-  if (successMessage) {
-    return (
-      <div className="trip-card-popup">
-        <div className="trip-card-popup-container">
-          <div className="popup-content">
-            <div onClick={handleClosePopup} className="delete-box">✕</div>
-            <span>{successMessage}</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  /* ================= UI ================= */
   return (
-    <div className="">
-      <div className="create-container-modal">
-        <div className="create-container-card">
-          {/* HEADER */}
-          <div className="header">
-            <h2>Create Customer</h2>
-            <X size={18} className="close" onClick={() => setView("table")} />
+    <>
+      {message && (
+        <div className="trip-card-popup">
+          <div className="trip-card-popup-container">
+            <div className="popup-content">
+              <div onClick={handleClosePopup} className="delete-box">✕</div>
+              <span>{message}</span>
+            </div>
           </div>
+        </div>
+      )}
 
-          <p>Enter the details of new Customer</p>
-
-          {/* BASIC INFO */}
-          <div className="account-grid">
-            <div className="account-grid-content">
-            <div className="grid-2">
-            <div className="form-group">
-              <label>First Name</label>
-              <input
-                name="firstName"
-                value={form.firstName}
-                onChange={handleChange}
-                placeholder="Enter First Name"
-              />
+      <div className="trip-modal">
+        <div className="create-container-modal">
+          <div className="create-container-card">
+            <div className="header">
+              <h2>{editData ? "Edit Customer" : "Create Customer"}</h2>
+              <X className="close" onClick={handleCancel} />
             </div>
-            <div className="form-group">
-              <label>Last Name</label>
-              <input
-                name="lastName"
-                value={form.lastName}
-                onChange={handleChange}
-                placeholder="Enter Last Name"
-              />
-            </div>
-      </div>
-      <div className="form-group mb-4">
-          <label>Email</label>
-          <input name="email"
-           placeholder="Enter Email"
-            value={form.email} onChange={handleChange} type="email" />
-        </div>
-      <div className="grid-2">
-        <div className="form-group highlighted">
-          <label>Phone Number</label>
-          <input name="phone"
-           placeholder="Enter Phone Number"
-           value={form.phone} onChange={handleChange} />
-        </div>
-        <div className="form-group">
-          <label>Address</label>
-          <input name="address" 
-           placeholder="Enter Address"
-           value={form.address} onChange={handleChange} />
-        </div>
-      </div>
 
-          {/* ACTIONS */}
-          <div className="btn-row">
-            <button className="cancel" onClick={() => setView("table")}>
-              Cancel
-            </button>
-            <button className="create" onClick={handleCreate}>
-              Create Customer
-            </button>
+            <p>Enter Customer Details</p>
+
+            <div className="account-grid">
+              <div className="account-grid-content">
+                <div className="grid-2">
+                  <div className="form-group">
+                    <label>First Name</label>
+                    <input name="firstname" value={form.firstname} onChange={handleChange} placeholder="Enter First Name" />
+                  </div>
+                  <div className="form-group">
+                    <label>Last Name</label>
+                    <input name="lastname" value={form.lastname} onChange={handleChange} placeholder="Enter Last Name" />
+                  </div>
+                </div>
+
+                <div className="form-group mb-4">
+                  <label>Email</label>
+                  <input name="email" value={form.email} onChange={handleChange} type="email" placeholder="Enter Email" />
+                </div>
+
+                <div className="grid-2">
+                  <div className="form-group highlighted">
+                    <label>Phone Number</label>
+                    <input name="phone_no" value={form.phone_no} onChange={handleChange} placeholder="Enter Phone Number" />
+                  </div>
+                  <div className="form-group">
+                    <label>Address</label>
+                    <input name="address" value={form.address} onChange={handleChange} placeholder="Enter Address" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="btn-row">
+              {mode === "submenu" && <button className="cancel" onClick={handleCancel}>Cancel</button>}
+              <button className="create" onClick={handleSubmit}>{editData ? "Update Customer" : "Create Customer"}</button>
+            </div>
           </div>
         </div>
       </div>
-      </div>
-    </div>
-    </div>
+    </>
   );
 };
 

@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
-import "../../../../assets/Styles/dashboard/Sale/presaleController.scss";
+import "../../../../assets/Styles/dashboard/controller.scss";
 import CreateSale from "./CreateSale";
 import SaleTable from "./SaleTable";
 import DrilldownSale from "./DrildownSale";
+import { useLocation } from "react-router-dom";
 
 const STORAGE_KEY = "sales_data";
 const PRESALE_KEY = "presales_data";
 
 const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
   const [selectedSale, setSelectedSale] = useState(null);
-
+  const location = useLocation();
   // Initialize sales from localStorage
   const [sales, setSales] = useState(() => {
     return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -68,7 +69,18 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
     setContainers(allContainers);
     setView(allContainers.length ? "table" : "empty");
   }, [trips]);
- 
+  useEffect(() => {
+    setSales(prev =>
+      prev.map(sale => ({
+        ...sale,
+        totalSaleAmount: Number(sale.totalSaleAmount) || 0,
+        noOfPallets: Number(sale.noOfPallets) || 0,
+        purchasePricePerPiece: Number(sale.purchasePricePerPiece) || 0,
+      }))
+    );
+  }, []);
+
+
   const filteredContainers = containers.filter((c) => {
     const title = c.title ?? "";
     const modelName = c.modelName ?? "";
@@ -142,7 +154,7 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
   
     if (Number(newSale.amountPaid) > 0) {
       const recoveryData =
-        JSON.parse(localStorage.getItem("data_storage")) || [];
+        JSON.parse(localStorage.getItem("recovery_storage")) || [];
   
       const balanceAfter = Math.max(
         Number(newSale.totalSaleAmount || 0) - Number(newSale.amountPaid),
@@ -162,13 +174,11 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
       };
   
       localStorage.setItem(
-        "data_storage",
+        "recovery_storage",
         JSON.stringify([...recoveryData, firstRecovery])
       );
     }
   };
-  
-  
   
   const handleDeleteSale = (saleId) => {
     // 1️⃣ Delete sale
@@ -178,14 +188,14 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
   
     // 2️⃣ Delete linked recoveries
     const recoveries =
-      JSON.parse(localStorage.getItem("data_storage")) || [];
+      JSON.parse(localStorage.getItem("recovery_storage")) || [];
   
     const filteredRecoveries = recoveries.filter(
       (r) => r.saleId !== saleId
     );
   
     localStorage.setItem(
-      "data_storage",
+      "recovery_storage",
       JSON.stringify(filteredRecoveries)
     );
   };
@@ -200,9 +210,9 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
   // };
   
   return (
-    <div className="emptysale">
-      <div className="emptysale-container">
-        <div className="emptysale-content">
+    <div className="controller">
+      <div className="controller-container">
+        <div className="controller-content">
           {(view === "empty" || view === "table") && (
             <div className="top-content">
               <div className="top-content-wrapper">

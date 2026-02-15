@@ -3,7 +3,11 @@ import '../../../../assets/Styles/dashboard/account/account.scss'
 import profile from '../../../../assets/Images/profile-img.png'
 import { ChevronRight } from 'lucide-react'
 import SupplierController from '../../AccountComponent/Supplier/SupplierController'
-const AccSupplier = ({autoOpenCreate, setAutoOpenCreate}) => {
+import { useOutletContext } from "react-router-dom";
+
+const AccSupplier = () => {
+const { autoOpenCreate, setAutoOpenCreate, openSubmenuFromChild } = useOutletContext();
+
   return (
     <div className='account'>
         <div className="headerContainer row">
@@ -34,8 +38,9 @@ const AccSupplier = ({autoOpenCreate, setAutoOpenCreate}) => {
         </div>
         </div>
         <div className="account-component">
-          <SupplierController autoOpenCreate={autoOpenCreate} 
-            setAutoOpenCreate={setAutoOpenCreate}  />
+          <SupplierController    openSubmenu={openSubmenuFromChild}
+             autoOpenCreate={autoOpenCreate}
+             setAutoOpenCreate={setAutoOpenCreate} />
         </div>
     </div>
   )

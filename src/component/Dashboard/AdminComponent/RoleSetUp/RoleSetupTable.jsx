@@ -1,103 +1,73 @@
-import React, { useState } from "react";
-import { Eye, Trash2 } from "lucide-react";
-import '../../../../assets/Styles/dashboard/table.scss';
-const RoleSetupTable = ({ data, setData }) => {
-  const [deleteRowId, setDeleteRowId] = useState(null); // row selected for deletion
-  const [showPopup, setShowPopup] = useState(false);
+import React from "react";
+import "../../../../assets/Styles/dashboard/table.scss";
 
-  // Drill-summary counts
-  const totalMembers = data.length;
-  const pendingReinvites = data.filter(d => d.status === "Pending").length;
-  const restrictedMembers = data.filter(d => d.status === "Restricted").length;
-  const accessRequests = data.filter(d => d.status === "Access Request").length;
+const RoleSetupTable = ({data,loading,page,totalPages,onPageChange,setView,setEditRole,}) => {
 
-  const handleDeleteClick = (id) => {
-    setDeleteRowId(id);
-    setShowPopup(true);
-  };
-
-  const confirmDelete = () => {
-    setData(prev => prev.filter(d => d.id !== deleteRowId));
-    setShowPopup(false);
-    setDeleteRowId(null);
-  };
-
-  const cancelDelete = () => {
-    setShowPopup(false);
-    setDeleteRowId(null);
+  const handleEdit = (role) => {
+    setEditRole(role);
+    setView("edit");
   };
 
   return (
     <div className="userTable">
-      {/* Drill-summary counts */}
-      <div className="drill-summary-grid">
-        <div className="drill-summary">
-          <div className="summary-item">
-            <p>Total Members</p>
-            <h2>{totalMembers}</h2>
-          </div>
-          <div className="summary-item">
-            <p>Pending Reinvites</p>
-            <h2>{pendingReinvites}</h2>
-          </div>
-          <div className="summary-item">
-            <p>Restricted</p>
-            <h2>{restrictedMembers}</h2>
-          </div>
-          <div className="summary-item">
-            <p>Access Requests</p>
-            <h2>{accessRequests}</h2>
-          </div>
-        </div>
-      </div>
-      {/* Table of roles */}
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" style={{ width: "100%",maxWidth:"100%",minWidth:"100%" }}>
           <thead>
             <tr>
               <th>S/N</th>
-              <th>Role</th>
-              <th>Full Name</th>
-              <th>Organization</th>
-              <th>Status</th>
-              <th>Permissions</th>
-              <th>Created</th>
-              <th>Action</th>
+              <th>Role Name</th>
+              <th>Details</th>
+              <th>Assign Permission</th>
+              <th>Created by</th>
+              <th>Created At</th>
             </tr>
           </thead>
 
           <tbody>
-            {data.map((d, idx) => (
-              <tr key={d.id}>
-                <td>{idx + 1}</td>
-                <td>{d.roleType || "-"}</td>
-                <td>{d.fullName || "-"}</td>
-                <td>{d.organization || "-"}</td>
-                <td style={{ color: d.status === "Active" ? "green" : "orange" }}
-                className={d.status === "Active" ? "active" : "disabled"}>{d.status}</td>
-                <td>{d.permissions.length} permission{d.permissions.length !== 1 ? "s" : ""}</td>
-                <td>{new Date(d.createdAt).toLocaleDateString()}</td>
-                <td className="action" style={{color:"red"}}>
-                  <Trash2 size={16} onClick={() => handleDeleteClick(d.id)} />
+            {loading ? (
+              <tr>
+                <td colSpan="4" style={{ textAlign: "center" }}>
+                  Loading roles...
                 </td>
               </tr>
-            ))}
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan="4" style={{ textAlign: "center" }}>
+                  No Role Found
+                </td>
+              </tr>
+            ) : (
+              data.map((d, idx) => (
+                <tr key={d.role_uuid}   onClick={() => handleEdit(d)}>
+                  <td>{idx + 1}</td>
+                  <td>{d.name || "-"}</td>
+                  <td>{d.details || "-"}</td>
+                  <td>{d.permissions_count} </td>
+                  <td>{d.creator_info.firstname} {d.creator_info.lastname}</td>
+                  <td>{new Date(d.created_at).toLocaleDateString()}</td>
+                </tr>
+              )))}
           </tbody>
         </table>
       </div>
 
-      {/* Delete confirmation popup */}
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <div className="popup-header">
-            <h3>Are you sure you want to delete this data row?</h3>
-            </div>
-            <div className="btn-row">
-              <button className="cancel" onClick={cancelDelete}>Cancel</button>
-              <button className="delete" onClick={confirmDelete}>Delete</button>
-            </div>
-          </div>
+      {/* PAGINATION */}
+      {!loading && totalPages > 1 && (
+        <div className="pagination">
+          <button disabled={page === 1} onClick={() => onPageChange(page - 1)}>
+            Prev
+          </button>
+
+          <span>
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            disabled={page === totalPages}
+            onClick={() => onPageChange(page + 1)}
+          >
+            Next
+          </button>
         </div>
       )}
     </div>

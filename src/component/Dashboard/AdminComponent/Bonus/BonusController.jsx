@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
-import EntityTable from "./EntityTable";
 import "../../../../assets/Styles/dashboard/account/emptyAccount.scss";
-import CreateEntity from "./CreateEntity";
+import CreateBonus from "./CreateBonus";
+import BonusTable from "./BonusTable";
 
-const Entity_KEY = "entity_data";
+const BONUS_KEY = "bonus_data";
 
-const EntityController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) => {
+const BonusController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) => {
   const [view, setView] = useState(() => {
-    const saved = JSON.parse(localStorage.getItem(Entity_KEY)) || [];
+    const saved = JSON.parse(localStorage.getItem(BONUS_KEY)) || [];
     return saved.length ? "table" : "empty";
   });
   
   const [data, setData] = useState(() => {
-    return JSON.parse(localStorage.getItem(Entity_KEY)) || [];
+    return JSON.parse(localStorage.getItem(BONUS_KEY)) || [];
   });
   useEffect(() => {
-    localStorage.setItem(Entity_KEY, JSON.stringify(data));
+    localStorage.setItem(BONUS_KEY, JSON.stringify(data));
   
     if (data.length === 0) {
       setView("empty");
@@ -63,16 +63,12 @@ const EntityController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) =>
                     </div>
                   </div>
 
-                  <div className="import-input">
-                    <p>Import</p>
-                  </div>
-
                   <div onClick={() => setView("export")} className="import-input">
                     <p>Export</p>
                   </div>
 
                   <button onClick={() => setView("create")}>
-                    Create Entity
+                    Create Bonus
                   </button>
                 </div>
               </div>
@@ -85,20 +81,20 @@ const EntityController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) =>
             {data.length === 0 && view === "empty" && (
               <div className="main-content-image">
                 <div className="main-content-image-text">
-                  <p>No Entity Created Yet</p>
-                  <span>A Entity created would be saved here automatically</span>
+                  <p>No Data Created Yet</p>
+                  <span>A Data created would be saved here automatically</span>
                 </div>
               </div>
             )}
 
             {/* Table */}
             {data.length > 0 && (view === "table" || view === "empty") && (
-              <EntityTable  data={data} />
+              <BonusTable  data={data} />
             )}
 
             {/* Create User Form */}
             {view === "create" && (
-              <CreateEntity
+              <CreateBonus
                 data={data}
                 setData={setData}
                 setView={setView}
@@ -112,4 +108,4 @@ const EntityController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) =>
   );
 };
 
-export default EntityController;
+export default BonusController;

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import "../../../../assets/Styles/dashboard/Purchase/tripDetails.scss";
-import { Plus, X, Edit, Trash2, ChevronDown, ChevronUp, Paperclip } from "lucide-react";
+import { Plus,  Edit, ChevronDown, ChevronUp,  } from "lucide-react";
 
 import TripFinnce from "./TripExpense/TripFinnce";
 import DrildownContainer from "../container/DrildownContainer";
@@ -11,15 +11,42 @@ import TripExpenseData from "./TripExpense/TripExpenseData";
 import TripContainerData from "./TripContainer/TripContainerData";
 import TripDocumentCreate from "./TripDocument/TripDocumentCreate";
 import TripDocumentTable from "./TripDocument/TripDocumentTable";
+import TripLog from "./TripLog";
+import { TripServices } from "../../../../services/Trip/trip";
 
-const statusOption = ["Not Started" , "Intransit " ,"Completed"];
+const statusOption = ["Not Started", "Intransit", "Completed"];
+
+const mapProgressToUI = (progress) => {
+  switch (progress) {
+    case "NOT STARTED":
+      return "Not Started";
+    case "INTRANSIT":
+      return "Intransit";
+    case "COMPLETED":
+      return "Completed";
+    default:
+      return "Not Started";
+  }
+};
+const mapUIToProgress = (ui) => {
+  switch (ui) {
+    case "Not Started":
+      return "NOT STARTED";
+    case "Intransit":
+      return "INTRANSIT";
+    case "Completed":
+      return "COMPLETED";
+    default:
+      return "NOT STARTED";
+  }
+};
+
+
 
 const TripDetails = ({ trip, goBack }) => {
   /* ================== STORAGE KEYS ================== */
-  const FINANCE_KEY = `trip-${trip.id}-finance`;
-  const CONTAINER_KEY = `trip-${trip.id}-container`;
   const TRIP_FILE_KEY = `trip-${trip.id}-tripFile`;
-  const LOG_KEY = `trip-${trip.id}-log-history`;
+
 
 
   /* ================== BASIC STATE ================== */
@@ -33,44 +60,105 @@ const TripDetails = ({ trip, goBack }) => {
   const [showDocumentDril, setShowDocumentDril] = useState(false);
   const [editTitle, setEditTitle] = useState(false);
   const [editDescription, setEditDescription] = useState(false);
+  const [editLocation, setEditLocation] = useState(false);
+   const [editStartDate, setEditStartDate] = useState(false);
+  const [editEndate, setEditEndate] = useState(false);
+  // Parent component
   const [showModal, setShowModal] = useState(false);
-  const [status, setStatus] = useState("Not Started");
+  const [status, setStatus] = useState('');
   const [openStatusDropdown, setOpenStatusDropdown] = useState(false);  
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [showItemData, setShowItemData] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
+const [message, setMessage] = useState(null);
+const [messageType, setMessageType] = useState(null);
+const[closePopup,setClosePopup] = useState(false)
   /* ================== TRIP META ================== */
   const [title, setTitle] = useState(trip?.title || "");
-  const [description, setDescription] = useState(trip?.description || "");
+const [description, setDescription] = useState(trip?.desc || "");
+const [location, setLocation] = useState(trip?.location || "");
+const [startDate, setStartDate] = useState(trip?.start_date || "");
+const [endDate, setEndDate] = useState(trip?.end_date || "");
+const [containerReloadKey, setContainerReloadKey] = useState(0);
 
-  useEffect(() => {
-    if (!trip) return;
-    setTitle(trip.title || "");
-    setDescription(trip.description || "");
-  }, [trip,status]);
+const originalRef = useRef(null);
+
+useEffect(() => {
+  if (!trip) return;
+
+  const original = {
+    title: trip.title || "",
+    description: trip.desc || "",
+    location: trip.location || "",
+    start_date: trip.start_date || "",
+    end_date: trip.end_date || "",
+    progress: trip.progress || "NOT STARTED",
+  };
+
+  originalRef.current = original;
+
+  setTitle(original.title);
+  setDescription(original.description);
+  setLocation(original.location);
+  setStartDate(original.start_date);
+  setEndDate(original.end_date);
+  setStatus(mapProgressToUI(original.progress));
+}, [trip]);
+
+
+const hasChanges = () => {
+  if (!originalRef.current) return false;
+
+  const o = originalRef.current;
+
+  return (
+    title !== o.title ||
+    description !== o.description ||
+    location !== o.location ||
+    startDate !== o.start_date ||
+    endDate !== o.end_date ||
+    mapUIToProgress(status) !== o.progress
+  );
+};
+
 
   /* ================== FINANCE DATA ================== */
-  const [financeData, setFinanceData] = useState(() => {
-    return JSON.parse(localStorage.getItem(FINANCE_KEY)) || [];
-  });
+const [financeData, setFinanceData] = useState([]);
 
-  useEffect(() => {
-    localStorage.setItem(FINANCE_KEY, JSON.stringify(financeData));
-  }, [financeData]);
+useEffect(() => {
+  if (!trip?.trip_uuid) return;
 
-  const handleAddFinance = (item) => {
-    setFinanceData((prev) => [...prev, item]);
-  
+  const fetchFinance = async () => {
+    try {
+      const res = await TripServices.getExpenses(trip.trip_uuid);
+      setFinanceData(res.data);
+    } catch (err) {
+      console.error("Failed to fetch finance", err);
+    }
+  };
+
+  fetchFinance();
+}, [trip?.trip_uuid]);
+
+const handleAddFinance = async (payload) => {
+  try {
+    const res = await TripServices.createExpense(trip.trip_uuid, payload);
+
+    setFinanceData((prev) => [res.data, ...prev]);
+
     addLog({
       module: "Trip Expense",
       action: "Created",
-      title: item.title,
+      title: res.data.title,
     });
-  
+
     setShowModal(false);
-  };
-  
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 const handleDeleteFinance = (id) => {
   const item = financeData.find((i) => i.id === id);
 
@@ -87,28 +175,46 @@ const handleDeleteFinance = (id) => {
 
 
   /* ================== CONTAINER DATA ================== */
-  const [containerData, setContainerData] = useState(() => {
-    return JSON.parse(localStorage.getItem(CONTAINER_KEY)) || [];
-  });
+ const [containerData, setContainerData] = useState([]);
 
-  useEffect(() => {
-    localStorage.setItem(CONTAINER_KEY, JSON.stringify(containerData));
-  }, [containerData]);
+ useEffect(() => {
+  if (!trip?.trip_uuid) return;
+
+  const fetchContainers = async () => {
+    try {
+      const res = await TripServices.getContainers(trip.trip_uuid);
+      setContainerData(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchContainers();
+}, [trip?.trip_uuid, containerReloadKey]);
+
  
   const handleAddContainer = (container) => {
-    const containerWithTripId = { ...container, tripId: trip.id }; // <-- add tripId
-    setContainerData((prev) => [...prev, containerWithTripId]);
-    
-    addLog({
-      module: "Container",
-      action: "Created",
-      title: container.title,
-    });
-  
-    setShowItemData(true);
-    setShowModal(false);
+  if (!container) {
+    console.error("Container payload is undefined");
+    return;
+  }
+
+  const containerWithTripId = {
+    ...container,
+    tripId: trip.id,
   };
-  
+
+  setContainerData((prev) => [...prev, containerWithTripId]);
+  setContainerReloadKey((k) => k + 1); 
+  addLog({
+    module: "Container",
+    action: "Created",
+    title: container.title || "Container",
+  });
+
+  setShowItemData(true);
+  setShowModal(false);
+};
   const handleDeleteContainer = (id) => {
     const item = containerData.find((i) => i.id === id);
   
@@ -122,25 +228,19 @@ const handleDeleteFinance = (id) => {
       });
     }
   };
-  const handleUpdateContainer = (updatedContainer) => {
-    const containerWithRate = {
-      ...updatedContainer,
-    };
-  
-    setContainerData((prev) =>
-      prev.map((item) =>
-        item.id === updatedContainer.id ? containerWithRate : item
-      )
-    );
-  
-    // Save to localStorage
-    localStorage.setItem(
-      `trip-${trip.id}-container`,
-      JSON.stringify(containerData.map(c =>
-        c.id === updatedContainer.id ? containerWithRate : c
-      ))
-    );
-  };
+const handleUpdateContainer = (updatedContainer) => {
+  if (!updatedContainer || !updatedContainer.id) {
+    console.error("Invalid updated container:", updatedContainer);
+    return;
+  }
+
+  setContainerData((prev) =>
+    prev.map((item) =>
+      item?.id === updatedContainer.id ? updatedContainer : item
+    )
+  );
+};
+
   
   const totalAmountUSD = containerData.reduce((sum, item) => {
     const value = Number(item.amountUsd) || 0;
@@ -190,16 +290,8 @@ const handleDeleteFinance = (id) => {
       });
     }
   };
-  
-/* ================== Activity Log ================== */
-const [logHistory, setLogHistory] = useState(() => {
-  return JSON.parse(localStorage.getItem(LOG_KEY)) || [];
-});
-
-useEffect(() => {
-  localStorage.setItem(LOG_KEY, JSON.stringify(logHistory));
-}, [logHistory]);
-
+  const LOG_KEY = `trip-${trip.id}-log-history`;
+/* ================== Log  ================== */
 const addLog = ({ module, action, title }) => {
   const log = {
     id: Date.now(),
@@ -209,32 +301,11 @@ const addLog = ({ module, action, title }) => {
     date: new Date().toISOString(),
   };
 
-  setLogHistory((prev) => [log, ...prev]);
+  const existing = JSON.parse(localStorage.getItem(LOG_KEY)) || [];
+  localStorage.setItem(LOG_KEY, JSON.stringify([log, ...existing]));
 };
 
-const handleDeleteLog = (id) => {
-  setLogHistory((prev) => prev.filter((log) => log.id !== id));
-};
-/* ================== LOG PAGINATION ================== */
-const logItemsPerPage = 10;
-const [logPage, setLogPage] = useState(1);
-
-const totalLogPages = Math.ceil(logHistory.length / logItemsPerPage);
-const logStartIndex = (logPage - 1) * logItemsPerPage;
-
-const currentLogs = logHistory.slice(
-  logStartIndex,
-  logStartIndex + logItemsPerPage
-);
-
-const nextLogPage = () =>
-  logPage < totalLogPages && setLogPage((p) => p + 1);
-
-const prevLogPage = () =>
-  logPage > 1 && setLogPage((p) => p - 1);
-
-
-
+  
   /* ================== PAGINATION ================== */
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
@@ -252,8 +323,6 @@ const prevLogPage = () =>
         .replace(/ /g, "-")
     : "-";
 /* ================== CALCULATIONS ================== */
-
-// Trip Expense categories
 const containerExpenses = financeData.filter(
   (item) => item.check === "Container Payment"
 );
@@ -261,9 +330,6 @@ const containerExpenses = financeData.filter(
 const generalExpenses = financeData.filter(
   (item) => item.check !== "Container Payment"
 );
-
-// Average FX rate for container payments
-
 const avgContainerRate =
   containerExpenses.length > 0
     ? containerExpenses.reduce((sum, item) => sum + Number(item.rate || 0), 0) /
@@ -274,13 +340,12 @@ const avgContainerRate =
     }, [avgContainerRate]);
     
 
-// Total container USD
-const totalContainerUSD = containerData.reduce(
-  (sum, item) => sum + Number(item.amountUsd || 0),
-  0
-);
+const totalContainerUSD = containerData.reduce((sum, item) => {
+  const amount = Number(item.amountUsd || 0);
+  const surcharge = item.funding === "partner" ? Number(item.surcharge || 0) : 0;
+  return sum + amount + surcharge;
+}, 0);
 
-// Total general expense NGN
 const totalGeneralExpenseNGN = generalExpenses.reduce(
   (sum, item) => sum + Number(item.amountNGN || 0),
   0
@@ -288,7 +353,6 @@ const totalGeneralExpenseNGN = generalExpenses.reduce(
 
 const totalContainers = containerData.length;
 
-// Calculate totals based on active tab
 let totalAmountNGN = 0;
 let displayTotalUSD = 0;
 
@@ -308,10 +372,8 @@ if (activeTab === "finance") {
   );
 }
 else if (activeTab === "container") {
-  // NGN = avg container rate * total container USD
   totalAmountNGN = avgContainerRate * totalContainerUSD;
 
-  // USD = total general expenses / total containers
   displayTotalUSD =
     totalContainers > 0
       ? totalGeneralExpenseNGN / totalContainers
@@ -353,10 +415,58 @@ else if (activeTab === "container") {
     }
   };
 
+const handleUpdate = async () => {
+  if (!hasChanges()) {
+    setMessageType("error");
+    setMessage("No changes detected");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+const payload = {
+  trip_uuid: trip.trip_uuid,
+  title,
+  desc: description || "",
+  location: location || "",
+  start_date: startDate || "",
+  end_date: endDate || "",
+  status: 1,
+  progress: mapUIToProgress(status),
+};
+
+
+await TripServices.edit(payload);
+
+
+    setMessageType("success");
+    setMessage("Trip updated successfully");
+
+    originalRef.current = {
+      title,
+      description,
+      location,
+      start_date: startDate,
+      end_date: endDate,
+      progress: mapUIToProgress(status),
+    };
+
+  } catch (err) {
+    setMessageType("error");
+    setMessage(err.response?.data?.message || "Update failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  
   /* ================== DRILLDOWN ================== */
   if (showTripDetails) {
-    return <TripFinnce trip={selectedTrip}
-     goBack={() => setShowTripDetails(false)} />;
+    return <TripFinnce trip={selectedTrip} 
+     goBack={() => setShowTripDetails(false)}
+      setTrip={setSelectedTrip}  />;
+
   }
 
   if (showContainerDetails) {
@@ -375,9 +485,23 @@ else if (activeTab === "container") {
   }
 
   const currentData = currentFinance;
-  const tableDataContainer = containerData || [];
 
   /* ================== UI ================== */
+  if (message) {
+            //  {message && ( <div className={`alert ${messageType}`}>{message}</div>)}
+    return (
+      <div className="trip-card-popup" >
+        <div className="trip-card-popup-container">
+          <div className={`popup-content ${messageType}`}>
+            <div  onClick={() => {setMessage(null);if (messageType === "success") 
+              {goBack(true);}}} className="delete-box">✕</div>
+            <span>{message}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
     <div className="trip-details-grid">
@@ -392,7 +516,7 @@ else if (activeTab === "container") {
 
 <div className="summary-item">
   <p className="small">
-    {activeTab === "container" ? "Average Expense (USD)" : "Total Amount (USD)"}
+    {activeTab === "container" ? "Average Expense (NGN)" : "Total Amount (USD)"}
   </p>
   <h2>{formatNumber(displayTotalUSD)}</h2>
 </div>
@@ -421,11 +545,7 @@ else if (activeTab === "container") {
           <div className="title-content">
             <div className="title-header">
               <h4>Trip Title :</h4>
-              {editTitle ? (
-                <input
-                  value={title}
-                  autoFocus
-                  onChange={(e) => setTitle(e.target.value)}
+              {editTitle ? (   <input  value={title} autoFocus  onChange={(e) => setTitle(e.target.value)}
                   onBlur={() => setEditTitle(false)}
                 />
               ) : (
@@ -494,22 +614,89 @@ else if (activeTab === "container") {
         </div>
         {/* DESCRIPTION */}
         <div className="trip-description">
-          <div className="desc-header">
-            <h4>Description</h4>
-            {!editDescription && <Edit size={16} onClick={() => setEditDescription(true)} />}
-          </div>
-          <div className="desc-body">
-            {editDescription ? (
-              <textarea
-                value={description}
-                autoFocus
-                onChange={(e) => setDescription(e.target.value)}
-                onBlur={() => setEditDescription(false)}
-              />
-            ) : (
-              <p>{description}</p>
-            )}
-          </div>
+  <div className="desc-header">
+    <h4>Description</h4>
+    {!editDescription && (
+      <Edit size={16} onClick={() => setEditDescription(true)} />
+    )}
+  </div>
+
+  <div className="desc-body">
+    {editDescription ? (
+      <textarea
+        className="desc-textarea"
+        value={description}
+        autoFocus
+        onChange={(e) => setDescription(e.target.value)}
+        onBlur={() => setEditDescription(false)}
+      />
+    ) : (
+      <textarea
+        className="desc-textarea"
+        value={description}
+        readOnly
+      />
+    )}
+  </div>
+</div>
+
+        <div className="grid-2 mt-4">
+         <div className="form-group">
+  <label>Location</label>
+  {!editLocation && (
+    <Edit size={16} onClick={() => setEditLocation(true)} />
+  )}
+
+  {editLocation ? (
+    <input
+      type="text"
+      value={location}
+      autoFocus
+      onChange={(e) => setLocation(e.target.value)}
+      onBlur={() => setEditLocation(false)}
+    />
+  ) : (
+    <input type="text" value={location} readOnly />
+  )}
+</div>
+           <div className="form-group">
+  <label>Start Date</label>
+  {!editStartDate && (
+    <Edit size={16} onClick={() => setEditStartDate(true)} />
+  )}
+
+  {editStartDate ? (
+    <input
+      type="date"
+      value={startDate}
+      autoFocus
+      onChange={(e) => setStartDate(e.target.value)}
+      onBlur={() => setEditStartDate(false)}
+    />
+  ) : (
+    <input type="date" value={startDate} readOnly />
+  )}
+</div>
+
+          <div className="form-group">
+  <label>End Date</label>
+  {!editEndate && (
+    <Edit size={16} onClick={() => setEditEndate(true)} />
+  )}
+
+  {editEndate ? (
+    <input
+      type="date"
+      value={endDate}
+      autoFocus
+      onChange={(e) => setEndDate(e.target.value)}
+      onBlur={() => setEditEndate(false)}
+    />
+  ) : (
+    <input type="date" value={endDate} readOnly />
+  )}
+</div>
+
         </div>
         </div>
        
@@ -539,13 +726,17 @@ else if (activeTab === "container") {
                   setShowItemData(false);
                   setShowModal(true);
                 }}>
+                  {activeTab !== "log" && (
                 <Plus size={30} className="tab-content-icon" />
+                )}
                 <p>
   {activeTab === "finance"
     ? "Add Item"
     : activeTab === "container"
     ? "Add Container"
-    : "Add Document"}
+    : activeTab === "tripFile"
+    ? "Add Document":
+    ""}
 </p>
 
               </button>
@@ -553,149 +744,53 @@ else if (activeTab === "container") {
           </div>
         </div>
         {/* FINANCE TABLE */}
-        {activeTab === "finance" && showItemData && (
-          <div className="finance-section">
-            <TripExpenseData currentData={currentData} 
-          handleRowClick={handleRowClick} 
-           handleAddFinance={handleAddFinance} financeData ={financeData}
-            handleDeleteFinance={handleDeleteFinance} openDeletePopup={openDeletePopup} />
-            {/* DELETE CONFIRM POPUP */}
-            {showDeletePopup && (
-              <div className="trip-card-popup">
-                <div className="trip-card-popup-container">
-                  <div className="popup-content">
-                    <div className="popup-proceeed-wrapper">
-                      <p>Are you sure you want to delete this Expense record?</p>
-                      <div className="btn-row-delete">
-                        <button className="cancel" onClick={cancelDelete}>
-                          Cancel
-                        </button>
-                        <button className="create" onClick={confirmDelete}>
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        {/* CONTAINER TABLE */}
-        {activeTab === "container" && showItemData && (
-        <div className="finance-section">
-          <TripContainerData  containerData={containerData} 
-          handleContainerRowClick={handleContainerRowClick} 
-          avgContainerRate={avgContainerRate} handleDeleteContainer={handleDeleteContainer} />
-        </div>
-        )}
-{activeTab === "tripFile" && showItemData && (
+{activeTab === "finance" && (
   <div className="finance-section">
-   
-    <TripDocumentTable tripFileData={tripFileData}
-    handleDeleteTripFile={handleDeleteTripFile}
-     handleDocumentRowClick={handleDocumentRowClick} 
-    formatDate={formatDate} />
+    <TripExpenseData
+      currentData={currentData}
+      handleRowClick={handleRowClick}
+      handleDeleteFinance={handleDeleteFinance}
+      openDeletePopup={openDeletePopup}
+      tripUuid={trip.trip_uuid}
+    />
   </div>
 )}
-{activeTab === "log" && (
+
+        {/* CONTAINER TABLE */}
+       {activeTab === "container" && (
   <div className="finance-section">
-     <div className="userTable">
-      <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>S/N</th>
-              <th>Module</th>
-              <th>Action Performed</th>
-              <th>Title</th>
-              <th>Date & Time</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {currentLogs.length === 0 ? (
-              <tr>
-                <td colSpan="6" style={{ textAlign: "center" }}>
-                  No Activity Recorded
-                </td>
-              </tr>
-            ) : (
-              currentLogs.map((log, idx) => (
-                <tr key={log.id}>
-                  <td>{logStartIndex + idx + 1}</td>
-                  <td>{log.module}</td>
-                  <td>
-                    <span
-                      style={{
-                        color:
-                          log.action === "Created"
-                            ? "green"
-                            : log.action === "Deleted"
-                            ? "red"
-                            : "orange",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {log.action}
-                    </span>
-                  </td>
-                  <td>{log.title}</td>
-                  <td>
-                    {formatDate(log.date)}{" "}
-                    {new Date(log.date).toLocaleTimeString()}
-                  </td>
-                  <td>
-                    <Trash2
-                      size={16}
-                      color="red"
-                      style={{ cursor: "pointer" }}
-                      onClick={() => handleDeleteLog(log.id)}
-                    />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        {/* LOG PAGINATION */}
-        {totalLogPages > 1 && (
-          <div className="pagination">
-            <button onClick={prevLogPage} disabled={logPage === 1}>
-              Previous
-            </button>
-            <span>
-              {logPage} / {totalLogPages}
-            </span>
-            <button
-              onClick={nextLogPage}
-              disabled={logPage === totalLogPages}
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+    <TripContainerData
+      containerData={containerData}
+      handleContainerRowClick={handleContainerRowClick}
+      avgContainerRate={avgContainerRate}
+      handleDeleteContainer={handleDeleteContainer}
+      tripUuid={trip.trip_uuid}
+    />
   </div>
+)}
+
+{activeTab === "tripFile" && (
+  <div className="finance-section">
+    <TripDocumentTable
+      tripFileData={tripFileData}
+      handleDeleteTripFile={handleDeleteTripFile}
+      handleDocumentRowClick={handleDocumentRowClick}
+      formatDate={formatDate}
+    />
+  </div>
+)}
+
+{activeTab === "log" && (
+ <TripLog addLog={addLog} trip={trip} formatDate={formatDate} />
 )}
          {/* FOOTER */}
-         <div className="footer-btns">
-          <button onClick={() => goBack(true)} className="preview">
-            Preview
-          </button>
 
-          <button
-            className="create"
-            onClick={() => {
-              scrollToTop();
-              setStatus("Not Started");
-            }}
-          >
-            Update
-          </button>
+
+         <div className="footer-btns"> 
+          <button onClick={() => goBack(true)} className="preview">   Preview </button>  
+          <button className="create"  disabled={loading}  onClick={handleUpdate}>
+             {loading ? "Updating..." : "Update"} </button>
+
          </div>
           </div>
          </div>
@@ -707,6 +802,7 @@ else if (activeTab === "container") {
             onCreate={handleAddFinance}
             setShowItemData={setShowItemData}
             setShowModal={setShowModal}
+             tripUuid={trip.trip_uuid}
           />
         </div>
       )}
@@ -716,6 +812,8 @@ else if (activeTab === "container") {
       onCreate={handleAddContainer}   // ✅ CORRECT
       setShowItemData={setShowItemData}
       setShowModal={setShowModal}
+       reloadKey={containerReloadKey}
+       tripUuid={trip.trip_uuid}
 
     />
   </div>

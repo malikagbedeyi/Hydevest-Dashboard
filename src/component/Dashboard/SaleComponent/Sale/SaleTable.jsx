@@ -75,7 +75,7 @@ const SaleTable = ({ sales, onDelete, onUpdate ,handleRowClick}) => {
       <div className="userTable">
         
         <div className="table-wrap">
-          <table className="table">
+          <table className="table" style={{width:"150%",minWidth:"150%",maxWidth:"150%"}}>
             <thead>
               <tr>
                 <th>S/N</th>
@@ -106,8 +106,8 @@ const SaleTable = ({ sales, onDelete, onUpdate ,handleRowClick}) => {
                     <td>{sale.containers?.map(c =>`TN${ c.trackingNumber || "N/A"}`).join(", ")}</td>
                     <td>{sale.noOfPallets}</td>
                     <td>{sale.purchasePricePerPiece}</td>
-                    <td>{sale.customer?.name}</td>
-                    <td>{sale.customer?.phone}</td>
+                    <td>{sale.customer?.name || "—"}</td>
+                    <td>{sale.customer?.phone || "—"}</td>
                     <td>{formatCurrency(sale.totalSaleAmount)}</td>
                     <td>{formatCurrency(sale.amountPaid)}</td>
                     <td>{sale.balance === 0 ? <span style={{ color: "green" }}>Fully Paid</span>

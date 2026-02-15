@@ -1,6 +1,6 @@
 import React from "react";
 import { Trash2 } from "lucide-react";
-import "../../../../assets/Styles/dashboard/Purchase/table.scss";
+import "../../../../assets/Styles/dashboard/table.scss";
 
 const ContainerTable = ({ containers, onDelete, onRowClick ,avgContainerRate = 0,
     formatNumber, totalAmountUSD = 0, totalAmountNGN = 0, totalContainers = 0, totalUnitPriceUSD = 0, }) => {
@@ -99,9 +99,9 @@ const ContainerTable = ({ containers, onDelete, onRowClick ,avgContainerRate = 0
                   <td>{c.unitpieces || "0"}</td>
                   <td>{c.unitPrice || "0"}</td>
                   <td>{safeFormatNumber(Number(c.amountUsd || "0"))} </td>
-                  <td>{safeFormatNumber((Number(c.amountUsd) || 0) * (Number(avgContainerRate) || 0))}</td>
+                  <td>{safeFormatNumber((Number(c.amountUsd) || 0) * (Number(avgContainerRate) || 0) +(c.funding === "partner" ? Number(c.surcharge || 0) : 0))}</td>
                   <td>{safeFormatNumber(Number(c.quotedAmountUsd || "0"))} </td>
-                  <td>{safeFormatNumber((Number(c.quotedAmountUsd) || 0) * (Number(avgContainerRate) || 0))}</td>
+                  <td>{safeFormatNumber((Number(c.quotedAmountUsd) || 0) * (Number(avgContainerRate) || 0) +(c.funding === "partner" ? Number(c.surcharge || 0) : 0))}</td>
                   <td>{formatDate(c.createdAt)}</td>
                    <td>
                     <span style={{ color: "orange", fontWeight: 600 }}>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ChevronDown, Paperclip, Trash2 } from "lucide-react";
 import "../../../../assets/Styles/dashboard/Expensify/create.scss";
 
-const typeOptions = ["Expense"];
+const typeOptions = ["Asset","Liability","Equity","Expense","Income",];
 
 const CURRENCIES = [
   { country: "United States", code: "USD", symbol: "$", rate: 1550 },
@@ -103,7 +103,7 @@ const CreateFinance = ({setView, onCreate, }) => {
             alignItems:"center",
           }}>
           <p>Enter finance details</p>
-          <div className=""  style={{
+          {/* <div className=""  style={{
             display:"flex",
             gap:"10px",
             alignItems:"center",
@@ -120,7 +120,7 @@ const CreateFinance = ({setView, onCreate, }) => {
 />
 <span>Container Payment</span>
 
-          </div>
+          </div> */}
           </div>
           {/* Title & Description */}
           <div className="grid-2">

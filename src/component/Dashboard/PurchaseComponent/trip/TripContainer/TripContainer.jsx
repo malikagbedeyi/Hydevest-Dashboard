@@ -1,61 +1,52 @@
 import React, { useState } from "react";
 import "../../../../../assets/Styles/dashboard/Purchase/createcontainer.scss";
 import { X } from "lucide-react";
+import { ContainerServices } from "../../../../../services/Trip/container";
 
-const TripContainer = ({ onCreate, setShowItemData, setShowModal }) => {
+const TripContainer = ({ onCreate, setShowItemData, setShowModal,tripUuid }) => {
   /* ================= FORM STATE ================= */
-  const [form, setForm] = useState({
-    title: "", trackingNumber: "", description: "", unitpieces: "", 
-    unitPrice: "", amountUsd: "", averageWeight: "", maxWeight: "", 
-    entity: "", invoiceNumber: "", piece: "", pricePerPieces: "", 
-    sourceNation: "", sourceLocation: "", sourcePart: "", destinationPort: "", 
-    funding: "", supplyCode: "", warehouseChargeNGN: "", offloadAndSorting: "",
-    quotedPriceUsd:  "", quotedAmountUsd: "",surcharge:"",extimated:"",
-  });
+const [form, setForm] = useState({
+  title: "",
+  trackingNumber: "",
+  description: "",
+});
+
   
 
   /* ================= CREATE HANDLER ================= */
-  const handleCreateContainer = () => {
-    const payload = {
-      id: Date.now(),
-      ...form, // 🔥 ALL fields now exist
-      createdAt: new Date().toISOString(),
-      status: "Pending",
-    };
-  
-    onCreate(payload);
+
+const handleCreate = async () => {
+  try {
+    if (!form.title || !form.trackingNumber || !form.description) {
+      alert("All required fields must be filled");
+      return;
+    }
+
+    const payload = new FormData();
+    payload.append("trip_uuid", tripUuid);
+    payload.append("title", form.title);
+    payload.append("tracking_number", form.trackingNumber);
+    payload.append("desc", form.description);
+
+    const res = await ContainerServices.create(payload);
+
+    const createdContainer = res.data?.record;
+
+    if (!createdContainer) {
+      throw new Error("Invalid create response");
+    }
+
+    // ✅ backend is now the single source of truth
+    onCreate(createdContainer);
+
     setShowItemData(true);
     setShowModal(false);
-  
-    // reset
-    setForm({
-      title: "",
-      trackingNumber: "",
-      description: "",
-      unitpieces: "",
-      unitPrice: "",
-      amountUsd: "",
-      averageWeight: "",
-      maxWeight: "",
-      entity: "",
-      invoiceNumber: "",
-      piece: "",
-      pricePerPieces: "",
-      sourceNation: "",
-      sourceLocation: "",
-      sourcePart: "",
-      destinationPort: "",
-      funding: "",
-      supplyCode: "",
-      warehouseChargeNGN: "",
-      offloadAndSorting: "",
-      quotedPriceUsd:  "",
-      quotedAmountUsd: "",
-      surcharge:"",
-      extimated:"",
-    });
-  };
-  
+  } catch (err) {
+    console.error("Container create failed:", err.response?.data || err);
+  }
+};
+
+
 
   return (
     <div className="trip-modal">
@@ -82,7 +73,7 @@ const TripContainer = ({ onCreate, setShowItemData, setShowModal }) => {
             <div className="form-group">
               <label>Title</label>
               <input type="text"   placeholder="Enter Title"
-              value={form.title} onChange={(e) =>  setForm({ ...form, title: e.target.value })
+              value={form.title}  onChange={(e) => setForm({ ...form, title: e.target.value })
               }/>
             </div>
 
@@ -120,7 +111,7 @@ const TripContainer = ({ onCreate, setShowItemData, setShowModal }) => {
 
             <button
               className="create"
-              onClick={handleCreateContainer}
+              onClick={handleCreate}
               // disabled={!title || !trackingNumber}
             >
               Submit

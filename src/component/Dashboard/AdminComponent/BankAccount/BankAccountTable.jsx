@@ -15,12 +15,14 @@ const BankAccountTable = ({  data }) => {
           <thead>
             <tr>
               <th>S/N</th>
-              <th>Name</th>
+              <th>Account Name</th>
+              <th>Account Number</th>
+              <th>Bank Name</th>
               <th>Email</th>
-              <th>Phone</th>
-              <th>Address</th>
-              <th>Director</th>
-              <th>Other Director</th>
+              <th>Entity</th>
+              <th>Account OfficerName</th>
+              <th>Account OfficerNumber</th>
+              <th>Currency</th>
               <th>Date Created</th>
             </tr>
           </thead>
@@ -29,21 +31,23 @@ const BankAccountTable = ({  data }) => {
             {currentData.length === 0 ? (
               <tr>
                 <td colSpan="7" style={{ textAlign: "center" }}>
-                  No Entity created yet
+                  No Data created yet
                 </td>
               </tr>
             ) : (
               currentData.map((data, idx) => (
                 <tr key={data.id}>
-                  <td>{startIndex + idx + 1}</td>
-                  <td>{data.name} </td>
-                  <td>{data.email}</td>
-                  <td>{data.phone}</td>
-                  <td>{data.address}</td>
-                  <td>{data.director}</td>
-                  <td>{data.otherDirector} </td>
-                  <td>{new Date(data.createdAt).toLocaleDateString()}</td>
-                </tr>
+                <td>{startIndex + idx + 1}</td>
+                <td>{data.accountName}</td>
+                <td>{data.accountNumber}</td>
+                <td>{data.bankName}</td>
+                <td>{data.email || "-"}</td>
+              <td>{data.entity?.name || "-"}</td>
+                <td>{data.accountOfficerName}</td>
+                <td>{data.accountOfficerNumber}</td>
+              <td>{data.currency?.symbol} {data.currency?.code}</td>
+                <td>{new Date(data.createdAt).toLocaleDateString()}</td>
+              </tr>              
               ))
             )}
           </tbody>

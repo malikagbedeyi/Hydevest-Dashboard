@@ -3,7 +3,11 @@ import '../../../../assets/Styles/dashboard/account/account.scss'
 import profile from '../../../../assets/Images/profile-img.png'
 import { ChevronRight } from 'lucide-react'
 import UserController from '../../AccountComponent/User/UserController'
-const AccUser = ({autoOpenCreate, setAutoOpenCreate}) => {
+import { useOutletContext } from "react-router-dom";
+
+const AccUser = () => {
+const { autoOpenCreate, setAutoOpenCreate, openSubmenuFromChild } = useOutletContext();
+
   return (
     <div className='account'>
         <div className="headerContainer row">
@@ -34,9 +38,9 @@ const AccUser = ({autoOpenCreate, setAutoOpenCreate}) => {
         </div>
         </div>
         <div className="account-component">
-           <UserController 
-            autoOpenCreate={autoOpenCreate} 
-            setAutoOpenCreate={setAutoOpenCreate}/>
+           <UserController  openSubmenu={openSubmenuFromChild}
+             autoOpenCreate={autoOpenCreate}
+             setAutoOpenCreate={setAutoOpenCreate}/>
 
         </div>
     </div>

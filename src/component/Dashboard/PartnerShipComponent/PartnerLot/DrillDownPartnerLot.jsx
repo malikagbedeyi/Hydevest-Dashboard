@@ -11,7 +11,8 @@ const DrillDownPartnerLot = ({ data,onCancel }) => {
     const [showProfit, setShowProfit] = useState(true);
     const [showRemittance, setShowRemittance] = useState(true);
     const allocationRows = data.allocations || [];
-
+    const [activeTab, setActiveTab] = useState("details"); // default tab
+    const [tableTab, setTableTab] = useState("container");
     
 const derived = useMemo(() => {
   const totalContainers = allocationRows.length;
@@ -67,6 +68,18 @@ const createdYear = useMemo(() => {
 </div>
 
         </div> </div>
+        <div className="tab-section" >
+          <div className="tab-header" style={{background:"#fff",}}>
+            <button  className={activeTab === "details" ? "active-request" : ""} style={{fontSize:"1.1vw"}}
+              onClick={() => setActiveTab("details")} > Details  </button>
+
+            <button  className={activeTab === "request" ? "active-request" : ""} 
+             onClick={() => setActiveTab("request")}> Request
+              </button>
+          </div>
+ 
+</div>
+{activeTab === "details" && (
     <div className="section-grid">
     <div className="readOnly-details">
   <div className="readOnly-wrapper">
@@ -77,7 +90,7 @@ const createdYear = useMemo(() => {
     </div>
 
     <div className="readOnly-content">
-      <h5>Available for Withdrawal</h5>
+      <h5>Available for container</h5>
       <p>—</p>
       <p>
         {data.assigneeType === "partner" ? "Partner" : "Entity"} Since{" "}
@@ -213,7 +226,7 @@ const createdYear = useMemo(() => {
       <section>
       <div className="userTable">
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" style={{width:"130%", maxWidth:"130%",minWidth:"130%"}}>
           <thead>
             <tr>
              <th>Container ID</th>
@@ -264,7 +277,108 @@ const createdYear = useMemo(() => {
       </div>
       </div>
     </div>
+    )}
+    {activeTab === "request" && (
+    <div className="section-grid mt-5">
+      <div className="section-grid-container">
+        <div className="section-grid-content">
+        <section className="section details">
+        <header className="section-head">
+        <h3>Request </h3>
+        </header>
+        <div className="btn-row" style={{display:"flex",justifyContent:"flex-end"}}>
+        <button  className="cancel">Request For Container</button>
+        <button className="create">Request For Withdraw</button>
+      </div>
+      <section>
+      <div className="userTable">
+      <div className="table-wrap">
+      <div className="tab-section" >
+          <div className="tab-header" >
+            <button  className={tableTab === "container" ? "active" : ""} style={{fontSize:"1.1vw"}}
+              onClick={() => setTableTab("container")} > Request container  </button>
+
+            <button  className={tableTab === "Withdrawal" ? "active" : ""} 
+             onClick={() => setTableTab("Withdrawal")}> Request For  Withdrawal
+              </button>
+          </div>
+          </div>
+          {tableTab === "container" && (
+        <table className="table" style={{width:"100%", maxWidth:"100%",minWidth:"100%"}}>
+          <thead>
+            <tr>
+             <th>S/N</th>
+              <th>Request Title</th>
+              <th>Request File</th>
+              <th>Description</th>
+              <th>Request Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+  {allocations.length === 0 ? (
+    <tr>
+      <td colSpan="7" style={{ textAlign: "center" }}>
+        No Container Data Found
+      </td>
+    </tr>
+  ) : (
+    allocations.map((row, idx) => (
+<tr key={row.rowId}>
+  <td>{idx + 1}</td>
+      <td>{}</td>
+      <td>{}</td>
+      <td>{}</td>
+      <td>{} </td>
+    </tr>
+    ))
+  )}
+</tbody>
+
+        </table>
+        )}
+           {tableTab === "Withdrawal" && (
+        <table className="table" style={{width:"100%", maxWidth:"100%",minWidth:"100%"}}>
+          <thead>
+            <tr>
+             <th>S/N</th>
+              <th>Request Title</th>
+              <th>Request File</th>
+              <th>Description</th>
+              <th>Request Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+  {allocations.length === 0 ? (
+    <tr>
+      <td colSpan="7" style={{ textAlign: "center" }}>
+        No Container Data Found
+      </td>
+    </tr>
+  ) : (
+    allocations.map((row, idx) => (
+<tr key={row.rowId}>
+  <td>{idx + 1}</td>
+      <td>{}</td>
+      <td>{}</td>
+      <td>{}</td>
+      <td>{} </td>
+    </tr>
+    ))
+  )}
+</tbody>
+
+        </table>
+        )}
+      </div>
     </div>
+      </section>
+        </section>
+      </div>
+    </div>
+    </div>
+  )}
+    </div> 
+
   );
 };
 

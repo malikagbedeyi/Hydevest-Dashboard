@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../../../../assets/Styles/dashboard/Sale/createPresale.scss";
+import "../../../../assets/Styles/dashboard/create.scss";
 import { ChevronDown, X } from "lucide-react";
 
 export const saleType = [
@@ -254,20 +254,18 @@ const getUsdAmount = (container) => {
         <div className="create-container-card">
 
           <div className="header">
+            <div className="header-content">
             <h2>Create Pre-Sale</h2>
+            </div>
             <X size={18} className="close" onClick={() => setView("table")} />
           </div>
-
           <div className="tab-section">
             <p>Enter the details of new Pre-sale</p>
-
             <div className="grid-2">
-
               {/* Sale Option */}
               <div className="form-group-select">
                 <label>Sale Option</label>
                 <div className="custom-select">
-
                   <div className="custom-select-drop">
                     <div className="select-box">
                       {selectedValues2.length === 0 ? (
@@ -276,7 +274,7 @@ const getUsdAmount = (container) => {
                         <span className="tag">{selectedValues2[0].saleName}</span>
                       )}
                     </div>
-                    <div className="custom-select" onClick={() => SetOpenSelect2(!openSelect2)}>
+                    <div className="custom-select-icon" onClick={() => SetOpenSelect2(!openSelect2)}>
                       <ChevronDown className={openSelect2 ? "up" : "down"} />
                     </div>
                   </div>
@@ -284,7 +282,9 @@ const getUsdAmount = (container) => {
                   <div className={openSelect2 ? "select-dropdown2 select-dropdown" : "d-none"}>
                     {saleType.map((item) => {
                       const selected = selectedValues2[0]?.id === item.id;
+                      
                       return (
+                        <div className="option-item">
                         <label key={item.id}>
                           <input
                             type="checkbox"
@@ -293,7 +293,9 @@ const getUsdAmount = (container) => {
                           />
                           <span>{item.saleName}</span>
                         </label>
+                        </div>
                       );
+                   
                     })}
                   </div>
                 </div>
@@ -315,7 +317,7 @@ const getUsdAmount = (container) => {
                         </div>
                       )}
                     </div>
-                    <div className="custom-select" onClick={() => SetOpenSelect(!openSelect)}>
+                    <div className="custom-select-icon" onClick={() => SetOpenSelect(!openSelect)}>
                       <ChevronDown className={openSelect ? "up" : "down"} />
                     </div>
                   </div>
@@ -376,8 +378,8 @@ const getUsdAmount = (container) => {
           <li>Tracking Number: TN {container.trackingNumber}</li>
           <li>Unit Pieces: {container.unitpieces}</li>
           <li>Unit Price: {container.unitPrice}</li>
-          <li>Amount (NGN): ₦{amountNGN.toLocaleString("en-NG")}</li>
-          <li>Quoted Amount (NGN): ₦{quotedAmountNGN.toLocaleString("en-NG")}</li>
+          <li>Amount (USD): ₦{amountNGN.toLocaleString("en-NG")}</li>
+          <li>Quoted Amount (USD): ₦{quotedAmountNGN.toLocaleString("en-NG")}</li>
           <li>Created Date: {formatDate(container.createdAt)}</li>
         </ul>
       </div>
@@ -390,7 +392,6 @@ const getUsdAmount = (container) => {
 
             {/* Pre-sale details section */}
             <h4 className="mt-5 mb-3">Pre-sale Details</h4>
-
             {(selectedSale === "Split Sale" || selectedSale === "Mixed Sale") && (
               <div className="from-pallet-option">
                 <div className="grid-2">
@@ -504,7 +505,6 @@ const getUsdAmount = (container) => {
                   </div>
               </div>
             )}
-
             {/* Box Sale */}
             {selectedSale === "Box Sale" && (
               <div className="from-box-sale">

@@ -3,8 +3,11 @@ import "../../../../assets/Styles/dashboard/Expensify/create.scss";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+const Bonus = JSON.parse(localStorage.getItem("bonus_data")) || [];
+
 const calculateMonthlyPAYE = (monthlyGross) => {
   const annualGross = monthlyGross * 12;
+
 
   const bands = [
     { limit: 800000, rate: 0 },
@@ -35,13 +38,22 @@ const CreatePayroll = ({ setView, onCreate }) => {
   const [bonusChecked, setBonusChecked] = useState(false);
   const [error, setError] = useState("");
 
-  const employees = [
-    { id: 1, name: "Kaf", salary: 1000000 },
-    { id: 2, name: "Amaka", salary: 500000 },
-    { id: 4, name: "Zainab", salary: 650000 },
-    { id: 5, name: "Ibrahim", salary: 65000 },
-    { id: 6, name: "Blessing", salary: 85000 },
+  const assigneeOptions = [
+    ...Bonus.map((e) => ({
+      id: e.id,
+      name: e.name,
+      salary:e.salary,
+    }))
   ];
+
+const employees = assigneeOptions
+  // const employees = [
+  //   { id: 1, name: "Kaf", salary: 1000000 },
+  //   { id: 2, name: "Amaka", salary: 500000 },
+  //   { id: 4, name: "Zainab", salary: 650000 },
+  //   { id: 5, name: "Ibrahim", salary: 65000 },
+  //   { id: 6, name: "Blessing", salary: 85000 },
+  // ];
 
   const handleDateChange = (date) => {
     const today = new Date();
@@ -71,8 +83,7 @@ const CreatePayroll = ({ setView, onCreate }) => {
         salaryWithBonus,
         paye,
         netPay,
-      };
-    });
+      };});
 
     const payload = {
       id: Date.now(),
@@ -96,7 +107,6 @@ const CreatePayroll = ({ setView, onCreate }) => {
         <div className="create-container-card">
           <h2>Create Payroll</h2>
           <p>Enter Payroll details</p>
-
           <div className="grid-2 mb-4">
             <div className="form-group">
               <label>Pay Period</label>
@@ -119,17 +129,12 @@ const CreatePayroll = ({ setView, onCreate }) => {
           </div>
 
           {selectedMonthYear && (
-            <div className="grid-3">
-              <div
-                className="grid-header"
-                style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-              >
+            <>
+             <div  className="grid-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}  >
                 <h4>Employee Details</h4>
                 {selectedMonthYear.getMonth() === 11 && (
-                  <div
-                    className="form-check"
-                    style={{ display: "flex", gap: "10px", alignItems: "center" }}
-                  >
+                  <div  className="form-check"
+                    style={{ display: "flex", gap: "10px", alignItems: "center" }}  >
                     <input
                       type="checkbox"
                       checked={bonusChecked}
@@ -139,7 +144,7 @@ const CreatePayroll = ({ setView, onCreate }) => {
                   </div>
                 )}
               </div>
-
+            <div className="grid">
               <div className="payrollTable">
                 <table className="table">
                   <thead>
@@ -172,6 +177,7 @@ const CreatePayroll = ({ setView, onCreate }) => {
                 </table>
               </div>
             </div>
+            </>
           )}
 
           <div className="btn-row" style={{ marginTop: "10%" }}>

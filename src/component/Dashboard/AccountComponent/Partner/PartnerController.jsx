@@ -2,42 +2,60 @@ import React, { useEffect, useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
 import CreatePartner from "./CreatePartner";
 import PartnerTable from "./PartnerTable";
-import "../../../../assets/Styles/dashboard/account/emptyAccount.scss";
+import { PartnerService } from "../../../../services/Account/PartnerService";
+import "../../../../assets/Styles/dashboard/controller.scss";
 
-const PARTNER_KEY = "partner_data";
+const PartnerController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
+  const [view, setView] = useState("table");
+  const [partners, setPartners] = useState([]);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({});
+  const [selectedPartner, setSelectedPartner] = useState(null);
 
-const PartnerController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) => {
-  const [view, setView] = useState(() => {
-    const saved = JSON.parse(localStorage.getItem(PARTNER_KEY)) || [];
-    return saved.length ? "table" : "empty";
-  });
-  
-  const [data, setData] = useState(() => {
-    return JSON.parse(localStorage.getItem(PARTNER_KEY)) || [];
-  });
-  useEffect(() => {
-    localStorage.setItem(PARTNER_KEY, JSON.stringify(data));
-  
-    if (data.length === 0) {
-      setView("empty");
-    } else if (view === "empty") {
-      setView("table");
+  const fetchPartners = async (pageNum = page) => {
+    try {
+      setLoading(true);
+      const res = await PartnerService.list({
+        search_email: search,
+        page: pageNum,
+      });
+      setPartners(res.data?.record?.data || []);
+      setPagination(res.data?.record || {});
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-  }, [data]);
-  
+  };
+
+  /* Debounced search */
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      setPage(1);
+      fetchPartners(1);
+    }, 500);
+
+    return () => clearTimeout(delay);
+  }, [search]);
 
   useEffect(() => {
-  if (autoOpenCreate) {
-    setView("create");
-    setAutoOpenCreate(false); 
-  }
-}, [autoOpenCreate]);
+    fetchPartners(page);
+  }, [page]);
+
+  useEffect(() => {
+    if (autoOpenCreate) {
+      setView("create");
+      setAutoOpenCreate(false);
+    }
+  }, [autoOpenCreate]);
 
   return (
-    <div className="emptyAccount">
-      <div className="emptyAccount-container">
-        <div className="emptyAccount-content">
-          {/* TOP BAR */}
+    <div className="controller">
+      <div className="controller-container">
+        <div className="controller-content">
           {(view === "empty" || view === "table") && (
             <div className="top-content">
               <div className="top-content-wrapper">
@@ -46,7 +64,12 @@ const PartnerController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) =
                 <div className="right-wrapper">
                   <div className="right-wrapper-input">
                     <Search className="input-icon" />
-                    <input type="text" placeholder="Search" />
+                    <input
+                      type="text"
+                      placeholder="Search with Email"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
                   </div>
 
                   <div className="select-input">
@@ -63,14 +86,6 @@ const PartnerController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) =
                     </div>
                   </div>
 
-                  <div className="import-input">
-                    <p>Import</p>
-                  </div>
-
-                  <div onClick={() => setView("export")} className="import-input">
-                    <p>Export</p>
-                  </div>
-
                   <button onClick={() => setView("create")}>
                     Create Partner
                   </button>
@@ -79,32 +94,30 @@ const PartnerController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) =
             </div>
           )}
 
-          {/* MAIN CONTENT */}
           <div className="main-content">
-            {/* Empty State */}
-            {data.length === 0 && view === "empty" && (
-              <div className="main-content-image">
-                <div className="main-content-image-text">
-                  <p>No Partner Created Yet</p>
-                  <span>A Partner created would be saved here automatically</span>
-                </div>
-              </div>
-            )}
-
-            {/* Table */}
-            {data.length > 0 && (view === "table" || view === "empty") && (
-              <PartnerTable  data={data} />
-            )}
-
-            {/* Create User Form */}
-            {view === "create" && (
-              <CreatePartner
-                data={data}
-                setData={setData}
-                setView={setView}
-                openSubmenu={openSubmenu}
+            {view === "table" && (
+              <PartnerTable
+                data={partners}
+                loading={loading}
+                page={page}
+                setPage={setPage}
+                pagination={pagination}
+                onEdit={(partner) => {
+                  setSelectedPartner(partner);
+                  setView("edit");
+                }}
               />
             )}
+
+            {view === "create" || view === "edit" ? (
+              <CreatePartner
+                mode={view === "edit" ? "edit" : "submenu"}
+                data={selectedPartner}
+                setView={setView}
+                openSubmenu={openSubmenu}
+                onSuccess={fetchPartners}
+              />
+            ) : null}
           </div>
         </div>
       </div>

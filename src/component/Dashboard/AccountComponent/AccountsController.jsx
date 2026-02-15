@@ -1,30 +1,40 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../../assets/Styles/dashboard/account/emptyAccount.scss";
 import { ChevronDown, Filter, Search,User, Users, Briefcase, Truck, CreditCard, Shield ,Building2,Banknote } from "lucide-react";
-import ExportAccount from "./ExportAccount";
+
 import CreateAccount from "./CreateAccount"
 
-const accountTypes = [
-  { icon: User, label: "System User", submenu: "acc-system-user" },
-  { icon: Users, label: "Partner", submenu: "acc-partner" },
-  { icon: User, label: "Hynvest", submenu: "acc-invest" },
-  { icon: Briefcase, label: "Customer", submenu: "acc-retailer" },
-  { icon: Truck, label: "Supplier", submenu: "acc-supplier" },
-  { icon: Shield, label: "Clearing Agent", submenu: "acc-clearing-agent" },
-  { icon: CreditCard, label: "BDC Operator", submenu: "acc-bdc-operator" },
-  // { icon: Building2, label: "Entity", submenu: "acc-entity" },
-  // { icon: Banknote, label: "Bank Account", submenu: "acc-bank-account" },
+import { useOutletContext } from "react-router-dom";
+
+const AccountsController = ({ autoOpenView, setAutoOpenView, openSubmenu }) => {
+  const [view, setView] = useState("empty");
   
-];
-const AccountsController = ({openSubmenu}) => {
-    
-  const [view, setView] = useState("empty"); 
+  const handleAccountClick = (submenu) => {
+    if (!openSubmenu) return;
+    openSubmenu("/dashboard/accounts", `/dashboard/accounts/${submenu}`);
+    setAutoOpenView("create"); // now guaranteed to exist
+  }
+
+  useEffect(() => {
+    if (autoOpenView === "create") {
+      setView("create");
+      setAutoOpenView(null); // reset
+    }
+  }, [autoOpenView, setAutoOpenView]);
   const [accounts, setAccounts] = useState([]);
 
-  const handleAccountClick = (submenu) => {
-    if (openSubmenu) openSubmenu('accounts', submenu ,"create");
-  };
+  const accountTypes = [
+    { icon: User, label: "System User", submenu: "system-user" },
+    { icon: Users, label: "Partner", submenu: "partner" },
+    { icon: User, label: "Hynvest", submenu: "invest" },
+    { icon: Briefcase, label: "Customer", submenu: "retailer" },
+    { icon: Truck, label: "Supplier", submenu: "supplier" },
+    { icon: Shield, label: "Clearing Agent", submenu: "clearing-agent" },
+    { icon: CreditCard, label: "BDC Operator", submenu: "bdc-operator" },
+  ];
 
+
+  
   return (
     <div className="emptyAccount">
       <div className="emptyAccount-container">
@@ -88,7 +98,7 @@ const AccountsController = ({openSubmenu}) => {
                 view="create"
                 accounts={accounts}
                 setAccounts={setAccounts}
-                openSubmenu={openSubmenu}
+                openSubmenu={openSubmenu} 
                 onClose={() => setView("empty")}
               />
             )}

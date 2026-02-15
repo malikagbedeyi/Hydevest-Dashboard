@@ -83,7 +83,6 @@ to {
   margin-bottom: 14px;
   .close { cursor: pointer; color: #333; }
 }
-
 /* quick option buttons for sale type */
 .custom-dropdown-inline {
   display:flex;
@@ -455,16 +454,24 @@ to {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 20px 0 10px;
+  margin: 1.4vw 0 .7vw;
+  @include Destop{
+    margin: 20px 0 10px;
+  }
   button{
     display: flex;
-    gap: 10px;
+    gap: .7vw;
     align-items: center;
-    border: 1px solid #581aae;
-    background: #fff;
+    border: 0.09vw solid #581aae;
+    background: inherit;
     color: #581aae;
-    border-radius: 10px;
-    padding:5px 10px;
+    border-radius: .7vw;
+    padding:.35vw .7vw;
+    @include Destop{
+      gap: 10px;
+      border-radius: 10px;
+      padding:5px 10px;
+    }
   }
     .add-item-dropdown {
     position: relative;
@@ -523,462 +530,27 @@ to {
     position: relative;
     z-index: 999;
     margin: auto;
-    padding: 20px;
+    padding: 1.4vw;
     display: flex;
     flex-direction: column;
     background: #f5f5f7;
-    border-radius: 20px;
+    border-radius: 1.4vw;
      height: 80vh;
      overflow-y: auto;
      scrollbar-width: none;
+     @include Destop{
+      border-radius: 20px;
+      padding: 20px;
+     }
     .close{
       color: red;
       display: flex;
       justify-content: flex-end;
       align-items: flex-end;
       margin-left: auto;
-      
+      width: 1.4vw;
+      height: 1.4vw;
     }
-    .grid-2 { 
-      width: 100%;
-      display:grid;
-       grid-template-columns: 1fr 1fr; 
-      gap: 16px; 
-      margin-bottom:0 ;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 16px;
-      .form-group { 
-        background:#f7f7f9;
-         padding:12px;
-         border-radius:10px; 
-        }
-        .form-group-select{
-          position: relative;
-           background:#f5f5f7;
-         padding:12px;
-         border-radius:10px; 
-         width: 100%;
-         label{
-          display:block; 
-        margin-bottom:6px; 
-        font-size:13px; 
-        color:#444;
-         }
-         .sale-custom-select{
-          width: 100%;
-          .custom-select-drop{
-               width: 100%;
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            align-items: center;
-             padding:8px 10px; 
-           border:1px solid #ddd;
-           border-radius:6px; 
-           background:#fff;
-           .up{
-            transform: rotate(180deg);
-            transition: .5s;
-          }
-          .down{
-             transition: .5s;
-          }
-            .select-box{
-              width: 100%;
-                .placeholder{
-                  width: 100%;
-                  background: inherit;
-                    color: #030314;
-                 }
-                 .selected-tags{
-                  display: flex;
-                  gap: 5px;
-                  border-radius: 6px;
-                  .tag{
-                    background: #f5f5f7;
-                    padding: 5px 10px;
-                  }
-                 }
-                }
-                .custom-select{
-                  width: 10%;
-                  cursor: pointer;
-                  transition: .5s;
-                  .up{
-                    transform: rotate(180deg);
-                    transition: .5s;
-                  }
-                  .down{
-                     transition: .5s;
-                  }
-                }
-              }
-                .sale-select-dropdown{
-                  width: 90%;
-                  background: #fff!important;
-                  animation: dropdown .4s;
-                   box-shadow: 0 6px 18px rgba(88,26,170,0.08);
-                  position: absolute;
-                   border-radius:12px; 
-                   cursor: pointer;
-                  top: 100px;
-                  left:20px;
-                  .search-input{
-                    width: 100%;
-                     padding:8px 10px 8px 20px; 
-                     border: none;
-                     border-bottom:1px solid #581aae;
-                     border-radius:12px 12px 0 0; 
-                     background:#fff;
-                     outline: none;
-                  }
-                  .option-sale{
-                    background: #fff!important;
-                     border-radius:0 0 12px 12px;
-                     display: flex;
-                     flex-direction: column;
-                    gap: 10px;
-                    padding: 20px;
-                    justify-content: center;
-                    align-content: center;
-                    margin: auto;
-                     cursor: pointer;
-                    label{
-                      display: flex;
-                      gap: 20px;
-                      cursor: pointer;
-                    }
-                  }
-                }
-            }
-        }
-   }
-   .grid { 
-    width: 100%;
-    display:grid;
-     grid-template-columns: 1fr 1fr; 
-    gap: 16px; 
-    margin-bottom:0 ;
-    margin: auto;
-    background: #fff;
-    padding: 20px;
-    border-radius: 16px;
-    .form-group { 
-      background:#f7f7f9;
-       padding:12px;
-       border-radius:10px; 
-      }
-      .form-group-select{
-        position: relative;
-         background:#f5f5f7;
-       padding:12px;
-       border-radius:10px; 
-       width: 100%;
-       label{
-        display:block; 
-      margin-bottom:6px; 
-      font-size:13px; 
-      color:#444;
-       }
-       .sale-custom-select{
-        width: 100%;
-        .custom-select-drop{
-             width: 100%;
-          display: flex;
-          justify-content: space-between;
-          gap: 10px;
-          align-items: center;
-           padding:8px 10px; 
-         border:1px solid #ddd;
-         border-radius:6px; 
-         background:#fff;
-         .up{
-          transform: rotate(180deg);
-          transition: .5s;
-        }
-        .down{
-           transition: .5s;
-        }
-          .select-box{
-            width: 100%;
-              .placeholder{
-                width: 100%;
-                background: inherit;
-                  color: #030314;
-               }
-               .selected-tags{
-                display: flex;
-                gap: 5px;
-                border-radius: 6px;
-                .tag{
-                  background: #f5f5f7;
-                  padding: 5px 10px;
-                }
-               }
-              }
-              .custom-select{
-                width: 10%;
-                cursor: pointer;
-                transition: .5s;
-                .up{
-                  transform: rotate(180deg);
-                  transition: .5s;
-                }
-                .down{
-                   transition: .5s;
-                }
-              }
-            }
-              .sale-select-dropdown{
-                width: 90%;
-                background: #fff!important;
-                animation: dropdown .4s;
-                 box-shadow: 0 6px 18px rgba(88,26,170,0.08);
-                position: absolute;
-                 border-radius:12px; 
-                 cursor: pointer;
-                top: 100px;
-                left:20px;
-                .search-input{
-                  width: 100%;
-                   padding:8px 10px 8px 20px; 
-                   border: none;
-                   border-bottom:1px solid #581aae;
-                   border-radius:12px 12px 0 0; 
-                   background:#fff;
-                   outline: none;
-                }
-                .option-sale{
-                  background: #fff!important;
-                   border-radius:0 0 12px 12px;
-                   display: flex;
-                   flex-direction: column;
-                  gap: 10px;
-                  padding: 20px;
-                  justify-content: center;
-                  align-content: center;
-                  margin: auto;
-                   cursor: pointer;
-                  label{
-                    display: flex;
-                    gap: 20px;
-                    cursor: pointer;
-                  }
-                }
-              }
-          }
-      }
- }
- .attachments {
-  margin: 5% 0;
-
-  .attach-link {
-    border-radius: 6px;
-    padding: 12px 16px;
-    border: none;
-    cursor: pointer;
-    align-items: flex-end;
-    gap: 8px;
-    font-weight: 600;
-    background: linear-gradient(0deg, rgba(127, 57, 242, 0.08), rgba(127, 57, 242, 0.08));
-    color: #581aae;
-    display: flex;
-    justify-content: flex-end;
-    margin-left: auto;
-  }
-  .recent-files {
-    background: inherit;
-    padding: 10px;
-    border-radius: 8px;
-  }
-  .file-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    border-radius: 6px;
-    margin-bottom: 12px;
-     background: #fff;
-
-    .file-actions {
-      display: flex;
-      gap: 10px;
-      color: #7b7b7b;
-
-      svg {
-        cursor: pointer;
-      }
-    }
-  }
-}
-   .grid-3{
-    background: #fff;
-    padding: 20px;
-    width: 100%;
-   }
-   .grid-5 {
-    width: 100%;
-    display:grid;
-     grid-template-columns: 1fr 1fr; 
-    gap: 16px; 
-    margin-bottom:0 ;
-    margin: auto;
-    background: #fff;
-    padding: 20px;
-    border-radius: 16px;
-    .form-group { 
-      background:#f7f7f9;
-       padding:12px;
-       border-radius:10px; 
-       .sale-input{
-        width:100%; 
-        padding:8px 10px; 
-        border:1px solid #ddd;
-         border-radius:6px; 
-        background:#ddd;
-        color: #352e40;
-        font-weight: 800;
-       }
-      }
-      .form-group-select{
-        position: relative;
-         background:#f5f5f7;
-       padding:12px;
-       border-radius:10px; 
-       width: 100%;
-       label{
-        display:block; 
-      margin-bottom:6px; 
-      font-size:13px; 
-      color:#444;
-       }
-       .sale-custom-select{
-        width: 100%;
-        .custom-select-drop{
-             width: 100%;
-          display: flex;
-          justify-content: space-between;
-          gap: 10px;
-          align-items: center;
-           padding:8px 10px; 
-         border:1px solid #ddd;
-         border-radius:6px; 
-         background:#fff;
-          .select-box{
-            width: 100%;
-              .placeholder{
-                width: 100%;
-                background: inherit;
-                  color: #030314;
-               }
-               .selected-tags{
-                display: flex;
-                gap: 5px;
-                border-radius: 6px;
-                .tag{
-                  background: #f5f5f7;
-                  padding: 5px 10px;
-                }
-               }
-              }
-              .custom-select{
-                width: 10%;
-                cursor: pointer;
-                transition: .5s;
-                .up{
-                  transform: rotate(180deg);
-                  transition: .5s;
-                }
-                .down{
-                   transition: .5s;
-                }
-              }
-            }
-              .sale-select-dropdown{
-                width: 90%;
-                background: #fff!important;
-                animation: dropdown .4s;
-                 box-shadow: 0 6px 18px rgba(88,26,170,0.08);
-                position: absolute;
-                 border-radius:12px; 
-                 cursor: pointer;
-                top: 100px;
-                left:20px;
-                display: flex;
-                padding: 20px;
-                flex-direction: column;
-                z-index: 999;
-               gap: 10px;
-                .search-input{
-                  width: 100%;
-                   padding:8px 10px 8px 20px; 
-                   border: none;
-                   border-bottom:1px solid #581aae;
-                   border-radius:12px 12px 0 0; 
-                   background:#fff;
-                   outline: none;
-                }
-                .option-sale{
-                  background: #fff!important;
-                  justify-content: center;
-                  align-content: center;
-                  margin: 0;
-                   cursor: pointer;
-                   &:hover{
-                    transition: .4s;
-                    padding-left: 10px;
-                    border-bottom: 1px solid #581aae;
-                   }
-                  label{
-                    display: flex;
-                    gap: 20px;
-                    cursor: pointer;
-                  }
-                }
-              }
-               .select-dropdown2{
-                width: 50%;
-                right: 20px!important;
-                left: 0;
-                border-radius: 12px;
-                margin-left: auto;
-                justify-content: flex-end;
-                align-items: flex-end;
-                 .option2{
-                  background: #fff;
-                   border-radius:0 0 12px 12px;
-                  display: flex;
-                  flex-direction: column;
-                  gap: 10px;
-                  padding: 20px;
-                  justify-content: flex-end;
-                  align-content: flex-end;
-                  margin: auto;
-                  cursor: pointer;
-                  label{
-                    display: flex;
-                    gap: 20px;
-                      font-size: 18px;
-                      text-align: center;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                    span{
-                      font-size: 18px;
-                       text-align: center;
-                       display: flex;
-                       align-items: center;
-                       justify-content: center;
-                    }
-                  }
-                }
-                }
-          }
-      }
-   }
-   
    .seperate-sale{
     width: 100%;
     height: 2px;
@@ -1226,6 +798,225 @@ to {
     }
 
 }
+}
+.grid-2 { 
+  width: 100%;
+  display:grid;
+   grid-template-columns: 1fr 1fr; 
+  gap: 1.1vw; 
+  margin-bottom:0 ;
+  margin: auto;
+  background: #fff;
+  padding: 1.4vw;
+  border-radius: 1.1vw;
+   @include Destop{
+    gap: 16px; 
+    background: #fff;
+    padding: 20px;
+    border-radius: 16px;
+ }
+ .form-group { 
+  background:#f7f7f9;
+   padding:.85vw;
+   border-radius:.7vw; 
+    @include Destop{
+      padding:12px;
+      border-radius:10px; 
+}
+  }
+  .form-group-select{
+    position: relative;
+     background:#f5f5f7;
+     padding:0.8vw;
+     border-radius:0.7vw;  
+   width: 100%;
+@include Destop{
+padding:12px;
+border-radius:10px; 
+    }
+   label{
+    display:block; 
+  margin-bottom:0.4vw; 
+  font-size:0.9vw; 
+  color:#444;
+@include Destop{
+font-size:13px; 
+margin-bottom:6px; 
+    }
+   }
+   .custom-select{
+    width: 100%;
+    .custom-select-drop{
+         width: 100%;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.7vw;
+      align-items: center;
+       padding:0.6vw 0.7vw; 
+     border:0.1vw solid #ddd;
+     border-radius:0.4vw; 
+     background:#fff;
+     @include Destop{
+      gap: 10px;
+      align-items: center;
+       padding:8px 10px; 
+     border:1px solid #ddd;
+     border-radius:6px; 
+    }
+      .select-box{
+        width: 100%;
+        color: gray;
+          .placeholder{
+            width: 100%;
+            background: inherit;
+              color: #030314;
+           }
+           .selected-tags{
+            display: flex;
+            gap: 0.35vw;
+            border-radius: 0.4vw;
+             @include Destop{
+              gap: 5px;
+              border-radius: 6px;
+    }
+            .tag{
+              background: #f5f5f7;
+              padding: 0.35vw 0.7vw;
+               @include Destop{
+                padding: 5px 10px;
+            }
+           }
+          }
+          .custom-select{
+            // width: 100%;
+            cursor: pointer;
+            transition: .5s;
+            .up{
+              transform: rotate(180deg);
+              transition: .5s;
+            }
+            .down{
+               transition: .5s;
+            }
+          }
+        }
+      }
+          .select-dropdown{
+            width: 90%;
+            background: #fff;
+            animation: dropdown .4s;
+             box-shadow: 0 0.4vw 1.3vw rgba(88,26,170,0.08);
+            position: absolute;
+             border-radius:0.85vw; 
+             cursor: pointer;
+            top: 6.95vw;
+            left:1.4vw;
+            padding: 0.7vw;
+            z-index: 999;  
+            @include Destop{
+              box-shadow: 0 6px 18px rgba(88,26,170,0.08);
+               border-radius:12px; 
+              top: 100px;
+              left:20px;
+              padding: 10px;
+            }
+            .search-input{
+              width: 100%;
+               padding:0.5vw 0.7vw 0.5vw 1.4vw; 
+               border: none;
+               border-bottom:0.1vw solid #581aae;
+               border-radius:0.85vw 0.85vw 0 0; 
+               background:#fff;
+               outline-style: none;
+               @include Destop{
+                padding:8px 10px 8px 20px; 
+                border: none;
+                border-bottom:1px solid #581aae;
+                border-radius:12px 12px 0 0; 
+            }
+            }
+            .option{
+              background: #fff;
+               border-radius:0 0 0.85vw 0.85vw;
+              display: flex;
+              flex-direction: column;
+              gap: 0.7vw;
+              padding: 1.4vw;
+              justify-content: center;
+              align-content: center;
+              outline-style: none;
+              margin: auto;
+               cursor: pointer;
+                @include Destop{
+                  border-radius:0 0 12px 12px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 10px;
+                  padding: 20px;
+            }
+              label{
+                display: flex;
+                gap: 1.4vw;
+                cursor: pointer;
+                 @include Destop{
+                  gap: 20px; 
+            }
+              }
+            }
+            .option-item{
+                background: #fff;
+                border-radius: 0 0 0 0.7vw ;
+                display: flex;
+                flex-direction: column;
+                gap: 0.7vw;
+                padding: 5px 0 0 1vw;
+                justify-content: center;
+                // align-i: center;
+                 outline-style: none;
+                 cursor: pointer;
+                 position: relative;
+                  @include Destop{
+                    border-radius: 0 0 0 10px ;
+                    gap: 10px;
+                    padding: 5px 0 0 15px;
+            }
+                 &:hover{
+                  &::before{
+                    width: 20%;
+                  }
+                 }
+                 &::before{
+                  content: '';
+                  position: absolute;
+                  left: 0.7vw;
+                  bottom: 0;
+                  width: 0;
+                  height: 0.09vw;
+                  transition: .4s;
+                  background: #581aae;
+                  border-radius: 0 0 0 0.7vw ;
+                   @include Destop{
+                    left: 0.7vw;
+                    bottom: 0;
+                    width: 0;
+                    height: 1px;
+            }
+                 }
+                 span{
+                  margin: 0;
+                 }
+                label{
+                  display: flex;
+                  gap: 1.4vw;
+                  cursor: pointer;
+                   @include Destop{
+                    gap: 20px;
+            }
+                }
+            }
+          }
+  }
+  }
 }
 
 .pallet-btn{

@@ -2,19 +2,26 @@ import React, { useState } from "react";
 import "../../../../assets/Styles/dashboard/account/createAccount.scss";
 import { ChevronDown, X } from "lucide-react";
 
+const CURRENCIES = [
+  { country: "United States", code: "USD", symbol: "$", },
+  { country: "United Kingdom", code: "GBP", symbol: "£",  },
+  { country: "European Union", code: "EUR", symbol: "€", },
+  { country: "China", code: "CNY", symbol: "¥",  },
+  { country: "Japan", code: "JPY", symbol: "¥", },
+  { country: "Canada", code: "CAD", symbol: "$", },
+  { country: "South Africa", code: "ZAR", symbol: "R", },
+  { country: "Ghana", code: "GHS", symbol: "₵", },
+  { country: "Nigeria", code: "NGN", symbol: "₦",  },
+];
+const Entity = JSON.parse(localStorage.getItem("entity_data")) || [];
 
 const CreateBankAccount = ({ data, setData, setView, openSubmenu }) => {
-  const [form, setForm] = useState({
-    accountName: "",
-    accountNumber: "",
-    bankName: "",
-    bankNumber: "",
-    entity: "",
-    accountOfficerName: "",
-    accountOfficerNumber: "",
-    currency:"",
+  const [form, setForm] = useState({    accountName: "",accountNumber: "",bankName: "",bankNumber: "",
+    entity: "",accountOfficerName: "",accountOfficerNumber: "",currency: CURRENCIES[0],
   });
+  const [openCurrencySelect, setOpenCurrencySelect] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [openEntitySelect, setOpenEntitySelect] = useState(false);
 
   /* ================= HANDLERS ================= */
   const handleChange = (e) => {
@@ -24,7 +31,14 @@ const CreateBankAccount = ({ data, setData, setView, openSubmenu }) => {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
-
+  const assigneeOptions = [
+    ...Entity.map((e) => ({
+      id: e.id,
+      name: e.name,
+      type: "entity"
+    }))
+  ];
+    const assigneeOptionsFiltered = assigneeOptions;
   const handleCreate = () => {
     const newdata = {
       id: crypto.randomUUID(),
@@ -36,7 +50,14 @@ const CreateBankAccount = ({ data, setData, setView, openSubmenu }) => {
     setData((prev) => [newdata, ...prev]);
     setSuccessMessage("Account successfully created");
   };
+  const handleCurrencySelect = (currency) => {
+    setForm((prev) => ({
+      ...prev,
+      currency,
+    }));
   
+    setOpenCurrencySelect(false); // ✅ CLOSE dropdown
+  };
 
   const handleClosePopup = () => {
     setSuccessMessage(null);
@@ -60,7 +81,7 @@ const CreateBankAccount = ({ data, setData, setView, openSubmenu }) => {
 
   /* ================= UI ================= */
   return (
-    <div className="">
+    <div className="trip-modal">
       <div className="create-container-modal">
         <div className="create-container-card">
           {/* HEADER */}
@@ -75,49 +96,92 @@ const CreateBankAccount = ({ data, setData, setView, openSubmenu }) => {
             <div className="grid-2">
         <div className="form-group">
             <label>Account Name</label>
-        <input  name="accountNumber" value={form.accountName} onChange={handleChange} placeholder="Enter Account Name" />
+        <input  name="accountName" value={form.accountName} onChange={handleChange} placeholder="Enter Account Name" />
         </div>
          <div className="form-group">
             <label>Account Number</label>
         <input  name="accountNumber" value={form.accountNumber} onChange={handleChange} placeholder="Enter Account Number" />
         </div>
       </div>
-      <div className="grid-2">
-        <div className="form-group">
-            <label htmlFor="">Bank Name</label>
+      <div className="grid-3">
+           <div className="form-group">
+           <label htmlFor="">Bank Name</label>
         <input name="bankName" value={form.bankName} onChange={handleChange} placeholder="Enter Bank Name" />
-        </div>
-         <div className="form-group">
-            <label htmlFor="">Bank Number</label>
-        <input name="bankNumber" value={form.bankNumber} onChange={handleChange} placeholder="Enter Bank Number" />
-        </div>
+           </div>
       </div>
       <div className="grid-2">
-         <div className="form-group highlighted">
-          <label>Entity</label>
-          <select
-            name="entity"
-            value={form.entity}
-            onChange={handleChange}  >
-            <option value="">Select Entity</option>
-            <option value="Admin">Admin</option>
-            <option value="Manager">Manager</option>
-            <option value="Staff">Staff</option>
-          </select>
-        </div>
-           <div className="form-group highlighted">
-          <label>Currency</label>
-          <select
-            name="currency"
-            value={form.currency}
-            onChange={handleChange}
+      <div className="form-group-select">
+  <label>Entity</label>
+
+  <div className="custom-select">
+    <div
+      className="custom-select-drop"
+      onClick={() => setOpenEntitySelect((prev) => !prev)}
+    >
+      <div className="select-box">
+        {form.entity ? (
+          <span>{form.entity.name}</span>
+        ) : (
+          <span className="placeholder">Select Entity</span>
+        )}
+      </div>
+
+      <ChevronDown className={openEntitySelect ? "up" : "down"} />
+    </div>
+
+    {openEntitySelect && (
+      <div className="select-dropdown">
+        {assigneeOptions.map((item) => (
+          <div
+            key={item.id}
+            className="option-item"
+            onClick={() => {
+              setForm((prev) => ({
+                ...prev,
+                entity: item,
+              }));
+              setOpenEntitySelect(false);
+            }}
           >
-            <option value="">Select currency</option>
-            <option value="Admin">USD</option>
-            <option value="Manager">NGN</option>
-            <option value="Staff">GBP</option>
-          </select>
-        </div>
+            {item.name}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
+        <div className="form-group-select">
+              <label>Currency</label>
+              <div className="custom-select">
+              <div
+  className="custom-select-drop"
+  onClick={() => setOpenCurrencySelect((prev) => !prev)}
+>
+  <div className="select-box">
+    {form.currency
+      ? `${form.currency.symbol} ${form.currency.code}`
+      : "Select Currency"}
+  </div>
+  <ChevronDown />
+</div>
+
+                {openCurrencySelect && (
+                <div className="select-dropdown">
+                  {CURRENCIES.map((cur) => (
+                    <div
+                      key={cur.code}
+                      className="option-item"
+                      onClick={() => handleCurrencySelect(cur)}
+                    >
+                      {cur.country} ({cur.symbol} {cur.code})
+                    </div>
+                  ))}
+                </div>
+                )}
+              </div>
+            </div>
+
         </div>
         <div className="grid-2">
          <div className="form-group">

@@ -1,15 +1,20 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Plus, X, Edit, Trash2, ChevronDown, ChevronUp, Paperclip } from "lucide-react";
+import { ExpenseServices } from '../../../../../services/Trip/expense';
 
-const TripExpenseData = ({handleRowClick,currentData , openDeletePopup , financeData}) => {
+const TripExpenseData = ({handleRowClick ,tripUuid, openDeletePopup , financeData}) => {
    
+ const [data, setData] = useState([])
+    const [search , setSearch ] = useState('')
+    const [page,setPage] = useState(1)
+    const [pagination,setPagination] = useState({})
+  const [selectedData, setSelectedData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
     const itemsPerPage = 10;
     const [currentPage, setCurrentPage] = useState(1);
-  
-    const totalPages = Math.ceil(financeData.length / itemsPerPage);
+    const totalPages = Math.ceil(data.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentFinance = financeData.slice(startIndex, startIndex + itemsPerPage);
   
     const nextPage = () => currentPage < totalPages && setCurrentPage((p) => p + 1);
     const prevPage = () => currentPage > 1 && setCurrentPage((p) => p - 1);
@@ -42,18 +47,54 @@ const TripExpenseData = ({handleRowClick,currentData , openDeletePopup , finance
           .replace(/ /g, "-")
       : "-";
 
+const fetchData = async (pageNum = page) => {
+  if (!tripUuid) return; 
 
+  try {
+    setLoading(true);
+    const res = await ExpenseServices.list({
+      trip_uuid: tripUuid,
+      status: '', 
+      is_container_payment: '',
+      title: search, 
+      expense_unique_id: '', 
+      from_date: '',
+      to_date: '',
+      page: pageNum,
+    });
+    
+    setData(res.data?.record?.data || []);
+    setPagination(res.data?.record || {});
+  } catch (err) {
+    console.error("Error fetching expenses:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchData(page)
+},[page])
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setPage(1);
+    fetchData(1);
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [search]);
+const currentData = data
   return (
     <div>
      <div className="userTable">
               <div className="table-wrap">
-                <table className="table">
+                <table className="table" style={{ width: "150%",maxWidth:"150%",minWidth:"150%" }}>
                   <thead>
                     <tr>
                       <th>S/N</th>
                       <th>Title</th>
                       <th>Description</th>
-                      <th>Type</th>
                       <th>Date</th>
                       <th>Amount</th>
                       <th>Currency</th>
@@ -76,22 +117,14 @@ const TripExpenseData = ({handleRowClick,currentData , openDeletePopup , finance
                         <tr key={item.id} onClick={() => handleRowClick(item)}>
                           <td>{startIndex + idx + 1}</td>
                           <td>{item.title}</td>
-                          <td>{item.description}</td>
-                          <td>{item.type}</td>
+                          <td>{item.desc}</td> 
                           <td>{formatDate(item.date)}</td>
                           <td>{formatCurrency(item.amount, item.currency)}</td>
-                          <td>{item.currencySymbol} {item.currency}</td>
-
+                          <td>{item.currency} </td> 
                            <td>{item.rate}</td>
-                            <td>{formatNGN(item.amountNGN)}</td>
-                            <td>{item.check||"Other"}</td>
-                          <td>
-                            {item.status === "Approved" ? (
-                              <span style={{ color: "green", fontWeight: 600 }}>Approved</span>
-                            ) : (
-                              <span style={{ color: "orange", fontWeight: 600 }}>Pending</span>
-                            )}
-                          </td>
+                           <td>{formatNGN(item.total_amount)}</td>
+                            <td>{item.is_container_payment === 1? "Container Payment": "General"}</td>
+                            <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>
                           <td onClick={(e) => e.stopPropagation()}>
                             <button
                               className="delete-btn"

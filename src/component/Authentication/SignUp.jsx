@@ -3,19 +3,21 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../assets/Styles/authentication/signup.scss'
 import Logo from '../../assets/Images/Logo/11.png'
 import { Link } from 'react-router-dom';
+import api from "../../services/api";
+import { useNavigate } from "react-router-dom";
+import ResetPasswordModal from './ResetPasswordModal';
 
 const SignUp = () => {
-  const [firstName,setFirstName] = useState('')
-  const [lastName,setLastName] = useState('')
   const [email,setEmail] = useState('')
-  const [location,setLocation] = useState('')
-  const [phone_no,setPhone_no] = useState('')
-  const [username,setUsername] = useState('')
   const [password,setPassword] = useState('')
-  const [confirmpassword,setConfirmpassword] = useState('')
   const [varify,setVarify] = useState(false)
   const [hidepop,setHidepop] = useState(false)
   const [hidemessage,setHidemessage] = useState(false)
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const hanldeMessage = () => {
     setHidemessage(!hidemessage)
@@ -26,6 +28,65 @@ const SignUp = () => {
   const handleVarify = () => {
     setVarify(!varify)
   }
+  const handleLogin = async (e) => {
+    e.preventDefault();
+  
+    if (!email || !password) {
+      setError("Email and password are required");
+      return;
+    }
+  
+    try {
+      setLoading(true);
+      setError("");
+  
+      const payload = new URLSearchParams();
+      payload.append("email", email.trim());
+      payload.append("password", password);
+  
+      const res = await api.post("/auth/login", payload, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
+  
+      if (res.data.success) {
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data));
+  
+        // ✅ show success popup first
+        setShowSuccessPopup(true);
+  
+        // setTimeout(() => {
+        //   navigate("/dashboard/trip", { replace: true });
+        // }, 1800);
+        
+        if(res.data.is_system_user === 1){
+          navigate("/dashboard/trip", { replace: true })
+        }
+        // if(res.data.account_type === "PARTNER"){
+        //   navigate("")
+        // }
+      } else {
+        setError(res.data.message || "Invalid email or password");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Invalid email or password"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  
+  const showForgotPassword =
+  error &&
+  error.toLowerCase().includes("email") &&
+  error.toLowerCase().includes("password");
+
 
   return (
     <div className='register'>
@@ -46,60 +107,24 @@ const SignUp = () => {
                 <div className="registerChildTop">
                     <h1>Login</h1>
                     <p>Identity Infomation</p>
+                
                 </div>
-                <form action="">
+                <form onSubmit={handleLogin}>
                   <div className="formtitle">
                     <p>PLease enter your valid identity information below.</p>
                     </div>
                     <div className="formInput">
-                    {/* <div className="fillWrapper">
-                      <div className="leftwrapper">
-                        <h3>first name</h3>
-                        <input type="name" 
-                        placeholder='Enter First Name'
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}/>
-                      </div>
-                      <div className="rightWrapper">
-                        <h3>last name</h3>
-                        <input type="name" 
-                        placeholder='Enter Last Name'
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}/>
-                      </div>
-                    </div> */}
                       <div className="fillWrapper">
                       <div className="leftwrapper">
                         <h3>email address</h3>
-                        <input type="email" 
+                        <input type="email"
                         placeholder='Enter Email Address'
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}/>
                       </div>
-                      <div className="rightWrapper">
-                        <h3>UserName</h3>
-                        <input type="username" 
-                        placeholder='Enter userName'
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}/>
-                      </div>
+
                     </div>
-                      {/* <div className="fillWrapper">
-                      <div className="leftwrapper">
-                        <h3>location</h3>
-                        <input type="location" 
-                        placeholder='Enter or use Location icon'
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}/>
-                      </div>
-                      <div className="rightWrapper">
-                        <h3>display name </h3>
-                        <input type="name" 
-                        placeholder='Enter Display Name'
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}/>
-                      </div>
-                    </div> */}
+                    
                       <div className="fillWrapper">
                       <div className="leftwrapper">
                         <h3>password</h3>
@@ -107,17 +132,21 @@ const SignUp = () => {
                         placeholder='Enter Password'
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}/>
+
+{showForgotPassword && (
+  <p
+    className="forgot-password mt-4" style={{cursor:"pointer"}}
+    onClick={() => setShowResetModal(true)}
+  >
+    Forgot password?
+  </p>
+)}
+    {error && <p style={{ color: "red",margin:"0" }}>{error}</p>}
                       </div>
-                      <div className="rightWrapper">
-                        <h3>confirm password</h3>
-                        <input type="password" 
-                        placeholder='Confirm Password'
-                        value={confirmpassword}
-                        onChange={(e) => setConfirmpassword(e.target.value)}/>
-                      </div>
+
                       </div>
                     </div>
-                    <div className="robotHoman">
+                    {/* <div className="robotHoman">
                       <div className="iconvarify">
                         <div style={{
                           border:"1px solid #000"
@@ -125,8 +154,13 @@ const SignUp = () => {
                         <div className={varify ? "unClickIcons" : "d-none"} onClick={handleVarify}> <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M10.5725 0.570312L4.28683 6.85603L1.42969 3.99888" stroke="#999999" stroke-linecap="round" stroke-linejoin="round"/> </svg>  </div>
                       </div>
                       <p> varify that you are not a Robot.</p>
-                    </div>
-                    <button onClick={handlePop}>Login</button>
+                    </div> */}
+                    
+
+                    <button type="submit" disabled={loading}>
+                      {loading ? "Logging in..." : "Login"}
+                      </button>
+
                 </form>
             </div>
         </div>
@@ -149,7 +183,23 @@ const SignUp = () => {
       </div>
       </div>
       </div>
+      <div className="resetPasswordModel">     
+       {showResetModal && ( <ResetPasswordModal
+    onClose={() => setShowResetModal(false)}/>)}
+    </div>
+    {showSuccessPopup && (
+  <div className="resetPasswordModel">
+    <div className="popup-card">
+      <h2>Login Successful 🎉</h2>
+      <p>Redirecting to your dashboard...</p>
+    </div>
+  </div>
+)}
+
+
+
     </div>
   )
 }
 export default SignUp
+ 

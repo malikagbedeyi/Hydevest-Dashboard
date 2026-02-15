@@ -1,12 +1,16 @@
 import React, { useEffect, useState, useMemo } from "react";
 import "../../../../assets/Styles/dashboard/create.scss";
 import { ChevronDown, Trash2 } from "lucide-react";
+import { PartnerService } from "../../../../services/Account/PartnerService";
+import { EntityServices } from "../../../../services/Admin/EntityServices";
 
 const CreateAllocation = ({drilldownMode = false,containersData,data,setData,setView,onCreate,}) => {
   
-  const partners = JSON.parse(localStorage.getItem("partner_data")) || [];
-  const Entity = JSON.parse(localStorage.getItem("entity_data")) || [];
 
+  const [partners, setPartners] = useState([]);
+  const [partnersLoading, setPartnersLoading] = useState(false);
+   const [entity, setEntity] = useState([]);
+  const [entityLoading,setEntityLoading]= useState(false)
   // core state
   const [selectedContainer, setSelectedContainer] = useState(null);
   const [selectedEstimated, setSelectedEstimated] = useState(0);
@@ -24,6 +28,37 @@ const CreateAllocation = ({drilldownMode = false,containersData,data,setData,set
   const [editMode, setEditMode] = useState(false);
   const [editingDraftId, setEditingDraftId] = useState(null);
 
+
+  const fetchPartners = async () => {
+    try {
+      setPartnersLoading(true);
+      const res = await PartnerService.list({ page: 1 });
+      setPartners(res.data?.record?.data || []);
+    } catch (err) {
+      console.error("Failed to fetch partners", err);
+    } finally {
+      setPartnersLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchPartners();
+  }, []);
+    const fetchEntity = async () => {
+      try{
+        setEntityLoading(true)
+        const res = await EntityServices.list({page:1})
+        setEntity(res.data?.record?.data || []);
+
+
+      }catch (err){
+        console.error("Failed to fecth Entity",err)
+      }finally{
+        setEntityLoading(false)
+      }
+    }
+    useEffect(() => {
+      fetchEntity();
+    }, []);
   const eligibleContainers = (containersData ?? [])
     .filter(
       c =>
@@ -157,20 +192,27 @@ const CreateAllocation = ({drilldownMode = false,containersData,data,setData,set
     };
   };
 
-  const assigneeOptions = [
-    ...partners.map((p) => ({
-      id: p.id,
-      name: p.fullName,
-      type: "partner"
-    })),
-    ...Entity.map((e) => ({
-      id: e.id,
-      name: e.name,
-      type: "entity"
-    }))
-  ];
+const assigneeOptions = [
+  ...(Array.isArray(partners)
+    ? partners.map((p) => ({
+        id: p.user_uuid,
+        name: `${p.firstname} ${p.lastname}`.trim(),
+        type: "partner",
+      }))
+    : []),
+
+  ...(Array.isArray(entity)
+    ? entity.map((e) => ({
+        id: e.user_uuid,
+        name: `${e.firstname} ${e.lastname}`.trim(),
+        type: "entity",
+      }))
+    : []),
+];
+
     const assigneeOptionsFiltered = assigneeOptions;
-      const handleEditDraftRow = (row) => {
+    
+    const handleEditDraftRow = (row) => {
         setEditMode(true);
         setEditingDraftId(row.id);
         setOpenAllocationPopup(true);
@@ -191,7 +233,7 @@ const CreateAllocation = ({drilldownMode = false,containersData,data,setData,set
         <div className="drill-summary-grid">
   <div className="drill-summary">
     <div className="summary-item">
-      <p className="small">Estimated Believing Amount (NGN)</p>
+      <p className="small">Estimated Delieving Amount (NGN)</p>
       <h2>{Number(selectedEstimated).toLocaleString("en-NG")}</h2>
     </div>
 
@@ -293,7 +335,7 @@ const CreateAllocation = ({drilldownMode = false,containersData,data,setData,set
   </div>
 
   <div className="form-group">
-    <label>Estimated Believing Amount (NGN)</label>
+    <label>Estimated Delieving Amount (NGN)</label>
     <input
       type="text"
       readOnly
@@ -466,11 +508,11 @@ placeholder="Enter amount" />
 {allocations.length > 0 && (
  <div className="userTable">
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" style={{width:"100%" , maxWidth:"100%",minWidth:"100%"}}>
       <thead>
         <tr>
           <th>S/N</th>
-          <th>Partner / Entity</th>
+          <th>Partner </th>
           <th>Amount</th>
           <th>Percentage</th>
         </tr>

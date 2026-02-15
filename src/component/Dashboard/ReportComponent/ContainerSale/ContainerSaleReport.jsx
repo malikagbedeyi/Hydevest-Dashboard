@@ -30,10 +30,12 @@ const ContainerSaleReport = ({ goBack }) => {
           };
         }
         
-        const containerTotal = container.pallets.reduce(
+       
+        const containerTotal = (container.pallets || []).reduce(
           (sum, p) => sum + (Number(p.total) || 0),
           0
         );
+        
 
         map[containerId].totalSaleAmount += containerTotal;
       });
@@ -81,14 +83,15 @@ const ContainerSaleReport = ({ goBack }) => {
 
       {/* DRILLDOWN VIEW */}
       {selectedContainer && (
-        <DrilldownContainerSale
-          data={selectedContainer}
-          goBack={() => setSelectedContainer(null)}
-          sales={sales}
-          presales={JSON.parse(localStorage.getItem("presales_data")) || []}
-          recoveries={JSON.parse(localStorage.getItem("data_storage")) || []}
-        />
-      )}
+  <DrilldownContainerSale
+    data={selectedContainer}
+    goBack={() => setSelectedContainer(null)}
+    sales={sales}   // ✅ ADD THIS
+    presales={JSON.parse(localStorage.getItem("presales_data")) || []}
+    recoveries={JSON.parse(localStorage.getItem("recovery_storage")) || []}
+  />
+)}
+
     </div>
   );
 };

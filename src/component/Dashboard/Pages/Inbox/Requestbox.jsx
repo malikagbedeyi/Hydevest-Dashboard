@@ -1,9 +1,9 @@
 import React from 'react'
-import profile from '../../../../../assets/Images/profile-img.png'
+import profile from '../../../../assets/Images/profile-img.png'
 import { ChevronRight } from 'lucide-react'
-import FinanceController from '../../../ExpensifyComponent/FinanceComponent/FinanceController'
+import RequestboxController from '../../RequestboxComponent/RequestboxController'
 
-const Finance = () => {
+const Requestbox = () => {
   return (
     <div className='account'>
         <div className="headerContainer row">
@@ -11,9 +11,7 @@ const Finance = () => {
           <div className="headerChild">
             <div className="topWrapper">
               <div className="leftTopWrapper">
-                <h1>Expensify</h1>
-                <span> <ChevronRight size={16} /> </span>
-                <span>Finance</span>
+                <h1>Requestbox</h1>
               </div>
               <div className="rightTopWrapper">
                 <div className="menuicon">
@@ -34,10 +32,11 @@ const Finance = () => {
         </div>
         </div>
         <div className="account-component">
-          <FinanceController />
+          <RequestboxController />
         </div>
     </div>
   )
 }
 
-export default Finance
+
+export default Requestbox

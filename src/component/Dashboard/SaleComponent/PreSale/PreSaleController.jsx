@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
-import "../../../../assets/Styles/dashboard/Sale/presaleController.scss";
+import "../../../../assets/Styles/dashboard/controller.scss";
 import CreatePreSale from "./CreatePreSale";
 import PreSaleTable from "./PreSaleTable";
 
@@ -114,9 +114,9 @@ const handleDeletePreSale = (createdAt) => {
 };
 
   return (
-    <div className="emptysale">
-      <div className="emptysale-container">
-        <div className="emptysale-content">
+    <div className="controller">
+      <div className="controller-container">
+        <div className="controller-content">
 
           {/* TOP BAR */}
           {(view === "empty" || view === "table") && (

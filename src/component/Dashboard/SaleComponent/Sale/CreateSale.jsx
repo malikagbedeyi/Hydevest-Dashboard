@@ -1,10 +1,11 @@
 import React, { useEffect, useState,useMemo } from "react";
-import "../../../../assets/Styles/dashboard/Sale/createPresale.scss";
+import "../../../../assets/Styles/dashboard/create.scss";
 import { X, ChevronDown, Plus } from "lucide-react";
 import SaleItemsTable from "./SaleItemsTable";
 import {totalPurchase,calculateTotals,totalSaleAmount,totalPalletCount,totalPurchasePricePerPiece} from './hooks/ useSaleCalculations';
 import {usePresaleHelpers} from './hooks/usePresaleHelpers';
-const CUSTOMERS_KEY = "customers_data";
+import { CustomerService } from "../../../../services/Account/CustomerService";
+
 
 const CreateSale = ({ preSales = [], sales, setView, onCreate, containersData }) => {
   const [editingRow, setEditingRow] = useState(null);
@@ -23,10 +24,9 @@ const [palletContainers, setPalletContainers] = useState({});
   const activeContainer = containerSales[activeContainerId];  
   const dynamicContainerOptions = selectedValues;
   const {presaleByContainerId,isPurchasePriceLowerThanPresale,getPalletOptionsForContainer,  } = usePresaleHelpers(preSales);
-  
   const [form, setForm] = useState({
     presaleId: "", container: "",noOfPallets: "", saleOption: "", wcPieces: "",
-    customerPhone: "", customerName: "", customerLocation: "", customerAddress: "", 
+    customerPhone: "", customerName: "",customerEmail: "", customerLocation: "", customerAddress: "", 
     noOfPalletInput: "", saleAmount: "", totalSaleAmount: "", depositAmount: "", 
     pallets: [],
   });
@@ -72,12 +72,23 @@ const [palletContainers, setPalletContainers] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const cleaned = cleanNumber(value);
+  
     setForm((prev) => ({
       ...prev,
-      [name]: cleaned,
+      [name]: value, // ✅ DO NOT CLEAN TEXT
     }));
   };
+  const handleNumberChange = (e) => {
+  const { name, value } = e.target;
+  const cleaned = value.replace(/[^\d]/g, "");
+
+  setForm((prev) => ({
+    ...prev,
+    [name]: cleaned,
+  }));
+};
+
+  
   const handlePalletChange = (index, field, value) => {
     const updated = [...form.pallets];
     updated[index][field] = value;
@@ -124,7 +135,10 @@ const [palletContainers, setPalletContainers] = useState({});
       ...p,
     }));
   });
-
+  const computedTotalSaleAmount = useMemo(() => {
+    return totalSaleAmount(tableSaleItems);
+  }, [tableSaleItems]);
+  
   const toggleCollapsedContainer = (id) => {
     setCollapsedContainers((prev) => ({
       ...prev,
@@ -215,8 +229,7 @@ const handleDeleteSaleItem = (row) => {
   });
 };
 
-const balance = amountPaid >= totalSaleAmount
-    ? 0 : totalSaleAmount - amountPaid;
+const balance = amountPaid >= computedTotalSaleAmount ? 0 : computedTotalSaleAmount - amountPaid;
 
   const formatCurrency = (value) =>
     new Intl.NumberFormat("en-NG", {
@@ -224,9 +237,7 @@ const balance = amountPaid >= totalSaleAmount
       currency: "NGN",
     }).format(value);
 
-  const [customers, setCustomers] = useState(() => {
-    return JSON.parse(localStorage.getItem(CUSTOMERS_KEY)) || [];
-  });
+
   const [foundCustomer, setFoundCustomer] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [showAddCustomerFields, setShowAddCustomerFields] = useState(false);
@@ -270,48 +281,108 @@ const balance = amountPaid >= totalSaleAmount
       
       
     });
-    console.log("CONTAINER ITEM:", item);
   }; 
  
-  const handleCustomerPhone = (e) => {
-    const phone = e.target.value;
-    setForm((prev) => ({ ...prev, customerPhone: phone }));
-
-    const customer = customers.find((c) => c.phone === phone);
-    setFoundCustomer(customer || null);
-    setShowAddCustomerFields(!customer);
+  const handleCustomerPhone = async (e) => {
+    const phone = e.target.value.trim();
+  
+    setForm(prev => ({ ...prev, customerPhone: phone }));
+  
+    if (!phone) {
+      setFoundCustomer(null);
+      setShowAddCustomerFields(false);
+      return;
+    }
+  
+    try {
+      const res = await CustomerService.list();
+      const list = res.data?.record?.data || [];
+  
+      const customer = list.find(
+        c => String(c.phone_no) === String(phone)
+      );
+  
+      if (!customer) {
+        setFoundCustomer(null);
+        setShowAddCustomerFields(true);
+        return;
+      }
+  
+      const mapped = {
+        id: customer.id,
+        name: `${customer.firstname} ${customer.lastname}`.trim(),
+        email: customer.email,
+        phone: customer.phone_no,
+        address: customer.address,
+      };
+  
+      setFoundCustomer(mapped);
+      setForm(prev => ({
+        ...prev,
+        customerName: mapped.name,
+        customerEmail: mapped.email,
+        customerAddress: mapped.address,
+      }));
+  
+      setShowAddCustomerFields(false);
+    } catch (err) {
+      console.error(err);
+      setFoundCustomer(null);
+      setShowAddCustomerFields(true);
+    }
   };
-  const handleAddCustomer = () => {
-    if (!form.customerName || !form.customerPhone || !form.customerLocation || !form.customerAddress) {
+  const handleAddCustomer = async () => {
+    if (
+      !form.customerName ||
+      !form.customerPhone ||
+      !form.customerEmail ||
+      !form.customerAddress
+    ) {
       setSuccessMessage("Please fill all customer fields");
       return null;
     }
   
-    const existingCustomer = customers.find(c => c.phone === form.customerPhone);
+    // ✅ NAME SPLIT BELONGS HERE
+    const [firstname, ...rest] = form.customerName.trim().split(" ");
+    const lastname = rest.join(" ") || "";
   
-    if (existingCustomer) {
-      setFoundCustomer(existingCustomer);
+    try {
+      const payload = {
+        firstname,
+        lastname,
+        email: form.customerEmail,
+        phone_no: String(form.customerPhone),
+        address: form.customerAddress,
+      };
+  
+      const res = await CustomerService.create(payload);
+      const rawCustomer = res.data?.data || res.data?.record || res.data;
+
+      const mappedCustomer = {
+        id: rawCustomer.id,
+        name:`${rawCustomer.firstname ?? ""} ${rawCustomer.lastname ?? ""}`.trim() ||
+          form.customerName, // ✅ FALLBACK TO FORM NAME
+        email: rawCustomer.email ?? form.customerEmail,
+        phone: rawCustomer.phone_no ?? form.customerPhone,
+        address: rawCustomer.address ?? form.customerAddress,
+      };
+      
+      
+      setFoundCustomer(mappedCustomer);
       setShowAddCustomerFields(false);
-      return existingCustomer; // <-- return the object, not true
+      setSuccessMessage("Customer created successfully");
+  
+      return mappedCustomer;
+    } catch (err) {
+      console.error(err.response?.data || err);
+      setSuccessMessage(
+        err.response?.data?.message || "Failed to create customer"
+      );
+      return null;
     }
-  
-    const newCustomer = {
-      phone: form.customerPhone,
-      name: form.customerName,
-      location: form.customerLocation,
-      address: form.customerAddress,
-    };
-  
-    const updatedCustomers = [...customers, newCustomer];
-    setCustomers(updatedCustomers);
-    localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(updatedCustomers));
-  
-    setFoundCustomer(newCustomer);
-    setShowAddCustomerFields(false);
-    setSuccessMessage("Customer added successfully!");
-  
-    return newCustomer; // <-- always return object
   };
+  
+  
   
   const togglePalletDropdown = (index) => {
     setOpenPalletDropdowns(prev => ({
@@ -320,8 +391,8 @@ const balance = amountPaid >= totalSaleAmount
     }));
   };
  
-  const handleCreate = () => {
-    const customer = foundCustomer;
+  const handleCreate = (customerParam) => {
+    const customer = customerParam || foundCustomer;
   
     if (!customer) {
       setSuccessMessage("Please add or select a customer");
@@ -340,24 +411,38 @@ const balance = amountPaid >= totalSaleAmount
         total: Number(p.total),
       })),
     }));
-    
-    const newSale = {
-      id: Date.now(),
-      presaleId: form.presaleId,
-      totalSaleAmount,
-      amountPaid: Number(amountPaid),
-      balance,
-      noOfPallets: totalPalletCount,
-      purchasePricePerPiece: totalPurchasePricePerPiece,
-      customer: {
-        name: customer.name,
-        phone: customer.phone,
-        location: customer.location,
-        address: customer.address,
-      },
-      containers: cleanContainers,
-      createdAt: new Date().toISOString(),
-    };
+    const computedNoOfPallets = totalPalletCount(containerSales);
+const computedPurchasePricePerPiece =
+  totalPurchasePricePerPiece(containerSales);
+
+const computedTotalSaleAmountFinal = computedTotalSaleAmount;
+
+const newSale = {
+  id: Date.now(),
+  presaleId: form.presaleId,
+
+  totalSaleAmount: computedTotalSaleAmountFinal,
+  amountPaid: Number(amountPaid),
+  balance:
+    Number(amountPaid) >= computedTotalSaleAmountFinal
+      ? 0
+      : computedTotalSaleAmountFinal - Number(amountPaid),
+
+  noOfPallets: computedNoOfPallets,
+  purchasePricePerPiece: computedPurchasePricePerPiece,
+
+  customer: {
+    name: customer.name,
+    email: customer.email,
+    phone: customer.phone,
+    location: customer.location,
+    address: customer.address,
+  },
+
+  containers: cleanContainers,
+  createdAt: new Date().toISOString(),
+};
+
   
     onCreate(newSale);
     setView("table");
@@ -367,22 +452,24 @@ const balance = amountPaid >= totalSaleAmount
 
   const closePopup = () => setSuccessMessage(null);
 
-  const handleClick = () => {
-    if (!foundCustomer) {
-      const added = handleAddCustomer();
-      if (!added) return;
+  const handleClick = async () => {
+    let customer = foundCustomer;
+  
+    if (!customer) {
+      // create customer if not found
+      customer = await handleAddCustomer();
+      if (!customer) return; // stop if creation failed
     }
   
-    handleCreate(); // ✅ NO ARGUMENT
+    handleCreate(customer); // pass customer object to your sale creation logic
   };
+  
 
 useEffect(() => {
   if (!selectedValues.length) {
     setPresaleError("");
     return;
   }
-
-
   const containersWithoutPresale = selectedValues.filter(
     c => !presaleByContainerId[c.id]
   );
@@ -443,10 +530,7 @@ useEffect(() => {
                         </div>
                       )}
                     </div>
-                    <div
-                      className="custom-select"
-                      onClick={() => setOpenContainerSelect(!openContainerSelect)}
-                    >
+                    <div className="custom-select-icon" onClick={() => setOpenContainerSelect(!openContainerSelect)}  >
                       <ChevronDown className={openContainerSelect ? "up" : "down"} />
                     </div>
                   </div>
@@ -543,7 +627,7 @@ useEffect(() => {
         </div>
             {/* Customer Section */}
             <div className="">
-            <h4 className="mb-4" style={{marginTop:""}} >Customer Details</h4>
+            <h4 className="title-text mb-4" style={{marginTop:""}} >Customer Details</h4>
             <div className="customer-header">
               <div className="grid-4" style={{ display: "flex", alignItems: "center",justifyContent:"center", gap: "20px" }}>
                 <div className="form-group" style={{ flex: "4" }}>
@@ -571,11 +655,11 @@ useEffect(() => {
             {foundCustomer && (
               <div className="customer-grid-3 mt-2">
               <div className="customer-details">
-                <ul className="ul">
-                  <li>Name: {foundCustomer.name}</li>
-                  <li>State: {foundCustomer.location}</li>
-                  <li>Address: {foundCustomer.address}</li>
-                </ul>
+              <ul className="ul">
+        <li>Name: {foundCustomer.name}</li>
+        <li>Email: {foundCustomer.email}</li>
+        <li>Address: {foundCustomer.address}</li>
+      </ul>
               </div>
               </div>
             )}
@@ -586,18 +670,15 @@ useEffect(() => {
                 <div className="grid-2">
                   <div className="form-group">
                     <label>Name</label>
-                    <input name="customerName" value={form.customerName} onChange={handleChange} />
+                    <input name="customerName" placeholder="Enter Customer Name" value={form.customerName} onChange={handleChange} />
                   </div>
-
                   <div className="form-group">
-                    <label>State</label>
-                    <input name="customerLocation" value={form.customerLocation} onChange={handleChange} />
+                    <label>Email</label>
+                    <input name="customerEmail" placeholder="Enter Customer Email Address" value={form.customerEmail} onChange={handleChange} />
                   </div>
-                </div>
-                <div className="grid-3">
-                <div className="form-group">
+                  <div className="form-group">
                     <label>Address</label>
-                    <input name="customerAddress" value={form.customerAddress} onChange={handleChange} />
+                    <input name="customerAddress" placeholder="Enter Customer Address" value={form.customerAddress} onChange={handleChange} />
                   </div>
                 </div>
               </div>
@@ -608,7 +689,7 @@ useEffect(() => {
   {/* Header */}
   <div className="sale-header-details">
       <>
-        <h3>Sale Details</h3>
+        <h3 className="title-text" >Sale Details</h3>
         <button
           type="button"
           className="add-item-btn"
@@ -651,8 +732,9 @@ useEffect(() => {
 
       <div className="sale-pallet-section">
         <div className="header">
-          <h5>Add Sale</h5>
-          <button type="button" onClick={addPallet}>Add More</button>
+          <h5 style={{fontSize:"1.2vw"}}>Add Sale</h5>
+          <button style={{padding:".7vw 1.4vw",borderRadius:".7vw" , background:"inherit",color: "#581aae"}}
+           type="button" onClick={addPallet}>Add More</button>
         </div>
 
         {form.pallets.map((pallet, index) => (
@@ -725,7 +807,6 @@ useEffect(() => {
     </small>
   )}
 </div>
-
               <div className="form-group">
                 <label>No Of Pallet Purchased</label>
                 <input
@@ -812,24 +893,28 @@ useEffect(() => {
     />
     <div className="grid-2 mt-3">
       <div className="form-group">
-        <h5 style={{ color: "#581aae" }}>Total Sale Amount</h5>
-        <input value={formatCurrency(totalSaleAmount)} readOnly />
+        <label style={{ color: "#581aae" }}>Total Sale Amount</label>
+        <input value={formatCurrency(computedTotalSaleAmount)} readOnly />
+
       </div>
 
       <div className="form-group">
-        <h5 style={{ color: "#581aae" }}>Amount Paid</h5>
+        <label style={{ color: "#581aae" }}>Amount Paid</label>
         <input
-          type="number"
-          value={formatMoneyNGN(amountPaid)}
-          onChange={(e) => {
-            const value = Number(e.target.value || 0);
-            if (value > totalSaleAmount) {
-              setSuccessMessage("Amount cannot exceed total sale amount");
-              return;
-            }
-            setAmountPaid(value);
-          }}
-        />
+  type="number"
+  value={amountPaid}
+  onChange={(e) => {
+    const value = Number(e.target.value || 0);
+
+    if (value > computedTotalSaleAmount) {
+      setSuccessMessage("Amount cannot exceed total sale amount");
+      return;
+    }
+
+    setAmountPaid(value);
+  }}
+/>
+
       </div>
     </div>
     <div className="btn-row">

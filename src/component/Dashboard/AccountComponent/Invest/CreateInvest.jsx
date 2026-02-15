@@ -1,151 +1,174 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../../../assets/Styles/dashboard/account/createAccount.scss";
-import { ChevronDown, X } from "lucide-react";
+import { X } from "lucide-react";
+import { InvestorService } from "../../../../services/Account/InvestorService";
 
-const PrivilegeOptions = ["NT Admin", "Manager", "User"];
-const statusOptions = ["Active", "Disabled"];
+const CreateInvest = ({setView, mode="submenu",onClose, refresh, editData = null }) => {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [messageType, setMessageType] = useState("success");
 
-const CreateInvest = ({ users, setUsers, setView, openSubmenu }) => {
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
+    firstname: "",
+    lastname: "",
     email: "",
-    phone: "",
+    phone_no: "",
     password: "",
-    bankName: "",
-    bankAccount: "",
-    mfa: false,
-    changePassword: false,
+    bank_name: "",
+    bank_account: "",
   });
-  const [successMessage, setSuccessMessage] = useState(null);
 
-  /* ================= HANDLERS ================= */
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+  useEffect(() => {
+    if (editData) {
+      setForm({
+        firstname: editData.firstname || "",
+        lastname: editData.lastname || "",
+        email: editData.email || "",
+        phone_no: editData.phone_no || "",
+        password: "",
+        bank_name: editData.hynvest_bank?.bank_name || "",
+        bank_account: editData.hynvest_bank?.bank_account || "",
+      });
+    }
+  }, [editData]);
 
-  const handleCreate = () => {
-    const newdata = {
-      id: crypto.randomUUID(),
-      ...form,
-      createdAt: new Date().toISOString(),
-    };
+  const handleChange = (e) =>
+  setForm({ ...form, [e.target.name]: e.target.value });
 
-    setUsers((prev) => [newdata, ...prev]);
-    setSuccessMessage("Invest successfully created");
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      setMessage(null);
+
+      if (editData) {
+        await InvestorService.edit({
+          user_uuid: editData.user_uuid,
+          firstname: form.firstname,
+          lastname: form.lastname,
+          email: form.email,
+          phone_no: form.phone_no,
+        });
+
+        await InvestorService.editBank({
+          user_uuid: editData.user_uuid,
+          bank_name: form.bank_name,
+          bank_account: form.bank_account,
+        });
+       
+        if (form.password) {
+          await InvestorService.changePassword(editData.user_uuid, form.password);
+        }
+
+        setMessage("Investor updated successfully");
+      } else {
+        await InvestorService.create(form);
+        setMessage("Investor created successfully");
+      }
+      if (mode === "submenu" && typeof setView === "function") {
+        setView("table");
+      }
+      setMessageType("success");
+      refresh();
+    } catch (err) {
+      console.error(err);
+      setMessage(err.response?.data?.message || "Operation failed");
+      setMessageType("error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClosePopup = () => {
-    setSuccessMessage(null);
-    setView("table");
-    openSubmenu?.("users");
+    setMessage(null);
+    if (messageType === "success") onClose?.();
   };
-
-  /* ================= SUCCESS POPUP ================= */
-  if (successMessage) {
-    return (
-      <div className="trip-card-popup">
-        <div className="trip-card-popup-container">
-          <div className="popup-content">
-            <div onClick={handleClosePopup} className="delete-box">✕</div>
-            <span>{successMessage}</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  /* ================= UI ================= */
+  const handleCancel = () => {
+    if (mode === "submenu" && setView) {
+      setView("table")
+    }
+  };
   return (
-    <div className="">
-      <div className="create-container-modal">
-        <div className="create-container-card">
-
-          {/* HEADER */}
-          <div className="header">
-            <h2>Create Investor</h2>
-            <X size={18} className="close" onClick={() => setView("table")} />
+    <>
+      {message && (
+        <div className="trip-card-popup">
+          <div className="trip-card-popup-container">
+            <div className={`popup-content ${messageType}`}>
+              <div onClick={handleClosePopup} className="delete-box">✕</div>
+              <span>{message}</span>
+            </div>
           </div>
+        </div>
+      )}
 
-          <p>Enter the details of new Investor</p>
-
-          {/* BASIC INFO */}
-          <div className="account-grid">
-            <div className="account-grid-content">
-            <div className="grid-2">
-            <div className="form-group">
-              <label>First Name</label>
-              <input
-                name="firstName"
-                value={form.firstName}
-                onChange={handleChange}
-                placeholder="Enter First Name"
-              />
+      <div className="trip-modal">
+        <div className="create-container-modal">
+          <div className="create-container-card">
+            <div className="header">
+              <div>
+                <h2>{editData ? "Edit Investor" : "Create Investor"}</h2>
+                <p>Enter Investor details</p>
+              </div>
+              <X className="close" onClick={onClose} />
             </div>
-            <div className="form-group">
-              <label>Last Name</label>
-              <input
-                name="lastName"
-                value={form.lastName}
-                onChange={handleChange}
-                placeholder="Enter Last Name"
-              />
+
+            <div className="grid-2 mt-3">
+              <div className="form-group">
+                <label>First Name</label>
+                <input name="firstname" placeholder="Enter firstname" value={form.firstname} onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input name="lastname" placeholder="Enter lastname" value={form.lastname} onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input name="email" placeholder="Enter email " value={form.email} onChange={handleChange} />
+              </div>
+              <div className="form-group">
+                <label>Phone No</label>
+                <input name="phone_no" placeholder="Enter phone_no" value={form.phone_no} onChange={handleChange} />
+              </div>
+              {editData ? (
+                <div className="form-group">
+                  <label>Change Password</label>
+                  <input
+                    type="password"
+                    placeholder="Leave empty to keep current password"
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
+                  />
+                </div>
+              ) : (
+                <div className="form-group">
+                  <label>Password</label>
+                  <input type="password" placeholder="Enter password" name="password" value={form.password} onChange={handleChange} />
+                </div>
+              )}
+              <div className="form-group">
+                <label>Bank Name</label>
+                <input name="bank_name" placeholder="Enter " value={form.bank_name} onChange={handleChange} />
+              </div>
             </div>
-      </div>
-      <div className="form-group mb-4">
-          <label>Email</label>
-          <input name="email"
-           placeholder="Enter Email"
-            value={form.email} onChange={handleChange} type="email" />
-        </div>
-      <div className="grid-2">
-        <div className="form-group highlighted">
-          <label>Phone Number </label>
-          <input name="phone"
-           placeholder="Enter Phone Number"
-            value={form.phone} onChange={handleChange} type="text" />
-        </div>
-        <div className="form-group">
-          <label>Password</label>
-          <input name="password"
-           placeholder="Enter Password"
-            value={form.password} onChange={handleChange} type="password" />
-        </div>
-      </div>
-
-      <div className="grid-2">
-        <div className="form-group">
-          <label>Bank Name</label>
-          <input name="bankName"
-           placeholder="Enter Bank Name"
-            value={form.bankName} onChange={handleChange} type="text" />
-        </div>
-        <div className="form-group">
-          <label>Bank Account</label>
-          <input name="bankAccount"
-           placeholder="Enter Bank Account"
-            value={form.bankAccount} onChange={handleChange} type="text" />
-        </div>
-      </div>
-
-          {/* ACTIONS */}
-          <div className="btn-row">
-            <button className="cancel" onClick={() => setView("table")}>
-              Cancel
-            </button>
-            <button className="create" onClick={handleCreate}>
-              Create Investor
-            </button>
+             <div className="form-group">
+                <label>Bank Account</label>
+                <input name="bank_account" placeholder="Enter " type="number" value={form.bank_account} onChange={handleChange} />
+              </div>
+            <div className="btn-row">
+  {mode === "submenu" && (
+    <button className="cancel" onClick={onClose}>
+      Cancel
+    </button>
+  )}<button className="create" onClick={handleSubmit} disabled={loading}>
+  {loading ? "Saving..." : editData ? "Update Investor" : "Create Investor"}
+          </button>  
+</div>
+         
           </div>
         </div>
       </div>
-      </div>
-    </div>
-    </div>
+    </>
   );
 };
 

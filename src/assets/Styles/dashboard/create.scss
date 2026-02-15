@@ -50,9 +50,57 @@
    border-box;
     margin: 0; 
     padding: 0; 
-    font-family: "Poppins", sans-serif; }
+    font-family: "Poppins", sans-serif;
+    outline-style: none;
+   }
+   .trip-card-popup {
+    .trip-card-popup-container {
+      position: fixed; 
+      inset:0; 
+      display:flex;
+       justify-content:center; 
+      align-items:center;
+       z-index:10001;
+      background: rgba(54,53,86,0.42);
+    }
+    .popup-content {
+      background:#fff; 
+      padding: 2.5vw!important; 
+      border-radius:0.7vw; 
+      width:29vw; 
+      text-align:center;
+      @include Destop{
+        padding: 36px; 
+        border-radius:8px; 
+        width:420px; 
+            }
+      .delete-box { 
+      display:flex; 
+      justify-content:flex-end; 
+      cursor:pointer; 
+      color:red;
+      font-size: 1.3vw;
+  }
+      span { 
+      display:block; 
+      font-size:1.3vw!important; 
+      font-weight:600; 
+      margin-top:0.5vw; 
+       @include Destop{
+        font-size:16px; 
+        margin-top:8px; 
+            }
+  }
+    }
+  }
+  
   .trip-modal{
     position: relative;
+    button{
+      padding: 10px 20px;
+      font-size: 1vw!important;
+    }
+
   .create-container-modal{
     background: rgba(0,0,0,.25);
     width: 100%;
@@ -61,156 +109,769 @@
     justify-content:center;
     z-index: 9999;
     height:100vh;
-    padding: 20px 0;
+    padding: 1.4vw 0;
     position: relative;
+    @include Destop{  
+      padding: 20px 0;
+    }
   .create-container-card{
     position: relative;
     background:#fff;
-    width: 980px;
-   // height:100vh;
+    width: 68vw;
    height: 100%;
     max-width: 90%;
-    border-radius: 12px;
-    padding: 28px;
+    border-radius: 0.8vw;
+    padding: 2vw;
       overflow-y:auto;
-      .drill-summary-grid{
-        margin-bottom: 30px;
-      .drill-summary {
-        width: 100%;
+      @include Destop{
+        width: 980px;
+         border-radius: 12px;
+         padding: 28px;
+      }
+      .drill-summary-grid {
+        margin-bottom: 2.1vw;
+      
+        @include Destop {
+          margin-bottom: 30px;
+        }
+      
+        .drill-summary {
+          width: 100%;
           display: flex;
-          gap: 12px;
+          gap: 0.85vw;
           align-items: center;
+      
+          @include Destop {
+            gap: 12px;
+          }
+      
           .summary-item {
             width: 100%;
-            padding: 12px 16px 20px;
+            padding: 0.85vw 1.1vw 1.4vw;
             box-shadow: 0px 4px 16px 0px #0000001F;
             background: #ffffff;
-            gap: 8px;
+            gap: 0.55vw;
             display: flex;
             flex-direction: column;
+      
+            @include Destop {
+              padding: 12px 16px 20px;
+              gap: 8px;
+            }
+      
             .small {
-             font-family: "Roboto",sans-serif;
-             font-weight: 500;
-             font-style: Medium;
-             font-size: 1vw;
-             line-height: 24px;
-             letter-spacing: 0px;
-             color: #8EA396;
-             margin: 0;
-              @include Destop{
+              font-family: "Roboto", sans-serif;
+              font-weight: 500;
+              font-style: Medium;
+              font-size: 1vw;
+              line-height: 24px;
+              letter-spacing: 0px;
+              color: #8EA396;
+              margin: 0;
+      
+              @include Destop {
                 font-size: 14px;
+              }
             }
-            }
-    
+      
             h2 {
-             font-family: "Poppins",sans-serif;
-             font-weight: 500;
-             font-style: Medium;
-             font-size: 1.5vw;
-             line-height: 100%;
-             letter-spacing: 0px;
-             margin: 0 0 0 30px;
-             color: #581aae;
-             position: relative;
-              @include Destop{
+              font-family: "Poppins", sans-serif;
+              font-weight: 500;
+              font-style: Medium;
+              font-size: 1.5vw;
+              line-height: 100%;
+              letter-spacing: 0px;
+              margin: 0 0 0 2.1vw;
+              color: #581aae;
+              position: relative;
+      
+              @include Destop {
                 font-size: 24px;
-            }
-            span{
-               position: absolute;
-               top: -6px;
-               left: -30px;
+                margin-left: 30px;
+              }
+      
+              span {
+                position: absolute;
+                top: -0.4vw;
+                left: -2.1vw;
                 font-size: 0.9vw;
-                @include Destop{
-                font-size: 14px;
-            }
-            }
+      
+                @include Destop {
+                  top: -6px;
+                  left: -30px;
+                  font-size: 14px;
+                }
+              }
             }
           }
         }
-        }
-  header {
+      }
+  .header {
     display:flex;
     justify-content: space-between;
     align-items: center;
+      h2{
+     color: #581aae; 
+     margin: 0;
+     font-size: 1.5vw;
+    }
     .header-content{
      display:flex;
-     gap: 5px;
+     gap:0.35vw;
      flex-direction: column;
+     @include Destop{  gap: 5px; }
      h2{
      color: #581aae; 
      margin: 0;
     }
 }
   }
+  .tab-section{
+    font-size: 1vw;
+    p{
+      margin-bottom:1.5vw;
+    }
+    .form-group { 
+      background:#f7f7f9;
+       padding:0.8vw;
+       border-radius:0.7vw;
+        outline-style: none;
+        @include Destop{
+          padding:12px;
+          border-radius:10px;
+        }
+       input,textarea{
+        width:100%; 
+        padding:0.5vw 0.7vw; 
+        border:0.1vw solid #ddd;
+         border-radius:0.4vw; 
+        background:#fff;
+        outline-style: none;
+        @include Destop{
+          padding:8px 10px; 
+          border:1px solid #ddd;
+           border-radius:6px;
+        }
+  
+       } 
+      }
+      .form-group-select{
+        position: relative;
+         background:#f5f5f7;
+         padding:0.8vw;
+         border-radius:0.7vw;  
+       width: 100%;
+  @include Destop{
+    padding:12px;
+    border-radius:10px; 
+        }
+       label{
+        display:block; 
+      margin-bottom:0.4vw; 
+      font-size:0.9vw; 
+      color:#444;
+  @include Destop{
+    font-size:13px; 
+    margin-bottom:6px; 
+        }
+       }
+       .custom-select{
+        width: 100%;
+        .custom-select-drop{
+             width: 100%;
+          display: flex;
+          justify-content: space-between;
+          gap: 0.7vw;
+          align-items: center;
+           padding:0.6vw 0.7vw; 
+         border:0.1vw solid #ddd;
+         border-radius:0.4vw; 
+         background:#fff;
+         @include Destop{
+          gap: 10px;
+          align-items: center;
+           padding:8px 10px; 
+         border:1px solid #ddd;
+         border-radius:6px; 
+        }
+          .select-box{
+            width: 100%;
+            color: gray;
+              .placeholder{
+                width: 100%;
+                background: inherit;
+                  color: #030314;
+               }
+               .selected-tags{
+                display: flex;
+                gap: 0.35vw;
+                border-radius: 0.4vw;
+                 @include Destop{
+                  gap: 5px;
+                  border-radius: 6px;
+        }
+                .tag{
+                  background: #f5f5f7;
+                  padding: 0.35vw 0.7vw;
+                   @include Destop{
+                    padding: 5px 10px;
+                }
+               }
+              }
+              .custom-select{
+                width: 10%;
+                cursor: pointer;
+                transition: .5s;
+                .up{
+                  transform: rotate(180deg);
+                  transition: .5s;
+                }
+                .down{
+                   transition: .5s;
+                }
+              }
+            }
+              .select-dropdown{
+                width: 90%;
+                background: #fff;
+                animation: dropdown .4s;
+                 box-shadow: 0 0.4vw 1.3vw rgba(88,26,170,0.08);
+                position: absolute;
+                 border-radius:0.85vw; 
+                 cursor: pointer;
+                top: 6.95vw;
+                left:1.4vw;
+                padding: 0.7vw;
+                z-index: 999;  
+                @include Destop{
+                  box-shadow: 0 6px 18px rgba(88,26,170,0.08);
+                   border-radius:12px; 
+                  top: 100px;
+                  left:20px;
+                  padding: 10px;
+                }
+                .search-input{
+                  width: 100%;
+                   padding:0.5vw 0.7vw 0.5vw 1.4vw; 
+                   border: none;
+                   border-bottom:0.1vw solid #581aae;
+                   border-radius:0.85vw 0.85vw 0 0; 
+                   background:#fff;
+                   outline-style: none;
+                   @include Destop{
+                    padding:8px 10px 8px 20px; 
+                    border: none;
+                    border-bottom:1px solid #581aae;
+                    border-radius:12px 12px 0 0; 
+                }
+                }
+                .option{
+                  background: #fff;
+                   border-radius:0 0 0.85vw 0.85vw;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 0.7vw;
+                  padding: 1.4vw;
+                  justify-content: center;
+                  align-content: center;
+                  outline-style: none;
+                  margin: auto;
+                   cursor: pointer;
+                    @include Destop{
+                      border-radius:0 0 12px 12px;
+                      display: flex;
+                      flex-direction: column;
+                      gap: 10px;
+                      padding: 20px;
+                }
+                  label{
+                    display: flex;
+                    gap: 1.4vw;
+                    cursor: pointer;
+                     @include Destop{
+                      gap: 20px; 
+                }
+                  }
+                }
+                .select-all{
+                  background: #f5f5f7;
+  
+                }
+                .option-permission-grid{
+                  display: flex;
+                  gap: 0.7vw;
+                  padding: 0.35vw 0 0 1vw;
+                   outline-style: none;
+                   cursor: pointer;
+                   position: relative;
+                   span{
+                    margin: 0;
+                    display: grid;
+                      @include Destop{
+                         gap: 10px;
+                      padding: 5px 0 0 15px;
+                }
+                    &:hover{
+                      transition: .4s;
+                      padding-left:0.7vw;
+                      font-size: 1vw;
+                      font-weight: bold;
+                      color: #581aae;
+                        @include Destop{
+                          padding-left:10px;
+                          font-size: 16px;
+                }
+  
+                     }
+                   }
+                   input{
+                    margin: 0;
+                    padding: 0;
+                    align-items: center;
+                    text-align: center;
+                   }
+                 }
+                .option-permission{
+                  background: #fff;
+                  border-radius: 0 0 0 0.7vw ;
+                    display: flex;
+                    gap: 0.7vw;
+                    padding: 0.35vw 0 0 1vw;
+                   outline-style: none;
+                   cursor: pointer;
+                   position: relative;
+                   @include Destop{
+                    border-radius: 0 0 0 10px ;
+                    gap: 10px;
+                    padding: 5px 0 0 15px;
+                }
+                   span{
+                    margin: 0;
+                    &:hover{
+                      transition: .4s;
+                      padding-left:0.7vw;
+                      font-size: 1.1vw;
+                      font-weight: bold;
+                      color: #581aae;
+                      @include Destop{
+                          padding-left:10px;
+                          font-size: 16px;
+                }
+  
+                     }
+                   }
+                   input{
+                    margin: 0;
+                    padding: 0;
+                    align-items: center;
+                    text-align: center;
+                   }
+                }
+                .option-item{
+                    background: #fff;
+                    border-radius: 0 0 0 0.7vw ;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.7vw;
+                    padding: 5px 0 0 1vw;
+                    justify-content: center;
+                    // align-i: center;
+                     outline-style: none;
+                     cursor: pointer;
+                     position: relative;
+                      @include Destop{
+                        border-radius: 0 0 0 10px ;
+                        gap: 10px;
+                        padding: 5px 0 0 15px;
+                }
+                     &:hover{
+                      &::before{
+                        width: 20%;
+                      }
+                     }
+                     &::before{
+                      content: '';
+                      position: absolute;
+                      left: 0.7vw;
+                      bottom: 0;
+                      width: 0;
+                      height: 0.09vw;
+                      transition: .4s;
+                      background: #581aae;
+                      border-radius: 0 0 0 0.7vw ;
+                       @include Destop{
+                        left: 0.7vw;
+                        bottom: 0;
+                        width: 0;
+                        height: 1px;
+                }
+                     }
+                     span{
+                      margin: 0;
+                     }
+                    label{
+                      display: flex;
+                      gap: 1.4vw;
+                      cursor: pointer;
+                       @include Destop{
+                        gap: 20px;
+                }
+                    }
+                }
+                .rolesoption{
+                  display: flex;
+                  gap: 0.7vw;
+                  align-items: center;
+                  font-size: 1vw;
+                   @include Destop{
+                    gap: 10px;
+                    font-size: 15px;
+                }
+                }
+              }
+          }
+      }
+      }
+      .sale-grid-3{
+  
+        background: #f5f5f7;
+        border-radius: 0.7vw;
+        padding: 0.7vw;
+        margin-bottom: 1.4vw;
+        width: 100%;
+        @include Destop{
+          border-radius: 10px;
+          padding: 10px;
+          margin-bottom: 20px;
+        }
+        .container-details{
+          width: 100%!important;
+          min-width: 100%;
+          max-width: 100%;
+          .collapsed-container{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5vw;
+            h4{
+              font-size: 1.2vw;
+              color: #581aae;
+              @include Destop{
+                font-size: 18px
+              }
+            }
+              .up{
+                        transform: rotate(180deg);
+                        transition: .5s;
+                      }
+                      .down{
+                         transition: .5s;
+                      }
+          }
+          ul{
+            
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+               margin: 0;
+              gap: 1.1vw; 
+              @include Destop{
+                gap: 16px; 
+              }
+              li{
+                  background:#fff;
+               padding:0.35vw;
+               border-radius:0.7vw;
+               margin: 0;
+               font-size: 1vw;
+               @include Destop{
+                padding:5px;
+                border-radius:10px;
+                font-size: 14px;
+              }
+              }
+          }
+        }
+     }
+     .title-text{
+      font-size: 1.2vw;
+      color: #581aae;
+      @include Destop{
+        font-size: 18px
+      }
+     }
+     .customer-grid-3{
+      background: #f5f5f7;
+      border-radius: 0.7vw;
+      padding: 0.7vw;
+      margin-bottom: 1.4vw;
+      width: 100%;
+      @include Destop{
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 20px;
+      }
+     .customer-details{
+          width: 100%!important;
+          min-width: 100%;
+          max-width: 100%;
+          .ul{
+           display: grid;
+            width: 100%!important;
+            grid-template-columns: 1fr 1fr;
+               margin: 0;
+              gap: 1.1vw; 
+              @include Destop{
+                gap: 16px;
+              }
+              li{
+                  background:#fff;
+               padding:0.35vw;
+               border-radius:0.7vw;
+               margin: 0;
+               font-size: 1vw;
+               @include Destop{
+                padding:5px;
+                border-radius:10px;
+                margin: 0;
+                font-size: 14px;
+               }
+              }
+          }
+        }
+      }
+      .sale-details{
+        // position: relative;
+      .sale-header-details{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 1.4vw 0 .7vw;
+        @include Destop{
+          margin: 20px 0 10px;
+        }
+        button{
+          display: flex;
+          gap: 0.7vw;
+          align-items: center;
+          border: 1px solid #581aae;
+          background: #fff;
+          color: #581aae;
+          border-radius: 0.7vw;
+          padding:.35vw 0.7vw;
+           @include Destop{
+          gap: 10px;
+          border-radius: 10px;
+          padding:5px 10px;
+        }
+        }
+          .add-item-dropdown {
+          position: relative;
+        .add-item-trigger {
+          display: flex;
+          align-items: center;
+          gap: 0.7vw;
+          cursor: pointer;
+          padding: .55vw .85vw;
+          border-radius: .4vw .4vw;
+          background: #fff;
+          border: 1px solid #581aae;
+          margin-bottom: 0.7vw;
+           @include Destop{
+          gap: 10px;
+          padding: 8px 12px;
+          border-radius: 6px 6px;
+          margin-bottom: 10px;
+        }
+        }
+        .add-item-menu {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          width: 100%;
+          background: #fff;
+          border-radius: 0.4vw;
+          box-shadow: 0 0.4vw 1.25vw rgba(0,0,0,0.12);
+          z-index: 10;
+           @include Destop{
+            border-radius: 6px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        }
+        }
+        
+        .add-item-option {
+          padding: 0.55vw 0.85vw;
+          cursor: pointer;
+           @include Destop{
+            padding: 8px 12px;
+        }
+        }
+      
+        .add-item-option:hover {
+          background: #fff;
+          border-bottom: 1px solid #581aae;
+        }
+      }
+      }
+    }
+  }
   .grid-cover{
    background: #f5f5f7;
-   padding: 15px;
-   border-radius: 16px;
+   padding: 1vw;
+   border-radius: 1.1vw;
+   @include Destop{
+    padding: 15px;
+    border-radius: 16px;
+     }
    .grid-cover-container{
     background: #fff;
-    padding: 15px;
+    padding: 1vw;
     display:grid;
     grid-template-columns: 1fr 1fr; 
    gap: 16px; 
-   margin-bottom: 16px;
+   margin-bottom: 1.1vw;
    align-items: center;
-   border-radius: 16px;
+   border-radius: 1.1vw;
+   @include Destop{
+    padding: 15px;
+    gap: 16px; 
+    margin-bottom: 16px;
+    border-radius: 16px;
+     }
    }
+  }
+  .grid{
+    background: #f5f5f7;
   }
   .grid-3{
     display:grid;
     grid-template-columns:1fr 1fr 1fr; 
-    gap: 16px; 
-   margin-bottom: 16px;
+    gap: 1.1vw; 
+   margin-bottom: 1.1vw;
+    @include Destop{
+      gap: 16px; 
+      margin-bottom: 16px;
+     }
    }
    .role-content{
     background: #f5f5f7;
-    padding: 20px;
-    border-radius: 12px;
+    padding: 1.4vw;
+    border-radius: 0.8vw;
+     @include Destop{
+      padding:20px;
+      border-radius: 12px;
+     }
     .role-style{
       background: #fff;
-      padding: 20px;
-      border-radius: 12px;
+      padding: 1.4vw;
+    border-radius: 0.8vw;
+       @include Destop{
+        padding: 20px;
+        border-radius: 12px;
+     }
+      .create-container-permission{
+        position: relative;
+      background:#fff;
+      border: 0.1vw solid #581aae!important;
+      height: 100%;
+      border-radius: 0.8vw;
+      padding: 2.7vw;
+        overflow-y:auto;
+         @include Destop{
+          border: 1px solid #581aae!important;
+          border-radius: 12px;
+          padding: 28px;
+     }
+        .header{
+          color: #581aae;
+        }
+          p{
+            margin: 0;
+            b{
+              color: #581aae;
+            }
+          }
+      }
     }
    }
   .grid-2 { 
       display:grid;
        grid-template-columns: 1fr 1fr; 
+      gap: 1.1vw; 
+      margin-bottom: 1.1vw;
+      align-items: center;
+      @include Destop{
+        gap: 16px; 
+        margin-bottom: 16px;
+      }
+
+   }
+   .permission-grid{ 
+    display:grid;
+     grid-template-columns: 1fr; 
+     gap: 1.1vw; 
+     margin-bottom: 1.1vw;
+    align-items: center;
+    @include Destop{
       gap: 16px; 
       margin-bottom: 16px;
-      align-items: center;
-    
-   }
+    }
+ }
    .grid-split-3{
     display:grid;
     grid-template-columns: 1fr 1fr 1fr; 
-   gap: 16px; 
-   margin-bottom: 16px;
+    gap: 1.1vw; 
+    margin-bottom: 1.1vw;
+     @include Destop{
+      gap: 16px; 
+      margin-bottom: 16px;
+    }
    }
    .form-group { 
     background:#f7f7f9;
-     padding:12px;
-     border-radius:10px;
+     padding:0.8vw;
+     border-radius:0.7vw;
+      outline-style: none;
+      @include Destop{
+        padding:12px;
+        border-radius:10px;
+      }
+      label{
+        font-size: 0.9vw;
+      }
      input,textarea{
       width:100%; 
-      padding:8px 10px; 
-      border:1px solid #ddd;
-       border-radius:6px; 
+      padding:0.5vw 0.7vw; 
+      border:0.1vw solid #ddd;
+       border-radius:0.4vw; 
       background:#fff;
       outline-style: none;
+      @include Destop{
+        padding:8px 10px; 
+        border:1px solid #ddd;
+         border-radius:6px;
+      }
+
      } 
     }
     .form-group-select{
       position: relative;
        background:#f5f5f7;
-     padding:12px;
-     border-radius:10px; 
+       padding:0.8vw;
+       border-radius:0.7vw;  
      width: 100%;
+@include Destop{
+  padding:12px;
+  border-radius:10px; 
+      }
      label{
       display:block; 
-    margin-bottom:6px; 
-    font-size:13px; 
+    margin-bottom:0.4vw; 
+    font-size:0.9vw; 
     color:#444;
+@include Destop{
+  font-size:13px; 
+  margin-bottom:6px; 
+      }
      }
      .custom-select{
       width: 100%;
@@ -218,14 +879,22 @@
            width: 100%;
         display: flex;
         justify-content: space-between;
+        gap: 0.7vw;
+        align-items: center;
+         padding:0.6vw 0.7vw; 
+       border:0.1vw solid #ddd;
+       border-radius:0.4vw; 
+       background:#fff;
+       @include Destop{
         gap: 10px;
         align-items: center;
          padding:8px 10px; 
        border:1px solid #ddd;
        border-radius:6px; 
-       background:#fff;
+      }
         .select-box{
           width: 100%;
+          color: gray;
             .placeholder{
               width: 100%;
               background: inherit;
@@ -233,16 +902,22 @@
              }
              .selected-tags{
               display: flex;
-              gap: 5px;
-              border-radius: 6px;
+              gap: 0.35vw;
+              border-radius: 0.4vw;
+               @include Destop{
+                gap: 5px;
+                border-radius: 6px;
+      }
               .tag{
                 background: #f5f5f7;
-                padding: 5px 10px;
+                padding: 0.35vw 0.7vw;
+                 @include Destop{
+                  padding: 5px 10px;
               }
              }
             }
             .custom-select{
-              width: 10%;
+              // width: 100%;
               cursor: pointer;
               transition: .5s;
               .up{
@@ -254,55 +929,160 @@
               }
             }
           }
+        }
             .select-dropdown{
               width: 90%;
               background: #fff;
               animation: dropdown .4s;
-               box-shadow: 0 6px 18px rgba(88,26,170,0.08);
+               box-shadow: 0 0.4vw 1.3vw rgba(88,26,170,0.08);
               position: absolute;
-               border-radius:12px; 
+               border-radius:0.85vw; 
                cursor: pointer;
-              top: 100px;
-              left:20px;
-              padding: 10px;
-              z-index: 999;
+              top: 6.95vw;
+              left:1.4vw;
+              padding: 0.7vw;
+              z-index: 999;  
+              @include Destop{
+                box-shadow: 0 6px 18px rgba(88,26,170,0.08);
+                 border-radius:12px; 
+                top: 100px;
+                left:20px;
+                padding: 10px;
+              }
               .search-input{
                 width: 100%;
-                 padding:8px 10px 8px 20px; 
+                 padding:0.5vw 0.7vw 0.5vw 1.4vw; 
                  border: none;
-                 border-bottom:1px solid #581aae;
-                 border-radius:12px 12px 0 0; 
+                 border-bottom:0.1vw solid #581aae;
+                 border-radius:0.85vw 0.85vw 0 0; 
                  background:#fff;
                  outline-style: none;
+                 @include Destop{
+                  padding:8px 10px 8px 20px; 
+                  border: none;
+                  border-bottom:1px solid #581aae;
+                  border-radius:12px 12px 0 0; 
+              }
               }
               .option{
                 background: #fff;
-                 border-radius:0 0 12px 12px;
+                 border-radius:0 0 0.85vw 0.85vw;
                 display: flex;
                 flex-direction: column;
-                gap: 10px;
-                padding: 20px;
+                gap: 0.7vw;
+                padding: 1.4vw;
                 justify-content: center;
                 align-content: center;
+                outline-style: none;
                 margin: auto;
                  cursor: pointer;
+                  @include Destop{
+                    border-radius:0 0 12px 12px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    padding: 20px;
+              }
                 label{
                   display: flex;
-                  gap: 20px;
+                  gap: 1.4vw;
                   cursor: pointer;
+                   @include Destop{
+                    gap: 20px; 
+              }
                 }
+              }
+              .select-all{
+                background: #f5f5f7;
+
+              }
+              .option-permission-grid{
+                display: flex;
+                gap: 0.7vw;
+                padding: 0.35vw 0 0 1vw;
+                 outline-style: none;
+                 cursor: pointer;
+                 position: relative;
+                 span{
+                  margin: 0;
+                  display: grid;
+                    @include Destop{
+                       gap: 10px;
+                    padding: 5px 0 0 15px;
+              }
+                  &:hover{
+                    transition: .4s;
+                    padding-left:0.7vw;
+                    font-size: 1vw;
+                    font-weight: bold;
+                    color: #581aae;
+                      @include Destop{
+                        padding-left:10px;
+                        font-size: 16px;
+              }
+
+                   }
+                 }
+                 input{
+                  margin: 0;
+                  padding: 0;
+                  align-items: center;
+                  text-align: center;
+                 }
+               }
+              .option-permission{
+                background: #fff;
+                border-radius: 0 0 0 0.7vw ;
+                  display: flex;
+                  gap: 0.7vw;
+                  padding: 0.35vw 0 0 1vw;
+                 outline-style: none;
+                 cursor: pointer;
+                 position: relative;
+                 @include Destop{
+                  border-radius: 0 0 0 10px ;
+                  gap: 10px;
+                  padding: 5px 0 0 15px;
+              }
+                 span{
+                  margin: 0;
+                  &:hover{
+                    transition: .4s;
+                    padding-left:0.7vw;
+                    font-size: 1.1vw;
+                    font-weight: bold;
+                    color: #581aae;
+                    @include Destop{
+                        padding-left:10px;
+                        font-size: 16px;
+              }
+
+                   }
+                 }
+                 input{
+                  margin: 0;
+                  padding: 0;
+                  align-items: center;
+                  text-align: center;
+                 }
               }
               .option-item{
                   background: #fff;
-                  border-radius: 0 0 0 10px ;
+                  border-radius: 0 0 0 0.7vw ;
                   display: flex;
                   flex-direction: column;
-                  gap: 10px;
-                  padding: 5px 0 0 15px;
+                  gap: 0.7vw;
+                  padding: 5px 0 0 1vw;
                   justify-content: center;
-                  align-content: center;
+                  // align-i: center;
+                   outline-style: none;
                    cursor: pointer;
                    position: relative;
+                    @include Destop{
+                      border-radius: 0 0 0 10px ;
+                      gap: 10px;
+                      padding: 5px 0 0 15px;
+              }
                    &:hover{
                     &::before{
                       width: 20%;
@@ -311,50 +1091,79 @@
                    &::before{
                     content: '';
                     position: absolute;
-                    left: 10px;
+                    left: 0.7vw;
                     bottom: 0;
                     width: 0;
-                    height: 1px;
+                    height: 0.09vw;
                     transition: .4s;
                     background: #581aae;
-                    border-radius: 0 0 0 10px ;
+                    border-radius: 0 0 0 0.7vw ;
+                     @include Destop{
+                      left: 0.7vw;
+                      bottom: 0;
+                      width: 0;
+                      height: 1px;
+              }
+                   }
+                   span{
+                    margin: 0;
                    }
                   label{
                     display: flex;
-                    gap: 20px;
+                    gap: 1.4vw;
                     cursor: pointer;
+                     @include Destop{
+                      gap: 20px;
+              }
                   }
               }
               .rolesoption{
                 display: flex;
-                gap: 10px;
+                gap: 0.7vw;
                 align-items: center;
-                font-size: 15px;
+                font-size: 1vw;
+                 @include Destop{
+                  gap: 10px;
+                  font-size: 15px;
+              }
               }
             }
-        }
+    }
     }
    .create {
     background: inherit;
      color: #fff; 
-     padding: 10px 18px;
-      border-radius: 24px; 
-      border: 1px solid #581aae;
+     padding: 0.7vw 1.3vw;
+      border-radius: 1.6vw; 
+      border: 0.09vw solid #581aae;
      color: #581aae; cursor:pointer;
+      @include Destop{
+        padding: 10px 18px;
+        border-radius: 24px; 
+        border: 1px solid #581aae;
+              }
   }
   .remove{
     width: 30%;
     background: #581aae;
      color: #fff; 
-     padding: 10px 18px;
-      border-radius: 24px; 
+     padding: 0.7vw 1.3vw;
+     border-radius: 1.6vw; 
+     border: 0.09vw solid #581aae;
       align-items: center;
-      border: 1px solid #581aae;
      ; cursor:pointer;
+     @include Destop{
+      padding: 10px 18px;
+      border-radius: 24px; 
+      border: 1px solid #581aae;
+            }
   }
   .error{
     color: red;
-    font-size: 14px;
+    font-size: 1vw;
+     @include Destop{
+      font-size: 14px;
+              }
   }
   .popup-overlay{
     background: rgb(0, 0, 0,0.5);
@@ -363,15 +1172,22 @@
     overflow-y: auto;
     scrollbar-width: none;
     margin: 0 auto;
-    padding: 20px;
+    padding: 1.4vw;
     position: absolute;
     top: 0;
     left: 0;
     z-index: 999;
+     @include Destop{ 
+      padding: 20px;
+              }
     .popup{
         background: #fff;
-        border-radius: 12px;
-        padding: 20px;
+        border-radius: 0.8vw;
+        padding: 1.4vw;
+         @include Destop{
+          border-radius: 12px;
+          padding: 20px;
+              }
         .popup-header{
             display: flex;
             justify-content: space-between;
@@ -389,64 +1205,66 @@
 
         }
         .popup-footer{
-            margin-top: 30px;
+            margin-top: 2.1vw;
             margin-left: auto;
             align-items: flex-end;
             display: flex;
             justify-content: flex-end;
-            gap: 20px;
+            gap: 1.4vw;
+            @include Destop{
+              margin-top: 30px;
+              gap: 20px;
+                  }
         }
     }
   }
 
   /* buttons row */
   .btn-row {
-    margin-top: 18px;
-    display:flex; gap:12px; justify-content:flex-end;
+    margin-top: 1.3vw;
+    display:flex;
+     gap:0.85vw;
+     justify-content:flex-end;
+     @include Destop{
+      margin-top: 18px;
+      gap:12px;
+          }
   }
   .btn-row .create {
-    background: #581aae; color: #fff; padding: 10px 18px; border-radius: 24px; border: none; cursor:pointer;
+    background: #581aae; 
+    color: #fff; 
+    border: none;
+    padding: 0.7vw 1.3vw;
+     border-radius: 1.6vw; 
+      cursor:pointer;
+      @include Destop{
+        padding: 10px 18px;
+        border-radius: 24px; 
+            }
   }
   .btn-row .cancel {
-    background: transparent; padding: 10px 18px; border-radius: 24px; border: 1px solid #581aae; color:#581aae; cursor:pointer;
+    background: transparent;
+     padding: 0.7vw 1.3vw;; 
+    border-radius: 1.6vw;
+     border: 1px solid #581aae;
+      color:#581aae;
+      cursor:pointer;
+       @include Destop{
+        padding: 10px 18px;
+        border-radius: 24px; 
+            }
   }
   
   /* popup */
-  .trip-card-popup {
-    .trip-card-popup-container {
-      position: fixed; 
-      inset:0; 
-      display:flex;
-       justify-content:center; 
-      align-items:center;
-       z-index:10001;
-      background: rgba(54,53,86,0.42);
-    }
-    .popup-content {
-      background:#fff; 
-      padding: 36px; 
-      border-radius:8px; 
-      width:420px; 
-      text-align:center;
-      .delete-box { 
-      display:flex; 
-      justify-content:flex-end; 
-      cursor:pointer; 
-      color:"red";
-  }
-      span { 
-      display:block; 
-      font-size:18px; 
-      font-weight:600; 
-      margin-top:8px; 
-  }
-    }
-  }
-  
+
   /* small helpers */
   .muted { 
     color:#888;
      padding: 12px; 
+      @include Destop{
+        padding: 10px 18px;
+        border-radius: 24px; 
+            }
     }
   
   /* responsive */
@@ -462,4 +1280,6 @@
      }
   }
 }
-}}
+}
+
+}

@@ -41,6 +41,12 @@
     opacity: 1;
   }
 }
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: .4; }
+  100% { opacity: 1; }
+}
+
 .userTable{
     width: 100%;
     margin-top: 10px;
@@ -72,6 +78,14 @@
           margin: 20px 0!important;
           cursor:pointer;
         }
+        .skeleton-row {
+          height: 40px;
+          background: #eee;
+          animation: pulse 1.5s infinite;
+        }
+        
+      
+        
 
         tbody tr {
           position: relative;

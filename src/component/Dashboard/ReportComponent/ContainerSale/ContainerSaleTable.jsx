@@ -116,11 +116,8 @@ const totalPresaleAmount = presales.reduce(
                         fontWeight: 600,
                         color:
                           row.balance === 0
-                            ? "green"
-                            : row.balance === row.balance
-                            ? "orange"
-                            : "",
-                      }}> {row.balance === 0 ? "Fully Paid"  : "Not Fully Paid "}</td>
+                            ? "green": row.balance === row.balance? "orange": "", }} >
+                             {row.balance === 0 ? "Fully Paid"  : "Not Fully Paid "}</td>
                   </tr>
                 ))
               )}

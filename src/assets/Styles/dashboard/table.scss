@@ -23,54 +23,155 @@
         @content;
     }
 }
-@keyframes fadeOut {
+@keyframes fadeOutT {
   0% {
     opacity: 0;
-    transform: translateX(0);
+    transform: translateY(-50px);
   }
   100% {
     opacity: 1;
-    transform: translateX(-50px);
+    transform: translateY(0);
   }
 }
-@keyframes fadeIn {
-      0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
+// @keyframes fadeIn {
+//       0% {
+//     opacity: 0;
+//   }
+//   100% {
+//     opacity: 1;
+//   }
+// }
 .userTable{
     width: 100%;
-    margin-top: 10px;
+    margin-top: 0.7vw;
+    animation:  fadeOutT .9s;
+    @include Destop{
+      margin-top: 10px;
+    }
+    .drill-summary-grid {
+      margin-bottom: 2.1vw;
+    
+      @include Destop {
+        margin-bottom: 30px;
+      }
+    
+      .drill-summary {
+        width: 100%;
+        display: flex;
+        gap: 0.85vw;
+        align-items: center;
+    
+        @include Destop {
+          gap: 12px;
+        }
+    
+        .summary-item {
+          width: 100%;
+          padding: 0.85vw 1.1vw 1.4vw;
+          box-shadow: 0px 4px 16px 0px #0000001F;
+          background: #ffffff;
+          gap: 1vw!important;
+          display: flex;
+          flex-direction: column;
+          border-radius: 10px;
+          @include Destop {
+            padding: 12px 16px 20px;
+            gap: 8px;
+          }
+    
+          .small {
+            font-family: "Roboto", sans-serif;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 1vw;
+            line-height: 24px;
+            letter-spacing: 0px;
+            color: #8EA396;
+            margin: 0;
+    
+            @include Destop {
+              font-size: 14px;
+            }
+          }
+    
+          h2 {
+            font-family: "Poppins", sans-serif;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 1.4vw!important;
+            line-height: 100%;
+            letter-spacing: 0px;
+            margin: 0 0 0 2.1vw;
+            color: #581aae;
+            position: relative;
+    
+            @include Destop {
+              font-size: 24px;
+              margin-left: 30px;
+            }
+    
+            span {
+              position: absolute;
+              top: -0.4vw;
+              left: -2.1vw;
+              font-size: 0.9vw;
+    
+              @include Destop {
+                top: -6px;
+                left: -30px;
+                font-size: 14px;
+              }
+            }
+          }
+        }
+      }
+    }
      .table-wrap {
         overflow: auto;
         background: #fff;
         border-radius: 8px;
-        padding: 8px 8px 0 -80px;
+        padding: 0.6vw 0.6vw 0 -5.6vw;
         scrollbar-width: none;
-      }
+        @include Destop{
+          padding: 8px 8px 0 -80px;
+        }
+      
       .table {
-        width: 120%;
+        width: 230%!important;
         border-collapse: collapse;
-        font-size: 14px;
+        font-size: 1vw;
+        margin-top: .7vw;
+        @include Destop{
+          font-size: 14px;
+        }
         thead th {
           text-align: left;
-          padding: 12px;
-          color: #263238;
-          font-weight: 600;
+          padding: 0.9vw;
+          // color: #263238;
+          font-weight: 500;
           background: #f5f5f9;
-          border-bottom: 5px solid #fff;
+          border-bottom: 0.3vw solid #fff;
+          font-size: 1vw!important;
+          color: #581aae;
+          text-align: center;
+          @include Destop{
+            padding: 12px;
+            border-bottom: 5px solid #fff;
+          }
         }
         tbody td {
-          padding: 20px 0px 20px 10px;
+          padding: 1.4vw 0px 1.4vw 0.7vw;
           border-bottom: 5px solid #fff;
           background: #f5f5f7;
           vertical-align: middle;
           color: #333;
           margin: 20px 0!important;
+          text-align: center;
+          font-size: .9vw;
           cursor:pointer;
+           @include Destop{
+            padding: 20px 0px 20px 10px;
+          }
           button{
             border: none;
             color: red;
@@ -89,10 +190,13 @@
         }
         /* TEXT SHORTENER */
         .td-desc {
-          max-width: 100px;
+          max-width: 6.94vw;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+            @include Destop{
+              max-width: 100px;
+          }
         }
 
         /* =====================
@@ -106,16 +210,21 @@
           border: none;
         }
         .edit-btn {
-          margin-left: 10px;
-          padding: 6px 14px;
-          border-radius: 6px;
-          font-size: 12px;
+          margin-left: 0.7vw;
+          padding: 0.4vw 0.9vw;
+          border-radius: 0.4vw;
+          font-size: 0.83vw;
           font-weight: 600;
           background: #581aae;
           color: #fff;
           border: none;
           cursor: pointer;
-
+          @include Destop{
+            margin-left: 10px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
           opacity: 0;
           visibility: hidden;
           transform: translateX(-5px);
@@ -129,8 +238,9 @@
           transform: translateX(0);
         }
 }
+}
 .pagination{
-  padding:10px 20px;
+  padding:0.7vw 1.4vw;
   width: 100%;
   position: sticky;
   left: 0;
@@ -138,14 +248,21 @@
   justify-content: flex-end;
   align-items: center;
   gap: 10px;
+    @include Destop{
+      padding:10px 20px;
+        }
   button{
     background: #fff;
     color: #581aae;
     border: 1px solid #581aae;
-    padding:5px 10px;
-    border-radius: 5px;
+    padding:0.35vw 0.7vw;
+    border-radius: 0.35vw;
     align-items: center;
     margin: 0;
+      @include Destop{
+        padding:5px 10px;
+        border-radius: 5px;
+        }
     &:disabled{
       background: #fff;
       color: gray;
@@ -164,7 +281,7 @@
   overflow-y: auto;
   scrollbar-width: none;
   margin: 0 auto;
-  padding: 20px;
+  padding: 1.4vw;
   position: absolute;
   top: 0;
   left: 0;
@@ -172,21 +289,30 @@
    display: flex;
       justify-content: center;
       align-items: center;
+        @include Destop{  
+          padding: 20px;
+        }
   .popup{
       background: #fff;
       border-radius: 12px;
       padding: 20px;
       width: 50%;
       margin: auto;
+        @include Destop{
+          padding: 20px;
+        }
       .popup-header{
           display: flex;
           justify-content:center;
           align-items: center;
     
           h3{
-            max-width: 500px;
+            max-width: 34.7vw;
             text-align: center;
               color: #581aae;
+                @include Destop{
+                  max-width: 500px;
+        }
           }
           button{
               background: inherit;
@@ -196,12 +322,16 @@
       }
      
       .popup-footer{
-          margin-top: 30px;
+          margin-top: 2.1vw;
           margin-left: auto;
           align-items: flex-end;
           display: flex;
           justify-content: flex-end;
-          gap: 20px;
+          gap: 1.4vw;
+           @include Destop{
+            margin-top: 30px;
+            gap: 20px;
+        }
       }
   }
 }
@@ -209,25 +339,36 @@
 }
     .btn-row-delete {
           width: 100%;
-          margin-top: 18px;
+          margin-top: 1.25vw;
           display:flex; 
           gap:12px; 
           justify-content:center;
           align-items: center;
+           @include Destop{
+            margin-top: 18px;
+        }
           .create {
             background: #581aae; 
             color: #fff;
-             padding: 10px 18px; 
-            border-radius: 24px; 
+            padding: 0.7vw 1.25vw; 
+            border-radius: 1.67vw;  
             border: none;
              cursor:pointer;
+             @include Destop{
+              padding: 10px 18px; 
+              border-radius: 24px; 
+      }
           }
           .cancel {
             background: transparent; 
-            padding: 10px 18px; 
-            border-radius: 24px; 
+            padding: 0.7vw 1.25vw; 
+            border-radius: 1.67vw; 
             border: 1px solid #581aae; 
             color:#581aae;
              cursor:pointer;
+              @include Destop{
+                padding: 10px 18px; 
+                border-radius: 24px; 
+        }
           }
 }

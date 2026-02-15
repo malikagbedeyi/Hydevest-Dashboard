@@ -1,52 +1,64 @@
-import React, { useState } from "react";
+import React from "react";
 import "../../../../assets/Styles/dashboard/account/userTable.scss";
 
-const PartnerTable = ({  data }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = data.slice(startIndex, startIndex + itemsPerPage);
+const PartnerTable = ({ data = [], loading, onEdit }) => {
 
   return (
     <div className="userTable">
       <div className="table-wrap">
-        <table className="table">
+        <table className="table" style={{width:"100%",maxWidth:"100%",minWidth:"100%"}}>
           <thead>
             <tr>
               <th>S/N</th>
               <th>Name</th>
               <th>Email</th>
               <th>Phone</th>
-              <th>Bank Name</th>
-              <th>Bank Accont</th>
+              <th>Bank</th>
+              <th>Account</th>
               <th>Date Created</th>
+              
+              <th>Status</th>
+              
             </tr>
           </thead>
 
           <tbody>
-            {currentData.length === 0 ? (
+            {loading ? (
               <tr>
                 <td colSpan="7" style={{ textAlign: "center" }}>
-                  No Partner created yet
+                  Loading...
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: "center" }}>
+                  No Partner Found
                 </td>
               </tr>
             ) : (
-              currentData.map((user, idx) => (
-                <tr key={user.id}>
-                  <td>{startIndex + idx + 1}</td>
-                  <td>{user.firstName} {user.lastName}</td>
-                  <td>{user.email}</td>
-                  <td>{user.phone}</td>
-                  <td>{user.bankName}</td>
-                  <td>{user.bankAccount}</td>
-                  <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+              data.map((p, idx) => (
+                <tr key={p.user_uuid} onClick={() => onEdit(p)}>
+                 <td>{idx + 1}</td>
+                 <td>{p.firstname} {p.lastname}</td>
+                 <td>{p.email}</td>
+                 <td>{p.phone_no}</td>
+                 <td>{p.partner_bank?.bank_name || "-"}</td>
+                <td>{p.partner_bank?.bank_account || "-"}</td>
+                <td>{new Date(p.created_at).toLocaleDateString()}</td>
+                <td>
+  <span className={`status ${p.status === 1 ? "active" : "pending"}`} 
+  style={{color:p.status === 1 ? "green":"red"}}>
+    {p.status === 1 ? "Active" : "Pending"}
+  </span>
+</td>
+
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+      
     </div>
   );
 };
