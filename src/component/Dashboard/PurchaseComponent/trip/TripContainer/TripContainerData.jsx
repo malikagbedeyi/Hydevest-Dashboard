@@ -108,7 +108,7 @@ const TripContainerData = ({handleContainerRowClick,handleDeleteContainer,avgCon
                   <td>TRN {item.tracking_number || "-"}</td>
                   <td>{item.pieces || 0}</td>
                   <td>{item.unit_price_usd || 0}</td>
-                   <td>{formatMoneyUSd((item.unit_price_usd || 0) * (item.pieces || 0)) + item.shipping_amount_usd}</td>
+                  <td>{formatMoneyUSd(((item.unit_price_usd || 0) * (item.pieces || 0)) +Number(item.shipping_amount_usd || 0))}</td>
                   <td>{formatMoney(((item.unit_price_usd || 0) * (item.pieces || 0)) * avgContainerRate || 0) +(item.funding === "partner" ? Number(item.surcharge || 0) : 0)}</td>
                   <td>{formatMoneyUSd(item.quotedAmountUsd || "0")} </td>
                   <td>{formatMoney((Number(item.quotedAmountUsd) || 0) * (Number(avgContainerRate) || 0) +(item.funding === "partner" ? Number(item.surcharge || 0) : 0))}</td>

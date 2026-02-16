@@ -6,7 +6,7 @@ import Attachment from "./Attachment";
 import Comment from "./Comment";
 import ContainerLog from "./ContainerLog";
 
-const fundingOption = ["partner", "entity"];
+const fundingOption = ["PARTNER", "ENTITY"];
 
 const DrildownContainer = ({container = {},goBack = () => {},onUpdate,avgContainerRate = 0,formatNumber,}) => {
 
@@ -22,10 +22,10 @@ const DrildownContainer = ({container = {},goBack = () => {},onUpdate,avgContain
 
 const [form, setForm] = useState({
   description: container?.desc || "",trackingNumber: container?.tracking_number || "",averageWeight: container?.average_weight || "",maxWeight: container?.max_weight || "",
- entity: container?.entity_id || null,invoiceNumber: container?.invoice_number || "",sourceNation: container?.source_nation || "",sourcePort: container?.source_port || "",
+entity: container?.entity_uuid || null,invoiceNumber: container?.invoice_number || "",sourceNation: container?.source_nation || "",sourcePort: container?.source_port || "",
   destinationPort: container?.destination_port || "",supplyCode: container?.supplier_code || "",
   unitpieces: container?.pieces || "",unitPrice: container?.unit_price_usd || "",warehouseChargeNGN: container?.warehouse_charge_ngn || "",offloadAndSorting: container?.offload_and_sorting || "",
-  shipping_amount_usd: container?.shipping_amount_usd || "",funding: container?.funding || "",
+  shipping_amount_usd: container?.shipping_amount_usd || "",funding: (container?.funding || "").toUpperCase(),
 });
 
 
@@ -53,7 +53,7 @@ const [openEntityDrop, setOpenEntityDrop] = useState(false);
 const [loading, setLoading] = useState(false);
 
 const filteredFundingdrop = fundingOption.filter((opt) =>
-  opt.toLowerCase().includes(fundingdrop.toLowerCase())
+  opt.toUpperCase().includes(fundingdrop.toUpperCase())
 );
 
 
@@ -61,6 +61,10 @@ useEffect(() => {
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
 }, []);
+
+const amountUsd =
+  (Number(form.unitPrice) || 0) * (Number(form.unitpieces) || 0) +
+  Number(form.shipping_amount_usd || 0);
 
 
 const scrollToTop = () => {
@@ -83,41 +87,47 @@ const handleUpdate = async () => {
   try {
     if (!container?.container_uuid) return;
 
+    const fundingValue = (form.funding || "").trim().toUpperCase();
+    if (!["PARTNER", "ENTITY"].includes(fundingValue)) {
+      alert("Funding must be either PARTNER or ENTITY");
+      return;
+    }
+    const entityValue = fundingValue === "ENTITY" ? form.entity : null;
+    if (fundingValue === "ENTITY" && !entityValue) {
+      alert("You must select a valid Entity for ENTITY funding");
+      return;
+    }
+
     const payload = {
       container_uuid: container.container_uuid,
       title: container.title || "",
       desc: form.description || "",
       tracking_number: form.trackingNumber || "",
-      average_weight: form.averageWeight ? Number(form.averageWeight) : 0,
-      max_weight: form.maxWeight ? Number(form.maxWeight) : 0,
-      entity_uuid: form.entity || null,
+      average_weight: Number(form.averageWeight || 0),
+      max_weight: Number(form.maxWeight || 0),
+      entity_uuid: entityValue, 
       invoice_number: form.invoiceNumber || "",
       source_nation: form.sourceNation || "",
       source_port: form.sourcePort || "",
       destination_port: form.destinationPort || "",
-      funding: form.funding ? form.funding.toLowerCase() : "",
+      funding: fundingValue,
       supplier_code: form.supplyCode || "",
-      pieces: form.unitpieces ? Number(form.unitpieces) : 0,
-      unit_price_usd: form.unitPrice ? Number(form.unitPrice) : 0,
-      warehouse_charge_ngn: form.warehouseChargeNGN
-        ? Number(form.warehouseChargeNGN)
-        : 0,
-      offload_and_sorting: form.offloadAndSorting
-        ? Number(form.offloadAndSorting)
-        : 0,
-      shipping_amount_usd: form.shipping_amount_usd
-        ? Number(form.shipping_amount_usd)
-        : 0,
+      pieces: Number(form.unitpieces || 0),
+      unit_price_usd: Number(form.unitPrice || 0),
+      warehouse_charge_ngn: Number(form.warehouseChargeNGN || 0),
+      offload_and_sorting: Number(form.offloadAndSorting || 0),
+      shipping_amount_usd: Number(form.shipping_amount_usd || 0),
     };
 
-    console.log("UPDATE PAYLOAD", payload); // 🔹 check before sending
-    
+    console.log("UPDATE PAYLOAD", payload);
+
     const res = await ContainerServices.edit(payload);
 
     const updated = {
       ...container,
       ...payload,
     };
+    console.log("FINAL PAYLOAD", payload);
 
     onUpdate(updated);
     goBack();
@@ -161,20 +171,20 @@ useEffect(() => {
   const fetchEntities = async () => {
     try {
       const res = await ContainerServices.entityList();
-
       const record = res?.data?.record;
-
-      // Normalize to array
       const entityArray = Array.isArray(record) ? record : record ? [record] : [];
 
-      setEntities(entityArray);
+      // Normalize all entities to have a `uuid` property
+      const normalized = entityArray.map((e) => ({
+        ...e,
+        uuid: e.uuid || e.user_uuid, 
+      }));
 
-      console.log("Normalized Entities:", entityArray);
+      setEntities(normalized);
     } catch (err) {
       console.error("Failed to fetch entities:", err);
     }
   };
-
   fetchEntities();
 }, []);
 
@@ -211,9 +221,11 @@ useEffect(() => {
   <p className="small"> Amount (NGN)</p>
   <h2>
   ₦{safeFormatNumber(
-    (Number(form.amountUsd) || 0) * (Number(avgContainerRate) || 0) +
-    (form.funding === "partner" ? Number(form.surcharge || 0) : 0))}
+    amountUsd * (Number(avgContainerRate) || 0) +
+    (form.funding === "PARTNER" ? Number(form.surcharge || 0) : 0)
+  )}
 </h2>
+
 </div>
 <div className="summary-item">
   <p className="small">Unit Price (USD)</p>
@@ -288,18 +300,19 @@ useEffect(() => {
       onClick={() => setOpenEntityDrop(!openEntityDrop)}
     >
       <div className="select-box">
-        {form.entity ? (
-          <span>
-            {(() => {
-              const selected = entities.find((e) => e.id === form.entity);
-              return selected
-                ? `${selected.firstname || ""} ${selected.lastname || ""}`.trim()
-                : "—";
-            })()}
-          </span>
-        ) : (
-          <span className="placeholder">Select Entity</span>
-        )}
+{form.entity ? (
+  <span>
+    {(() => {
+      const selected = entities.find((e) => e.uuid === form.entity);
+      return selected
+        ? `${selected.firstname || ""} ${selected.lastname || ""}`.trim()
+        : "—";
+    })()}
+  </span>
+) : (
+  <span className="placeholder">Select Entity</span>
+)}
+
       </div>
 
       <ChevronDown className={openEntityDrop ? "up" : "down"} />
@@ -314,7 +327,7 @@ useEffect(() => {
             <div
               key={entity.uuid || entity.id}
               className="option-item"
-             onClick={() => {setForm((prev) => ({ ...prev, entity: entity.uuid }));
+             onClick={() => {setForm((prev) => ({ ...prev, entity: entity.uuid })); 
               setOpenEntityDrop(false);}}>
               {`${entity.firstname || ""} ${entity.lastname || ""}`.trim() || "—"}
             </div>
@@ -369,15 +382,16 @@ useEffect(() => {
         key={opt}
         className="option-item"
         onClick={() => {
-          setForm((prev) => ({ ...prev, funding: opt }));
+          setForm((prev) => ({ ...prev, funding: opt.toUpperCase() }));
           setOpenFundingdrop(false); 
         }}
       >
-        {opt}
+        {opt.toUpperCase()} 
       </div>
     ))}
   </div>
 )}
+ 
 
               </div>
             </div>
@@ -419,7 +433,7 @@ useEffect(() => {
           />
         </div>
               
-              {form.funding === "partner" && (
+              {form.funding === "PARTNER" && (
   <div className="form-group">
     <label>Quoted Price USD</label>
     <input
@@ -432,7 +446,7 @@ useEffect(() => {
     />
   </div>
   )}         
-   {form.funding === "partner" && (
+   {form.funding === "PARTNER" && (
           <div className="form-group">
                 <label>Surcharge NGN</label>
               <input type="text" value={form.surcharge}
@@ -440,7 +454,7 @@ useEffect(() => {
                onChange={(e) =>  setForm({ ...form, surcharge: e.target.value })} />
               </div>
                )}    
-                  {form.funding === "partner" && (
+                  {form.funding === "PARTNER" && (
           <div className="form-group">
                 <label>Total Extimated Price NGN</label>
               <input type="text" value={form.extimated}
