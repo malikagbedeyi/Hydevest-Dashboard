@@ -6,11 +6,12 @@ import TripExpenseLog from './TripExpenseLog';
 import TripComment from './TripComment';
 import FileAttachment from "./FileAttachment";
 
-const TripFinnce = ({ setTrip, trip, goBack }) => {
+const TripFinnce = ({ setTrip, trip, goBack, onApprovalChange }) => {
+
   const scrollRef = useRef(null);
 
   // Initialize states from trip
-  const [approved, setApproved] = useState(trip?.approved || false);
+  const [approved, setApproved] = useState(false);
   const [title, setTitle] = useState(trip?.title || "No Title Set");
   const [type, setType] = useState(trip?.location || "type not set");
   const [startDate, setStartDate] = useState(trip?.startDate || "2025-02-21");
@@ -27,35 +28,41 @@ const TripFinnce = ({ setTrip, trip, goBack }) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // const approved = trip?.approved;
 
   /** ---------- EDIT / UPDATE HANDLER ---------- */
   const handleUpdate = async () => {
+    if (!trip?.expense_uuid) return;
+
     try {
       setLoading(true);
-      if (!trip?.expense_uuid) return;
-
       const payload = {
         expense_uuid: trip.expense_uuid,
-        title,
-        desc: description,
+        title: trip.title,
+        desc: trip.desc,
         amount: trip.amount,
         currency: trip.currency || "NGN",
         rate: trip.rate,
-        date: startDate,
+        date: trip.startDate,
         is_container_payment: trip.is_container_payment || 0,
+        status: trip.status,
+        approved: trip.approved,
       };
 
       const res = await ExpenseServices.edit(payload);
 
-      setTrip({
+      const updatedTrip = {
         ...trip,
         ...payload,
         updated_at: res.data.updated_at || new Date().toISOString(),
-        approved, // keep approval state
-      });
+      };
 
-      scrollToTop();
+      setTrip(updatedTrip);
+      onApprovalChange?.(updatedTrip); 
+      handleApprovalChange()
+      scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       goBack(true);
+
     } catch (err) {
       console.error("Error updating expense:", err);
     } finally {
@@ -65,32 +72,34 @@ const TripFinnce = ({ setTrip, trip, goBack }) => {
 
   /** ---------- APPROVE / CHANGE APPROVAL HANDLER ---------- */
   const handleApprovalChange = async () => {
+    if (!trip?.expense_uuid) return;
+
+    const newStatus = approved ? 1 : 0;
+
+    // Optimistic update
+    const updated = { ...trip, status: newStatus, approved: newStatus === 1 };
+    setTrip(updated);
+    onApprovalChange?.(updated);
+
     try {
       setLoading(true);
-      if (!trip?.expense_uuid) return;
-
-      const newStatus = approved ? 0 : 1;
-
-      const payload = {
+      await ExpenseServices.change_approval({
         expense_uuid: trip.expense_uuid,
         status: newStatus,
-      };
-
-      const res = await ExpenseServices.change_approval(payload);
-
-      setApproved(newStatus === 1);
-
-      setTrip({
-        ...trip,
-        approved: newStatus === 1,
-        updated_at: res.data.updated_at || new Date().toISOString(),
       });
     } catch (err) {
       console.error("Error changing approval:", err);
+
+      // Rollback if API fails
+      const rollback = { ...trip };
+      setTrip(rollback);
+      onApprovalChange?.(rollback);
     } finally {
       setLoading(false);
     }
   };
+
+
 
   return (
     <div className="finance-wrapper" ref={scrollRef}>
@@ -102,9 +111,13 @@ const TripFinnce = ({ setTrip, trip, goBack }) => {
           <span>Expense</span>
         </div>
         <div className="actions">
-          <button className="primary" onClick={handleApprovalChange} disabled={loading}>
-            {approved ? "Unapprove" : "Approve"}
-          </button>
+<button
+  className={approved ? "d-none" : "primary"}
+  onClick={() => setApproved(true)}  
+  disabled={loading}
+>
+  {loading ? "Approving..." : "Approve"}
+</button>
           <div className="status">
             <span>{approved ? "Approved" : "Not Approved"}</span>
           </div>

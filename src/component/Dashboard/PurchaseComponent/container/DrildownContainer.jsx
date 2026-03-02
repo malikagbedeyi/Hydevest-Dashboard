@@ -8,7 +8,7 @@ import ContainerLog from "./ContainerLog";
 
 const fundingOption = ["PARTNER", "ENTITY"];
 
-const DrildownContainer = ({container = {},goBack = () => {},onUpdate,avgContainerRate = 0,formatNumber,}) => {
+const DrildownContainer = ({container = {},goBack = () => {},onUpdate,avgContainerRate = 0,formatNumber,reloadTable,}) => {
 
   const safeFormatNumber =
   typeof formatNumber === "function"
@@ -24,8 +24,9 @@ const [form, setForm] = useState({
   description: container?.desc || "",trackingNumber: container?.tracking_number || "",averageWeight: container?.average_weight || "",maxWeight: container?.max_weight || "",
 entity: container?.entity_uuid || null,invoiceNumber: container?.invoice_number || "",sourceNation: container?.source_nation || "",sourcePort: container?.source_port || "",
   destinationPort: container?.destination_port || "",supplyCode: container?.supplier_code || "",
-  unitpieces: container?.pieces || "",unitPrice: container?.unit_price_usd || "",warehouseChargeNGN: container?.warehouse_charge_ngn || "",offloadAndSorting: container?.offload_and_sorting || "",
-  shipping_amount_usd: container?.shipping_amount_usd || "",funding: (container?.funding || "").toUpperCase(),
+  unitpieces: container?.pieces || "",unitPrice: container?.unit_price_usd || "",warehouseChargeNGN: container?.warehouse_charge_ngn || "",
+  offloadAndSorting: container?.offload_and_sorting || "", shipping_amount_usd: container?.shipping_amount_usd || "",quotedPriceUsd:container?.quoted_price_usd || "",
+  funding: (container?.funding || "").toUpperCase(), surcharge:container?.surcharge_ngn || "",extimated:container?.total_estimated_price_ngn|"",
 });
 
 
@@ -34,7 +35,7 @@ entity: container?.entity_uuid || null,invoiceNumber: container?.invoice_number 
     description: false, destination: false,
     trackingNumber: false, sourceNation: false, unitpieces:false, sourcePart: false, supplyCode: false,
     destinationCountry: false, destinationPort: false, funding: false,  piece: false,
-    unitPrice: false, warehouseChargeNGN: false,  offloadAndSorting:false ,shipping_amount_usd:false,
+    unitPrice: false, warehouseChargeNGN: false,  offloadAndSorting:false ,shipping_amount_usd:false,surcharge:false
   });
 
 const scrollRef = useRef(null);
@@ -83,6 +84,21 @@ const handleChange = (e) => {
   const toggleEdit = (field) => {
     setEdit((s) => ({ ...s, [field]: !s[field] }));
   };
+
+useEffect(() => {
+  if (!container) return;
+
+  setForm((prev) => ({
+    ...prev,
+    entity:
+      container.entity_uuid ??
+      container.entity_id ??
+      container.entity_info?.uuid ??
+      null,
+    funding: (container.funding || "").toUpperCase(),
+  }));
+}, [container]);
+
 const handleUpdate = async () => {
   try {
     if (!container?.container_uuid) return;
@@ -99,6 +115,7 @@ const handleUpdate = async () => {
     }
 
     const payload = {
+        entity_uuid: entityValue,
       container_uuid: container.container_uuid,
       title: container.title || "",
       desc: form.description || "",
@@ -117,19 +134,23 @@ const handleUpdate = async () => {
       warehouse_charge_ngn: Number(form.warehouseChargeNGN || 0),
       offload_and_sorting: Number(form.offloadAndSorting || 0),
       shipping_amount_usd: Number(form.shipping_amount_usd || 0),
+      surcharge_ngn: Number(form.surcharge || 0),  
+      total_estimated_price_ngn: Number(form.extimated || 0), 
+      quoted_price_usd: Number(form.quotedPriceUsd || 0), 
     };
 
-    console.log("UPDATE PAYLOAD", payload);
-
-    const res = await ContainerServices.edit(payload);
+    
+    await ContainerServices.edit(payload);
 
     const updated = {
       ...container,
       ...payload,
+       entity_uuid: payload.entity_uuid,
     };
-    console.log("FINAL PAYLOAD", payload);
 
     onUpdate(updated);
+    reloadTable();
+    handleApprovalChange()
     goBack();
   } catch (err) {
     console.error("Container update failed:", err.response?.data || err);
@@ -146,27 +167,30 @@ const handleApprovalChange = async () => {
 
     setLoading(true);
 
-    const newStatus = approved ? 0 : 1;
+    const newStatus = approved ? 1: 0;
 
     const payload = {
+      container_id: container.id, 
       container_uuid: container.container_uuid,
       status: newStatus,
     };
 
     await ContainerServices.change_approval(payload);
 
-    setApproved(newStatus === 1);
+    setApproved(newStatus);
 
-    onUpdate({
-      ...container,
-      approved: newStatus === 1,
-    });
+onUpdate({
+  ...container,
+  status: newStatus, // 👈 THIS is what table reads
+});
+
   } catch (err) {
     console.error("Error changing approval:", err);
   } finally {
     setLoading(false);
   }
 };
+
 useEffect(() => {
   const fetchEntities = async () => {
     try {
@@ -174,7 +198,6 @@ useEffect(() => {
       const record = res?.data?.record;
       const entityArray = Array.isArray(record) ? record : record ? [record] : [];
 
-      // Normalize all entities to have a `uuid` property
       const normalized = entityArray.map((e) => ({
         ...e,
         uuid: e.uuid || e.user_uuid, 
@@ -187,6 +210,7 @@ useEffect(() => {
   };
   fetchEntities();
 }, []);
+
 
   return (
   <div className="drill-container" ref={scrollRef}>
@@ -201,7 +225,7 @@ useEffect(() => {
             {!approved && (
 <button
   className="primary"
-  onClick={handleApprovalChange}
+  onClick={()=> setApproved(true)}
   disabled={loading}
 >
   {loading ? "Approving..." : "Approve"}
@@ -229,16 +253,16 @@ useEffect(() => {
 </div>
 <div className="summary-item">
   <p className="small">Unit Price (USD)</p>
-  <h2>{form.unitPrice}</h2>
+  <h2>{safeFormatNumber(form.unitPrice)}</h2>
 </div>
 <div className="summary-item">
   <p className="small">Average  Weight(KG)</p>
-  <h2>{form.averageWeight}</h2>
+  <h2>{safeFormatNumber(form.averageWeight)}</h2>
 </div>
 
 <div className="summary-item">
   <p className="small">Total Pieces</p>
-  <h2>{form.unitpieces}</h2>
+  <h2>{safeFormatNumber(form.unitpieces)}</h2>
 </div>
 <div className="summary-item">
   <p className="small">Average Fx Rate</p>

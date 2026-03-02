@@ -6,19 +6,21 @@ import { ContainerServices } from "../../../../../services/Trip/container";
 const TripContainer = ({ onCreate, setShowItemData, setShowModal,tripUuid }) => {
   /* ================= FORM STATE ================= */
 const [form, setForm] = useState({
-  title: "",
-  trackingNumber: "",
-  description: "",
+  title: "",trackingNumber: "",description: "",
 });
 
-  
+  const [loading, setLoading] = useState(false);
 
   /* ================= CREATE HANDLER ================= */
 
+const [error, setError] = useState(null);
+
 const handleCreate = async () => {
   try {
+    setLoading(true);
+
     if (!form.title || !form.trackingNumber || !form.description) {
-      alert("All required fields must be filled");
+      alert("All fields are required");
       return;
     }
 
@@ -30,19 +32,22 @@ const handleCreate = async () => {
 
     const res = await ContainerServices.create(payload);
 
-    const createdContainer = res.data?.record;
+   const createdContainer = res.data?.record || res.data;
 
     if (!createdContainer) {
       throw new Error("Invalid create response");
     }
 
-    // ✅ backend is now the single source of truth
+    // ✅ Update parent state and close modal immediately
     onCreate(createdContainer);
-
     setShowItemData(true);
     setShowModal(false);
+
   } catch (err) {
     console.error("Container create failed:", err.response?.data || err);
+    alert(err.response?.data?.message || "Failed to create container");
+  } finally {
+    setLoading(false);
   }
 };
 
@@ -52,7 +57,7 @@ const handleCreate = async () => {
     <div className="trip-modal">
       <div className="create-expense-modal">
         <div className="create-expense-card">
-          
+          {error && <p style={{color:'red', marginBottom:'10px'}}>{error}</p>}
           {/* HEADER */}
           <div className="header">
             <h2>Create Container</h2>
@@ -108,14 +113,8 @@ const handleCreate = async () => {
             >
               Cancel
             </button>
-
-            <button
-              className="create"
-              onClick={handleCreate}
-              // disabled={!title || !trackingNumber}
-            >
-              Submit
-            </button>
+            <button className="create" onClick={handleCreate} disabled={loading}>
+              {loading ? "Creating..." : "Create"}</button>
           </div>
 
         </div>

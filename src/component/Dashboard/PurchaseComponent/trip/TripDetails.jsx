@@ -13,7 +13,7 @@ import TripDocumentCreate from "./TripDocument/TripDocumentCreate";
 import TripDocumentTable from "./TripDocument/TripDocumentTable";
 import TripLog from "./TripLog";
 import { TripServices } from "../../../../services/Trip/trip";
-
+import { useTripFinance } from "./hook/useTripFinance";
 const statusOption = ["Not Started", "Intransit", "Completed"];
 
 const mapProgressToUI = (progress) => {
@@ -124,22 +124,23 @@ const hasChanges = () => {
 
 
   /* ================== FINANCE DATA ================== */
-const [financeData, setFinanceData] = useState([]);
+  const {financeData,setFinanceData,avgContainerRate,loading: financeLoading,} = useTripFinance(trip?.trip_uuid);
+// const [financeData, setFinanceData] = useState([]);
 
-useEffect(() => {
-  if (!trip?.trip_uuid) return;
+// useEffect(() => {
+//   if (!trip?.trip_uuid) return;
 
-  const fetchFinance = async () => {
-    try {
-      const res = await TripServices.getExpenses(trip.trip_uuid);
-      setFinanceData(res.data);
-    } catch (err) {
-      console.error("Failed to fetch finance", err);
-    }
-  };
+//   const fetchFinance = async () => {
+//     try {
+//       const res = await TripServices.getExpenses(trip.trip_uuid);
+//       setFinanceData(res.data?.data || []);
+//     } catch (err) {
+//       console.error("Failed to fetch finance", err);
+//     }
+//   };
 
-  fetchFinance();
-}, [trip?.trip_uuid]);
+//   fetchFinance();
+// }, [trip?.trip_uuid]);
 
 const handleAddFinance = async (payload) => {
   try {
@@ -172,40 +173,82 @@ const handleDeleteFinance = (id) => {
     });
   }
 };
+useEffect(() => {
+  if (!trip?.trip_uuid) return;
+  if (!avgContainerRate || avgContainerRate <= 0) return;
+
+  const key = `trip_fx_rate_${trip.trip_uuid}`;
+
+  localStorage.setItem(key, JSON.stringify({
+    rate: avgContainerRate,
+    savedAt: Date.now(),
+  }));
+}, [trip?.trip_uuid, avgContainerRate]);
 
 
   /* ================== CONTAINER DATA ================== */
  const [containerData, setContainerData] = useState([]);
 
- useEffect(() => {
+useEffect(() => {
   if (!trip?.trip_uuid) return;
 
   const fetchContainers = async () => {
     try {
       const res = await TripServices.getContainers(trip.trip_uuid);
-      setContainerData(res.data);
+
+      // Map to include calculated amounts
+      const containersWithAmounts = res.data.map((item) => {
+        const amountUSD =
+          (Number(item.unit_price_usd || 0) * Number(item.pieces || 0)) +
+          Number(item.shipping_amount_usd || 0);
+
+        const amountNGN = amountUSD * Number(avgContainerRate || 0);
+
+        const quotedUSD = Number(item.quoted_price_usd || 0);
+        const quotedNGN =
+          quotedUSD * Number(avgContainerRate || 0) +
+          (item.funding === "partner" ? Number(item.surcharge || 0) * Number(avgContainerRate || 0) : 0);
+
+        return {
+          ...item,
+          amountUSD,
+          amountNGN,
+          quotedUSD,
+          quotedNGN,
+        };
+      });
+
+      setContainerData(containersWithAmounts);
     } catch (err) {
       console.error(err);
     }
   };
 
   fetchContainers();
-}, [trip?.trip_uuid, containerReloadKey]);
-
+}, [trip?.trip_uuid, containerReloadKey, avgContainerRate]);
  
-  const handleAddContainer = (container) => {
-  if (!container) {
-    console.error("Container payload is undefined");
-    return;
-  }
+const handleAddContainer = (container) => {
+  if (!container) return;
 
-  const containerWithTripId = {
-    ...container,
-    tripId: trip.id,
-  };
+  // Calculate NGN and quoted NGN
+  const amountUSD =
+    (Number(container.unit_price_usd || 0) * Number(container.pieces || 0)) +
+    Number(container.shipping_amount_usd || 0);
 
-  setContainerData((prev) => [...prev, containerWithTripId]);
-  setContainerReloadKey((k) => k + 1); 
+  const amountNGN = amountUSD * Number(avgContainerRate || 0);
+
+  const quotedUSD = Number(container.quoted_price_usd || 0);
+  const quotedNGN =
+    quotedUSD * Number(avgContainerRate || 0) +
+    (container.funding === "partner" ? Number(container.surcharge || 0) * Number(avgContainerRate || 0) : 0);
+
+  setContainerData((prev) => [
+    ...prev,
+    { ...container, amountUSD, amountNGN, quotedUSD, quotedNGN },
+  ]);
+
+  setContainerReloadKey((k) => k + 1);
+
   addLog({
     module: "Container",
     action: "Created",
@@ -229,17 +272,19 @@ const handleDeleteFinance = (id) => {
     }
   };
 const handleUpdateContainer = (updatedContainer) => {
-  if (!updatedContainer || !updatedContainer.id) {
-    console.error("Invalid updated container:", updatedContainer);
-    return;
-  }
-
   setContainerData((prev) =>
     prev.map((item) =>
-      item?.id === updatedContainer.id ? updatedContainer : item
+      item.id === updatedContainer.id
+        ? {
+            ...item,
+            ...updatedContainer,
+            entity_uuid: updatedContainer.entity_uuid, // force it
+          }
+        : item
     )
   );
 };
+
 
   
   const totalAmountUSD = containerData.reduce((sum, item) => {
@@ -250,12 +295,14 @@ const handleUpdateContainer = (updatedContainer) => {
     const value = Number(item.unitpieces) || 0;
     return sum + value;
   }, 0);
-  const formatNumber = (num) =>
-  num.toLocaleString("en-US", {
-    // minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+
+const formatNumber = (num) =>
+  Math.round(Number(num || 0)).toLocaleString("en-NG", {
+    maximumFractionDigits: 0,
   });
+
     
+   
   /* ================== Trip File  DATA ================== */
   const [tripFileData, setTripFileData] = useState(() => {
     return JSON.parse(localStorage.getItem(TRIP_FILE_KEY)) || [];
@@ -323,62 +370,98 @@ const addLog = ({ module, action, title }) => {
         .replace(/ /g, "-")
     : "-";
 /* ================== CALCULATIONS ================== */
-const containerExpenses = financeData.filter(
-  (item) => item.check === "Container Payment"
-);
 
-const generalExpenses = financeData.filter(
-  (item) => item.check !== "Container Payment"
-);
-const avgContainerRate =
-  containerExpenses.length > 0
-    ? containerExpenses.reduce((sum, item) => sum + Number(item.rate || 0), 0) /
-      containerExpenses.length
-    : 0;
-    useEffect(() => { 
-      localStorage.setItem(`trip-${trip.id}-avg_container_rate`,avgContainerRate);      
-    }, [avgContainerRate]);
-    
+const calculateAverageFxRate = (expenses = []) => {
+  const valid = expenses.filter(
+    (item) =>
+      Number(item.is_container_payment) === 1 &&
+      Number(item.rate) > 0
+  );
 
-const totalContainerUSD = containerData.reduce((sum, item) => {
-  const amount = Number(item.amountUsd || 0);
-  const surcharge = item.funding === "partner" ? Number(item.surcharge || 0) : 0;
-  return sum + amount + surcharge;
+  if (!valid.length) return 0;
+
+  const total = valid.reduce(
+    (sum, item) => sum + Number(item.rate),
+    0
+  );
+
+  return total / valid.length;
+};
+const calculateContainerUSD = (item) => {
+  const base =
+    Number(item.unit_price_usd || 0) * Number(item.pieces || 0) +
+    Number(item.shipping_amount_usd || 0);
+
+  const surcharge =
+    item.funding === "partner" ? Number(item.surcharge || 0) : 0;
+
+  return base + surcharge;
+};
+
+const calculateContainerNGN = (item, rate) =>
+  calculateContainerUSD(item) * Number(rate || 0);
+
+// const avgContainerRate = calculateAverageFxRate(financeData);
+
+/* ================== FINANCE SUMMARY (CORRECT) ================== */
+
+const totalExpenseNGN = financeData.reduce((sum, item) => {
+  return sum + Number(item.total_amount || 0);
 }, 0);
 
-const totalGeneralExpenseNGN = generalExpenses.reduce(
-  (sum, item) => sum + Number(item.amountNGN || 0),
-  0
-);
+const totalExpenseUSD = financeData.reduce((sum, item) => {
+  if (item.currency === "USD") {
+    return sum + Number(item.amount || 0);
+  }
+  return sum;
+}, 0);
 
 const totalContainers = containerData.length;
 
-let totalAmountNGN = 0;
-let displayTotalUSD = 0;
+const totalPieces = containerData.reduce(
+  (sum, item) => sum + Number(item.pieces || 0),
+  0
+);
+
+const totalContainerUSD = containerData.reduce((sum, item) => {
+  const base =
+    Number(item.unit_price_usd || 0) * Number(item.pieces || 0) +
+    Number(item.shipping_amount_usd || 0);
+
+  const surcharge =
+    item.funding === "partner" ? Number(item.surcharge || 0) : 0;
+
+  return sum + base + surcharge;
+}, 0);
+
+const totalContainerNGN = containerData.reduce((sum, item) => {
+  return sum + calculateContainerNGN(item, avgContainerRate);
+}, 0);
+
+const avgContainerExpenseNGN =
+  totalContainers > 0 ? totalContainerNGN / totalContainers : 0;
+
+
+
+
+
+let summaryNGN = 0;
+let summaryUSD = 0;
 
 if (activeTab === "finance") {
-  const containerPayments = financeData.filter(
-    (item) => item.check === "Container Payment"
-  );
-
-  totalAmountNGN = containerPayments.reduce(
-    (sum, item) => sum + Number(item.amountNGN || 0),
-    0
-  );
-
-  displayTotalUSD = containerPayments.reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0
-  );
+  summaryNGN = totalExpenseNGN;
+  summaryUSD = totalExpenseUSD;
 }
-else if (activeTab === "container") {
-  totalAmountNGN = avgContainerRate * totalContainerUSD;
 
-  displayTotalUSD =
-    totalContainers > 0
-      ? totalGeneralExpenseNGN / totalContainers
-      : 0;
+if (activeTab === "container") {
+  summaryNGN = totalContainerNGN;     
+  summaryUSD = avgContainerExpenseNGN; 
 }
+
+
+useEffect(() => {
+}, [financeData]);
+
 
   /* ================== UTILITY FUNCTIONS ================== */
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
@@ -421,10 +504,8 @@ const handleUpdate = async () => {
     setMessage("No changes detected");
     return;
   }
-
   try {
     setLoading(true);
-
 const payload = {
   trip_uuid: trip.trip_uuid,
   title,
@@ -435,14 +516,9 @@ const payload = {
   status: 1,
   progress: mapUIToProgress(status),
 };
-
-
 await TripServices.edit(payload);
-
-
     setMessageType("success");
     setMessage("Trip updated successfully");
-
     originalRef.current = {
       title,
       description,
@@ -451,7 +527,6 @@ await TripServices.edit(payload);
       end_date: endDate,
       progress: mapUIToProgress(status),
     };
-
   } catch (err) {
     setMessageType("error");
     setMessage(err.response?.data?.message || "Update failed");
@@ -460,23 +535,38 @@ await TripServices.edit(payload);
   }
 };
 
-  
   /* ================== DRILLDOWN ================== */
   if (showTripDetails) {
     return <TripFinnce trip={selectedTrip} 
      goBack={() => setShowTripDetails(false)}
-      setTrip={setSelectedTrip}  />;
+      setTrip={setSelectedTrip} 
+onApprovalChange={(updatedExpense) => {
+  setFinanceData((prev) =>
+    prev.map((item) => {
+
+      if (item.expense_uuid === updatedExpense.expense_uuid) {
+        return {
+          ...item,
+          status: updatedExpense.status, // 1 or 0
+          approved: updatedExpense.approved, // true or false
+        };
+      }
+      return item;
+      
+    })
+  );
+}}
+
+ />;
 
   }
 
   if (showContainerDetails) {
-    return <DrildownContainer
-     container={selectedContainerDrill}
-      goBack={() => setShowContainerDetails(false)}
-      onUpdate={handleUpdateContainer} 
-      avgContainerRate={avgContainerRate}
-      formatNumber={formatNumber} totalAmountUSD={totalAmountUSD} totalAmountNGN={totalAmountNGN}
-      totalContainers={totalContainers} totalUnitPriceUSD={totalUnitPriceUSD}  />;
+    return <DrildownContainer  container={selectedContainerDrill}
+      goBack={() => setShowContainerDetails(false)}  onUpdate={handleUpdateContainer} 
+      avgContainerRate={avgContainerRate} formatNumber={formatNumber} totalAmountUSD={totalAmountUSD} totalAmountNGN={totalContainerNGN}
+      totalContainers={totalContainers} totalUnitPriceUSD={totalUnitPriceUSD}
+      reloadTable={() => setContainerReloadKey(k => k + 1)}  />;
   }
   if (showDocumentDril) {
     return <TripDocumentDrill
@@ -485,7 +575,12 @@ await TripServices.edit(payload);
   }
 
   const currentData = currentFinance;
-
+const handleCloseMessage = () => {
+  setMessage(null);
+  if (messageType === "success") {
+    goBack(true);
+  }
+};
   /* ================== UI ================== */
   if (message) {
             //  {message && ( <div className={`alert ${messageType}`}>{message}</div>)}
@@ -493,8 +588,7 @@ await TripServices.edit(payload);
       <div className="trip-card-popup" >
         <div className="trip-card-popup-container">
           <div className={`popup-content ${messageType}`}>
-            <div  onClick={() => {setMessage(null);if (messageType === "success") 
-              {goBack(true);}}} className="delete-box">✕</div>
+            <div  onClick={() => {handleCloseMessage();}}className="delete-box">✕</div>
             <span>{message}</span>
           </div>
         </div>
@@ -508,19 +602,20 @@ await TripServices.edit(payload);
     <div className="trip-details-grid-content">
     <div className="drill-summary-grid">
       <div className="drill-summary">
-      <div className="summary-item">
-  <p className="small">Total Amount (NGN)</p>
-  <h2>{"₦" + totalAmountNGN.toLocaleString("en-NG", { minimumFractionDigits: 0 })}</h2>
 
+<div className="summary-item">
+  <p className="small">Total Amount (NGN)</p>
+  <h2>{"₦" + summaryNGN.toLocaleString("en-NG")}</h2>
 </div>
 
 <div className="summary-item">
   <p className="small">
-    {activeTab === "container" ? "Average Expense (NGN)" : "Total Amount (USD)"}
+    {activeTab === "container"
+      ? "Average Expense (NGN)"
+      : "Total Amount (USD)"}
   </p>
-  <h2>{formatNumber(displayTotalUSD)}</h2>
+  <h2>{formatNumber(summaryUSD)}</h2>
 </div>
-
 
 <div className="summary-item">
   <p className="small">Total Container</p>
@@ -529,12 +624,15 @@ await TripServices.edit(payload);
 
 <div className="summary-item">
   <p className="small">Total Pieces</p>
-  <h2>{formatNumber(totalUnitPriceUSD)}</h2>
+  <h2>{formatNumber(totalPieces)}</h2>
 </div>
+
 <div className="summary-item">
   <p className="small">Average Fx Rate</p>
   <h2>{formatNumber(avgContainerRate)}</h2>
 </div>
+
+
 
     </div>
     </div>
@@ -677,9 +775,10 @@ await TripServices.edit(payload);
     <input type="date" value={startDate} readOnly />
   )}
 </div>
-
-          <div className="form-group">
-  <label>End Date</label>
+        </div>
+        <div className="grid-3 mt-4 mb-5">
+                   <div className="form-group">
+  <label >End Date</label>
   {!editEndate && (
     <Edit size={16} onClick={() => setEditEndate(true)} />
   )}
@@ -744,15 +843,11 @@ await TripServices.edit(payload);
           </div>
         </div>
         {/* FINANCE TABLE */}
-{activeTab === "finance" && (
+    {activeTab === "finance" && (
   <div className="finance-section">
-    <TripExpenseData
-      currentData={currentData}
-      handleRowClick={handleRowClick}
-      handleDeleteFinance={handleDeleteFinance}
-      openDeletePopup={openDeletePopup}
-      tripUuid={trip.trip_uuid}
-    />
+    <TripExpenseData  financeData={financeData}   currentData={currentData} setFinanceData={setFinanceData}
+    handleRowClick={handleRowClick}handleDeleteFinance={handleDeleteFinance}
+      openDeletePopup={openDeletePopup} tripUuid={trip.trip_uuid}/>
   </div>
 )}
 
@@ -760,32 +855,27 @@ await TripServices.edit(payload);
        {activeTab === "container" && (
   <div className="finance-section">
     <TripContainerData
-      containerData={containerData}
-      handleContainerRowClick={handleContainerRowClick}
-      avgContainerRate={avgContainerRate}
-      handleDeleteContainer={handleDeleteContainer}
-      tripUuid={trip.trip_uuid}
-    />
-  </div>
-)}
+  containerData={containerData}
+  setContainerData={setContainerData}
+  handleContainerRowClick={handleContainerRowClick}
+  handleDeleteContainer={handleDeleteContainer}
+  avgContainerRate={avgContainerRate}
+  tripUuid={trip.trip_uuid}
+   reloadKey={containerReloadKey}
+/>
 
-{activeTab === "tripFile" && (
-  <div className="finance-section">
-    <TripDocumentTable
-      tripFileData={tripFileData}
-      handleDeleteTripFile={handleDeleteTripFile}
-      handleDocumentRowClick={handleDocumentRowClick}
-      formatDate={formatDate}
-    />
   </div>
-)}
-
-{activeTab === "log" && (
- <TripLog addLog={addLog} trip={trip} formatDate={formatDate} />
-)}
+       )}
+    {activeTab === "tripFile" && (
+       <div className="finance-section">
+    <TripDocumentTable  tripFileData={tripFileData} handleDeleteTripFile={handleDeleteTripFile} 
+    handleDocumentRowClick={handleDocumentRowClick} formatDate={formatDate}/>
+  </div>
+       )}
+      {activeTab === "log" && (
+        <TripLog addLog={addLog} trip={trip} formatDate={formatDate} />
+       )}
          {/* FOOTER */}
-
-
          <div className="footer-btns"> 
           <button onClick={() => goBack(true)} className="preview">   Preview </button>  
           <button className="create"  disabled={loading}  onClick={handleUpdate}>

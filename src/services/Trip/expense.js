@@ -13,9 +13,23 @@ export const ExpenseServices = {
   edit: async (payload) => {
     return api.post('/systemuser/trip/expense/edit', payload);
   },
-   change_approval: async (payload) => {
-    return api.post('/systemuser/trip/expense/changeapproval', payload);
-  },
+change_approval: async (payload) => {
+  const formData = new URLSearchParams();
+
+  formData.append("expense_uuid", payload.expense_uuid);
+  formData.append("status", payload.status);
+
+  return api.post(
+    "/systemuser/trip/expense/changeapproval",
+    formData,
+    {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    }
+  );
+},
+
 
   log: async (params) => {
     return api.get('/systemuser/trip/expense/logs', { params });

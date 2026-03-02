@@ -4,9 +4,9 @@ export const usePresaleHelpers = (preSales) => {
   const presaleByContainerId = useMemo(() => {
     const map = {};
     preSales.forEach(ps => {
-      ps.selectedContainers?.forEach(c => {
-        map[c.id] = ps;
-      });
+      if (ps.container_id) {
+        map[ps.container_id] = ps;
+      }
     });
     return map;
   }, [preSales]);
@@ -21,16 +21,8 @@ export const usePresaleHelpers = (preSales) => {
     );
   };
 
-  const getPalletOptionsForContainer = (containerId) => {
-    const presale = presaleByContainerId[containerId];
-    if (!presale?.pallets) return [];
-
-    return [...new Set(presale.pallets.map(p => Number(p.pieces)).filter(Boolean))];
-  };
-
   return {
     presaleByContainerId,
     isPurchasePriceLowerThanPresale,
-    getPalletOptionsForContainer,
   };
 };

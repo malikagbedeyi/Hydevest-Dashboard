@@ -138,6 +138,7 @@ const DrilldownSale = ({ data, goBack, onUpdate }) => {
   };
   
   return (
+    
     <div className="drilldown">
       {/* ===== SUMMARY ===== */}
       <div className="drill-summary-grid">

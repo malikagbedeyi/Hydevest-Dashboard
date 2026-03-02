@@ -379,6 +379,8 @@ line-height: 20px;
       }
       label{
         font-size: 0.9vw;
+        color: #581aae;
+          margin-right: 0.5vw;
       }
      input,textarea{
       width:100%; 
@@ -477,6 +479,46 @@ line-height: 20px;
      }
  }
  }
+  .grid-3 { 
+      display:grid;
+       grid-template-columns: 1fr; 
+      gap: 1.1vw; 
+      margin-bottom: 1.1vw;
+      align-items: center;
+      @include Destop{
+        gap: 16px; 
+        margin-bottom: 16px;
+      }
+ .form-group { 
+    background:#f7f7f9;
+     padding:0.8vw;
+     border-radius:0.7vw;
+      outline-style: none;
+      @include Destop{
+        padding:12px;
+        border-radius:10px;
+      }
+      label{
+        font-size: 0.9vw;
+        color: #581aae;
+        margin-right: 0.5vw;
+      }
+     input,textarea{
+      width:100%; 
+      padding:0.5vw 0.7vw; 
+      border:0.1vw solid #ddd;
+       border-radius:0.4vw; 
+      background:#fff;
+      outline-style: none;
+      @include Destop{
+        padding:8px 10px; 
+        border:1px solid #ddd;
+         border-radius:6px;
+      }
+
+     } 
+    }
+  } 
  }
   .trip-document{
     .trip-document-head{
@@ -1008,16 +1050,7 @@ margin-top: 20px;
     }
   }
   
-  .grid-3 {
-    width: 100%;
-    gap: 1.1vw;
-    margin-bottom: 1.4vw;
-  
-    @include Destop {
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-  }
+
   
   /* ================================
      FORM ELEMENTS
@@ -1033,12 +1066,12 @@ margin-top: 20px;
   }
     label {
       display: block;
-      margin-bottom: 0.4vw;
+      margin-bottom: 0.5vw;
     font-size: 0.9vw;
-    color: #444;
+    color: #581aae;
 
     @include Destop {
-      margin-bottom: 6px;
+      margin-bottom: 10px;
       font-size: 13px;
     }
     }

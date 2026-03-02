@@ -1,6 +1,6 @@
 import { Trash2, Edit3 } from "lucide-react";
 
-const SaleItemsTable = ({ items = [], onDelete, onEdit }) => {
+const SaleItemsTable = ({ items = [], onDelete, onEdit,formatNumber }) => {
   if (items.length === 0) return null;
 
   const formatDateTime = (value) => {
@@ -36,10 +36,10 @@ const SaleItemsTable = ({ items = [], onDelete, onEdit }) => {
               <tr key={row.palletId}>
                 <td>{idx + 1}</td>
                 <td>{row.containerName}</td>
-                <td>{row.pieces}</td>
-                <td>{row.saleAmount}</td>
+                <td>{formatNumber(row.purchasePrice)}</td>
+                <td>{row.noOfPallets}</td>
                 <td>{row.palletOption}</td>
-                <td>{row.total}</td>
+                <td>{formatNumber(row.total)}</td>
                 <td>
                 <button
                     className="edit-btn"

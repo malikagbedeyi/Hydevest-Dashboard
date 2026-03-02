@@ -2,118 +2,105 @@ import React from "react";
 import { Trash2 } from "lucide-react";
 import "../../../../assets/Styles/dashboard/table.scss";
 
-const ContainerTable = ({ containers, onDelete, onRowClick ,avgContainerRate = 0,
-    formatNumber, totalAmountUSD = 0, totalAmountNGN = 0, totalContainers = 0, totalUnitPriceUSD = 0, }) => {
+const ContainerTable = ({data,loading,page,setPage,pagination,onRowClick,}) => {
 
-    const formatDate = (date) =>
+  const formatDate = (date) =>
     date
       ? new Date(date)
-          .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+          .toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
           .replace(/ /g, "-")
       : "-";
-    
-      const safeFormatNumber =
-  typeof formatNumber === "function"
-    ? formatNumber
-    : (num = 0) =>
-        Number(num || 0).toLocaleString("en-US", {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 2,
-        });
+
+  const formatMoneyUSD = (value) =>
+    "$" +
+    new Intl.NumberFormat("en-US", {
+      maximumFractionDigits: 0,
+    }).format(Math.round(Number(value || 0)));
+
+  const formatMoneyNGN = (value) =>
+    value === null || value === undefined
+      ? "—"
+      : "₦" +
+        new Intl.NumberFormat("en-NG", {
+          maximumFractionDigits: 0,
+        }).format(Math.round(Number(value)));
 
   return (
     <div className="userTable">
-        <div className="drill-summary-grid">
-      <div className="drill-summary">
-
-<div className="summary-item">
-  <p className="small">Total Amount (NGN)</p>
-  <h2>
-  ₦{safeFormatNumber(
-      containers.reduce(
-        (sum, c) => sum + (Number(c.amountUsd) || 0) * (Number(avgContainerRate) || 0),
-        0
-      )
-    )}
-  </h2>
-</div>
-<div className="summary-item">
-  <p className="small">Total Trip</p>
-  <h2>3</h2>
-</div>
-
-<div className="summary-item">
-  <p className="small">Total Container</p>
-  <h2>{totalContainers}</h2>
-</div>
-
-<div className="summary-item">
-  <p className="small">Total Pieces</p>
-  <h2>{safeFormatNumber(totalUnitPriceUSD)}</h2>
-</div>
-<div className="summary-item">
-  <p className="small">Average Fx Rate</p>
-  <h2>{safeFormatNumber(avgContainerRate)}</h2>
-</div>
-
-    </div>
-    </div>
       <div className="table-wrap">
-        <table className="table">
+        <table
+          className="table"
+          style={{ width: "130%", minWidth: "130%" ,maxWidth:"130%"}}
+        >
           <thead>
             <tr>
               <th>S/N</th>
-              <th>Container ID</th>
-              <th>	Description</th>
-              <th>Container title</th>
-              <th>Container Tracking Number</th>
-              <th>Container Tracking Name</th>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Container Number</th>
               <th>Pieces</th>
-              <th>Unit Price(USD)</th>
+              <th>Unit Price (USD)</th>
               <th>Amount (USD)</th>
-              <th>Amount (NGN)</th>
+              {/* <th>Amount (NGN)</th> */}
               <th>Quoted Amount (USD)</th>
-              <th> Quoted Amount (NGN)</th>
+              {/* <th>Quoted Amount (NGN)</th> */}
               <th>Created Date</th>
               <th>Status</th>
-              <th>Action</th>
+              <th>Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {containers.length === 0 ? (
+            {loading ? (
               <tr>
-                <td colSpan="7" style={{ textAlign: "center" }}>
+                <td colSpan="13" style={{ textAlign: "center" }}>
+                  Loading...
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan="13" style={{ textAlign: "center" }}>
                   No Containers Found
                 </td>
               </tr>
             ) : (
-              containers.map((c, idx) => (
-                <tr key={c.id} onClick={() => onRowClick(c)}>
+              data.map((item, idx) => (
+                <tr
+                  key={item.container_uuid}
+                  onClick={() => onRowClick(item)}
+                  style={{ cursor: "pointer" }}
+                >
                   <td>{String(idx + 1).padStart(2, "0")}</td>
-                  <td>{c.id}</td>
-                  <td>{c.description}</td>
-                  <td>{c.title}</td>
-                  <td>TN{c.trackingNumber}</td> 
-                  <td>{c.modelName}</td>
-                  <td>{c.unitpieces || "0"}</td>
-                  <td>{c.unitPrice || "0"}</td>
-                  <td>{safeFormatNumber(Number(c.amountUsd || "0"))} </td>
-                  <td>{safeFormatNumber((Number(c.amountUsd) || 0) * (Number(avgContainerRate) || 0) +(c.funding === "partner" ? Number(c.surcharge || 0) : 0))}</td>
-                  <td>{safeFormatNumber(Number(c.quotedAmountUsd || "0"))} </td>
-                  <td>{safeFormatNumber((Number(c.quotedAmountUsd) || 0) * (Number(avgContainerRate) || 0) +(c.funding === "partner" ? Number(c.surcharge || 0) : 0))}</td>
-                  <td>{formatDate(c.createdAt)}</td>
-                   <td>
-                    <span style={{ color: "orange", fontWeight: 600 }}>
-                      {c.status}
-                    </span>
+                  <td>{item.title}</td>
+                  <td>{item.desc || "-"}</td>
+                  <td>TRN {item.tracking_number || "-"}</td>
+                  <td>{Number(item.pieces || 0).toLocaleString()}</td>
+                  <td>{formatMoneyUSD(item.unit_price_usd)}</td>
+                  <td>{formatMoneyUSD(item.amountUSD)}</td>
+                  {/* <td>{formatMoneyNGN(item.amountNGN)}</td> */}
+                  <td>{formatMoneyUSD(item.quotedUSD)}</td>
+                  {/* <td>{formatMoneyNGN(item.quotedNGN)}</td> */}
+                  <td>{formatDate(item.created_at)}</td>
+                  <td>
+                    {item.status === 1 ? (
+                      <span style={{ color: "green" }}>
+                        Approved
+                      </span>
+                    ) : (
+                      <span style={{ color: "orange" }}>
+                        Pending
+                      </span>
+                    )}
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>
                     <Trash2
                       size={16}
                       color="red"
                       style={{ cursor: "pointer" }}
-                      onClick={() => onDelete(c.id)}
                     />
                   </td>
                 </tr>
@@ -121,6 +108,26 @@ const ContainerTable = ({ containers, onDelete, onRowClick ,avgContainerRate = 0
             )}
           </tbody>
         </table>
+
+        {pagination?.last_page > 1 && (
+          <div className="pagination">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Previous
+            </button>
+            <span>
+              {page} / {pagination.last_page}
+            </span>
+            <button
+              disabled={page === pagination.last_page}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

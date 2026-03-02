@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../../../../assets/Styles/dashboard/create.scss";
 import { ChevronDown, X } from "lucide-react";
+import { PresaleServices } from "../../../../services/Sale/presale";
 
 export const saleType = [
   { id: 1, saleName: "Box Sale" },
@@ -8,91 +9,120 @@ export const saleType = [
   { id: 3, saleName: "Mixed Sale" },
 ];
 
-const CreatePreSale = ({ users, setUsers, setView, openSubmenu,containersData }) => {
-  
+const CreatePreSale = ({ users, setUsers, setView, containersData, setContainers  }) => {
   const [form, setForm] = useState({
-    saleOption: "",containerOption:"", wcAverageWeight: "", wcPieces: "",
-    pricePerKg: "", pricePerPic:"", noOfPallets: "",
-    pallets: [{ pieces: "", count: "" }],
+    saleOption: "",containerOption: "",wcAverageWeight: "", wcPieces: "",
+    pricePerKg: "",pricePerPic: "",noOfPallets: "",pallets: [{ pieces: "", count: "" }],
   });
 
-  const [successMessage, setSuccessMessage] = useState(null);
   const [popupMessage, setPopupMessage] = useState(null);
-  const [popupType, setPopupType] = useState(null); // "error" | "success"
+  const [popupType, setPopupType] = useState(null); 
+  // -----------------------------
+  // CONTAINER DATA STATE
+  // -----------------------------
+  const [loadingContainers, setLoadingContainers] = useState(true);
 
-  const getContainerFxRate = (container) => {
-    return (
-      Number(
-        localStorage.getItem(`trip-${container.tripId}-avg_container_rate`)
-      ) || 0
-    );
-  };
-  
+//   useEffect(() => {
+//     const fetchContainers = async () => {
+//       try {
+//         setLoadingContainers(true);
+//         const response = await PresaleServices.containerList({});
+//      if (response.data?.record) {
+//   setContainers(response.data.record);
+// } else {
+//   setContainers([]);
+// }
+//         console.log("presale container dropdown data",response.data)
+//       } catch (err) {
+//         console.error("Failed to fetch containers:", err);
+//         setContainers([]);
+//       } finally {
+//         setLoadingContainers(false);
+//       }
+//     };
+
+//     fetchContainers();
+//   }, []);
+
   // -----------------------------
   // SALE OPTION SELECT
   // -----------------------------
   const [openSelect2, SetOpenSelect2] = useState(false);
   const [selectedValues2, setSelectedValues2] = useState([]);
-
+const [expandedContainers, setExpandedContainers] = useState([]);
   const toggleSelect2 = (item) => {
     setSelectedValues2([item]);
     setForm((prev) => ({ ...prev, saleOption: item.saleName }));
     SetOpenSelect2(false);
   };
+
   const formatDate = (date) =>
-  date
-    ? new Date(date)
-        .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-        .replace(/ /g, "-")
-    : "-";
+    date
+      ? new Date(date)
+          .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+          .replace(/ /g, "-")
+      : "-";
+
   // -----------------------------
   // CONTAINER MULTI SELECT
   // -----------------------------
   const [openSelect, SetOpenSelect] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedValues, setSelectedValues] = useState([]);
-  const filterOption = (containersData ?? [])
-  .filter((item) => {
-    const title = item.title ?? "";
-    const modelName = item.modelName ?? "";
 
-    return (
-      title.toLowerCase().includes(search.toLowerCase()) ||
-      modelName.toLowerCase().includes(search.toLowerCase())
+console.log("containersListData:", containersData);
+
+const filterOption = (containersData ?? []).filter((item) => {
+  const title = item.title ?? "";
+  const containerId = item.container_unique_id ?? "";
+
+  return (
+    title.toLowerCase().includes(search.toLowerCase()) ||
+    containerId.toLowerCase().includes(search.toLowerCase())
+  );
+});
+
+
+ const toggleSelect = (item) => {
+  setSelectedValues((prev) => {
+    const exists = prev.some(
+      (v) => v.container_uuid === item.container_uuid
     );
-  })
-  const toggleSelect = (item) => {
-    setSelectedValues((prev) => {
-      const exists = prev.some((v) => v.id === item.id);
-      if (exists) {
-        return prev.filter((v) => v.id !== item.id);
-      } else {
-        return [...prev, item];
-      }
-    });
-  };
 
+    if (exists) {
+      return prev.filter(
+        (v) => v.container_uuid !== item.container_uuid
+      );
+    }
+
+    return [...prev, item];
+  }); 
+};
+
+const toggleContainerDetails = (uuid) => {
+  setExpandedContainers((prev) =>
+    prev.includes(uuid)
+      ? prev.filter((id) => id !== uuid)
+      : [...prev, uuid]
+  );
+};
   // -----------------------------
   // FORM HANDLERS
   // -----------------------------
   const cleanNumber = (value) => value.replace(/[^\d.]/g, "");
 
   const formatMoneyNGN = (value) =>
-  value === "" ? "" : "₦" + Number(value).toLocaleString("en-NG");
-  
+    value === "" ? "" : "₦" + Number(value).toLocaleString("en-NG");
+
   const formatNumber = (value) =>
-  value === "" ? "" : Number(value).toLocaleString("en-NG");
-  
+    value === "" ? "" : Number(value).toLocaleString("en-NG");
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     const cleaned = cleanNumber(value);
-  
-    setForm((prev) => ({
-      ...prev,
-      [name]: cleaned,
-    }));
+    setForm((prev) => ({ ...prev, [name]: cleaned }));
   };
-  
+
   const handlePalletChange = (index, field, value) => {
     const updated = [...form.pallets];
     updated[index][field] = value;
@@ -100,15 +130,14 @@ const CreatePreSale = ({ users, setUsers, setView, openSubmenu,containersData })
   };
 
   const addPallet = () => {
-    setForm((prev) => ({
-      ...prev,
-      pallets: [...prev.pallets, { pieces: "", count: "" }],
-    }));
+    setForm((prev) => ({ ...prev, pallets: [...prev.pallets, { pieces: "", count: "" }] }));
   };
+
   const removePallet = (index) => {
     const updated = form.pallets.filter((_, i) => i !== index);
     setForm((prev) => ({ ...prev, pallets: updated }));
   };
+
   const expectedRevenue = () => {
     const totalPieces = parseFloat(form.wcPieces) || 0;
     const price = parseFloat(form.pricePerPic) || 0;
@@ -116,125 +145,203 @@ const CreatePreSale = ({ users, setUsers, setView, openSubmenu,containersData })
   };
 
   // -----------------------------
-  // CREATE PRE-SALE (Corrected)
+  // DERIVED TOTALS
   // -----------------------------
-  // -----------------------------
-// DERIVED TOTALS
-// -----------------------------
-const totalPalletCount = form.pallets.reduce(
-  (sum, p) => sum + Number(p.count || 0),
-  0
-);
+  const totalPalletCount = form.pallets.reduce((sum, p) => sum + Number(p.count || 0), 0);
+  const totalPalletPieces = form.pallets.reduce(
+    (sum, p) => sum + Number(p.pieces || 0) * Number(p.count || 0),
+    0
+  );
+  const maxPalletsAllowed = Number(form.noOfPallets || 0);
+  const maxPiecesAllowed = Number(form.wcPieces || 0);
+  const palletCountExceeded = maxPalletsAllowed > 0 && totalPalletCount > maxPalletsAllowed;
+  const palletPiecesExceeded = maxPiecesAllowed > 0 && totalPalletPieces > maxPiecesAllowed;
 
-const totalPalletPieces = form.pallets.reduce(
-  (sum, p) => sum + Number(p.pieces || 0) * Number(p.count || 0),
-  0
-);
-
-const maxPalletsAllowed = Number(form.noOfPallets || 0);
-const maxPiecesAllowed = Number(form.wcPieces || 0);
-
-const palletCountExceeded =
-  maxPalletsAllowed > 0 && totalPalletCount > maxPalletsAllowed;
-
-const palletPiecesExceeded =
-  maxPiecesAllowed > 0 && totalPalletPieces > maxPiecesAllowed;
   const getValidationError = () => {
-    if (palletCountExceeded) {
+    if (palletCountExceeded)
       return `❌ Total pallets entered (${totalPalletCount}) must not exceed Total Number of Pallets (${maxPalletsAllowed})`;
-    }
-  
-    if (palletPiecesExceeded) {
+    if (palletPiecesExceeded)
       return `❌ Total pallet pieces (${totalPalletPieces}) must not exceed WC Pieces (${maxPiecesAllowed})`;
-    }
-  
-    return null; // no error
+    return null;
   };
-  
-  const handleCreate = () => {
-    const error = getValidationError();
-  
-    // ❌ Error → show popup, DO NOT navigate
-    if (error) {
-      setPopupMessage(error);
-      setPopupType("error");
-      return;
-    }
-  
-    // ✅ Success
-    const newSale = {
-      ...form,
-      saleOption: selectedValues2[0]?.saleName || "",
-      selectedContainers: selectedValues,
-      noOfPallets: form.noOfPallets,
-      containerNames: selectedValues.map((c) => c.title),
-      expectedRevenue: expectedRevenue(),
-      status: "Pending",
-      createdAt: new Date().toISOString(),
-    };
-  
-    setUsers((prev) => [newSale, ...prev]);
-    setPopupMessage("✅ Pre-sale successfully created");
-    setPopupType("success");
-  };
-  
-  const closePopup = () => {
-    setPopupMessage(null);
-  
-    // ✅ Only go to table IF success
-    if (popupType === "success") {
-      setView("table");
-    }
-  
-    setPopupType(null);
-  };
-  
+
+  // -----------------------------
+  // HANDLE CREATE WITH API
+  // -----------------------------
+const getBackendErrorMessage = (error) => {
+  const data = error?.response?.data;
+
+  if (!data) return "❌ Something went wrong. Please try again.";
+
+  // Case 1: simple string message
+  if (typeof data.message === "string") {
+    return `❌ ${data.message}`;
+  }
+
+  // Case 2: array of errors
+  if (Array.isArray(data.message)) {
+    return `❌ ${data.message.join(", ")}`;
+  }
+
+  // Case 3: Laravel-style validation errors object
+  if (data.errors && typeof data.errors === "object") {
+    const messages = Object.values(data.errors).flat();
+    return `❌ ${messages.join(", ")}`;
+  }
+
+  return "❌ Request failed. Please check your input.";
+};
+const handleCreate = async () => {
+  const error = getValidationError();
+  if (error) {
+    setPopupMessage(error);
+    setPopupType("error");
+    return;
+  }
+
   const selectedSale = selectedValues2[0]?.saleName;
 
-  const deriveAmountUsd = (container) => {
-    return (
-      Number(container.amountUsd) ||
-      Number(container.unitPrice) * Number(container.unitpieces) ||
-      0
-    );
+  if (!selectedSale) {
+    setPopupMessage("Select a sale option");
+    setPopupType("error");
+    return;
+  }
+
+  if (selectedValues.length === 0) {
+    setPopupMessage("Select at least one container");
+    setPopupType("error");
+    return;
+  }
+
+  if (Number(form.wcAverageWeight) <= 0 || Number(form.wcPieces) <= 0) {
+    setPopupMessage("WC Average Weight and WC Pieces must be > 0");
+    setPopupType("error");
+    return;
+  }
+
+  let payload = null;
+  let response;
+
+  try {
+    /* -----------------------
+       BOX SALE
+    ------------------------ */
+    if (selectedSale === "Box Sale") {
+      if (selectedValues.length !== 1) {
+        setPopupMessage("Box Sale requires exactly 1 container");
+        setPopupType("error");
+        return;
+      }
+
+      payload = {
+        container_uuid: selectedValues[0]?.container_uuid,
+        wc_average_weight: Number(form.wcAverageWeight),
+        wc_pieces: Number(form.wcPieces),
+        price_per_kg: Number(form.pricePerKg),
+        price_per_piece: Number(form.pricePerPic),
+      };
+
+      response = await PresaleServices.createBoxSale(payload);
+    }
+
+    /* -----------------------
+       SPLIT SALE
+    ------------------------ */
+    if (selectedSale === "Split Sale") {
+      if (selectedValues.length !== 1) {
+        setPopupMessage("Split Sale requires exactly 1 container");
+        setPopupType("error");
+        return;
+      }
+
+      payload = {
+        container_uuid: selectedValues[0]?.container_uuid,
+        wc_average_weight: Number(form.wcAverageWeight),
+        wc_pieces: Number(form.wcPieces),
+        price_per_kg: Number(form.pricePerKg),
+        price_per_piece: Number(form.pricePerPic),
+        total_no_of_pallets: Number(form.noOfPallets),
+        pallet_pieces: form.pallets.map(p => p.pieces).join(","),
+        no_of_pallets: form.pallets.map(p => p.count).join(","),
+      };
+
+      response = await PresaleServices.createSplitSale(payload);
+    }
+
+    /* -----------------------
+       MIXED SALE
+    ------------------------ */
+    if (selectedSale === "Mixed Sale") {
+      if (selectedValues.length !== 2) {
+        setPopupMessage("Mixed Sale requires exactly 2 containers");
+        setPopupType("error");
+        return;
+      }
+
+      payload = {
+        container_uuid: selectedValues[0]?.container_uuid,
+        container_uuid_two: selectedValues[1]?.container_uuid,
+        wc_average_weight: Number(form.wcAverageWeight),
+        wc_pieces: Number(form.wcPieces),
+        price_per_kg: Number(form.pricePerKg),
+        price_per_piece: Number(form.pricePerPic),
+        total_no_of_pallets: Number(form.noOfPallets),
+        pallet_pieces: form.pallets.map(p => p.pieces).join(","),
+        no_of_pallets: form.pallets.map(p => p.count).join(","),
+      };
+
+      response = await PresaleServices.createMixedSale(payload);
+    }
+
+    /* -----------------------
+       SUCCESS HANDLING
+    ------------------------ */
+    if (response?.data?.success) {
+      setUsers(prev => [response.data.record || payload, ...prev]);
+      setPopupMessage("✅ Pre-sale successfully created");
+      setPopupType("success");
+
+      console.log("Final Payload:", payload);
+      console.log(
+        "Container UUIDs:",
+        selectedValues.map(c => c.container_uuid)
+      );
+   } else {
+  setPopupMessage(`❌ ${response?.data?.message || "Failed to create pre-sale"}`);
+  setPopupType("error");
+  return;
+}
+  } catch (err) {
+  console.error("Error creating pre-sale:", err.response?.data || err);
+
+  const backendMessage = getBackendErrorMessage(err);
+  setPopupMessage(backendMessage);
+  setPopupType("error");
+  
+}
+};
+
+  const closePopup = () => {
+    setPopupMessage(null);
+    if (popupType === "success") setView("table");
+    setPopupType(null);
   };
 
-const getSafeFxRate = (container) => {
+  const selectedSale = selectedValues2[0]?.saleName;
 
-  return (
-    Number(container.avgRate) ||
-    Number(localStorage.getItem(`trip-${container.tripId}-avg_container_rate`)) ||
-    1
-  );
-};
 
-// Helper: calculate USD amount safely
-const getUsdAmount = (container) => {
-  // Prefer amountUsd, else calculate from unitPrice * unitpieces
-  const amountUsd = Number(container.amountUsd ?? 0);
-  if (amountUsd > 0) return amountUsd;
-
-  const unitPrice = Number(container.unitPrice ?? 0);
-  const unitPieces = Number(container.unitpieces ?? 0);
-  return unitPrice * unitPieces;
-};
 
   // -----------------------------
-  // SUCCESS POPUP
+  // RENDER JSX (UNCHANGED)
   // -----------------------------
   if (popupMessage) {
     return (
       <div className="trip-card-popup">
         <div className="trip-card-popup-container">
           <div className="popup-content">
-            <div onClick={closePopup} className="delete-box" style={{color:"red"}}>✕</div>
+            <div onClick={closePopup} className="delete-box" style={{ color: "red" }}>✕</div>
             <div className="popup-proceeed-wrapper">
-              <span
-                style={{
-                  color: popupType === "error" ? "red" : "green",
-                  fontWeight: 600,
-                }}
-              >
+              <span style={{ color: popupType === "error" ? "red" : "green", fontWeight: 600 }}>
                 {popupMessage}
               </span>
             </div>
@@ -243,10 +350,9 @@ const getUsdAmount = (container) => {
       </div>
     );
   }
-  
 
   // -----------------------------
-  // JSX
+  // JSX (UNCHANGED)
   // -----------------------------
   return (
     <div className="trip-modal">
@@ -312,8 +418,8 @@ const getUsdAmount = (container) => {
                       ) : (
                         <div className="selected-tags">
                           {selectedValues.map((item) => (
-                            <span className="tag" key={item.sn}>{item.title}</span>
-                          ))}
+                            <span className="tag" key={item.container_uuid}>{item.title}</span>
+                            ))}
                         </div>
                       )}
                     </div>
@@ -332,9 +438,9 @@ const getUsdAmount = (container) => {
 
                     <div className="option">
                       {filterOption.map((item) => {
-                        const checked = selectedValues.some((v) => v.id === item.id);
+                        const checked = selectedValues.some((v) => v.container_uuid === item.container_uuid);
                         return (
-                          <label key={item.id} onClick={() => SetOpenSelect(false) }>
+                          <label key={item.container_unique_id} onClick={() => SetOpenSelect(false) }>
                             <input
                               type="checkbox"
                               checked={checked}
@@ -345,8 +451,8 @@ const getUsdAmount = (container) => {
                                 gap:"10px"
                               }}
                               >
-                                <span>{item.sn} :</span>
-                            <span> {item.modelName} ({item.title})</span>
+                            <span>{item.container_unique_id} :</span>
+                            <span>{item.modelName} ({item.title})</span>
                             </div>
                           </label>
                         );
@@ -360,34 +466,41 @@ const getUsdAmount = (container) => {
 
             {/* Container Details */}
             <div className="">
-            {selectedValues.map((container) => {
-  // FX rate safely
-  const fxRate = getSafeFxRate(container);
+   {selectedValues.map((container) => {
+const isExpanded = expandedContainers.includes(container.container_uuid);
 
-  // Amount calculations
-  const amountNGN = getUsdAmount(container) * fxRate;
-  const quotedAmountNGN = Number(container.quotedAmountUsd ?? 0) * fxRate;
 
   return (
-    <div className="sale-grid-3" key={container.id}>
+    <div className="sale-grid-3" key={container.container_uuid}>
       <div className="container-details">
-        <h4>{container.title}</h4>
-        <ul>
-          <li>Container ID: {container.id}</li> 
-          <li>Description: {container.description}</li>
-          <li>Tracking Number: TN {container.trackingNumber}</li>
-          <li>Unit Pieces: {container.unitpieces}</li>
-          <li>Unit Price: {container.unitPrice}</li>
-          <li>Amount (USD): ₦{amountNGN.toLocaleString("en-NG")}</li>
-          <li>Quoted Amount (USD): ₦{quotedAmountNGN.toLocaleString("en-NG")}</li>
-          <li>Created Date: {formatDate(container.createdAt)}</li>
-        </ul>
+        <div
+          className="container-header"
+          style={{ display: "flex", justifyContent: "space-between",alignItems:"center", cursor: "pointer" }}
+          onClick={() => toggleContainerDetails(container.container_uuid)}
+        >
+          <h5 className="" style={{color:"#581aae"}} >{container.title}</h5>
+          <ChevronDown
+            className={isExpanded ? "up" : "down"}
+            size={18}
+          />
+        </div>
+
+        {isExpanded && (
+          <ul>
+            <li>Container ID: {container.id}</li> 
+            <li>Description: {container.desc}</li>
+            <li>Tracking Number: TN {container.tracking_number}</li>
+            <li>Unit Pieces: {container.pieces ?? "-"}</li>
+            <li>Unit Price (USD): {container.unit_price_usd ?? "-"}</li>
+            <li>Amount (USD): ${Number(container.unit_price_usd ?? 0).toLocaleString()}</li>
+            <li>Quoted Amount (USD): ${Number(container.quoted_price_usd ?? 0).toLocaleString()}</li>
+            <li>Created Date: {formatDate(container.created_at)}</li>
+          </ul>
+        )}
       </div>
     </div>
   );
 })}
-
-
             </div>
 
             {/* Pre-sale details section */}
@@ -448,7 +561,7 @@ const getUsdAmount = (container) => {
                 <div className="pallet-section">
                   <div className="header">
                     <label>Pallet Distribution</label>
-                    <button type="button" onClick={addPallet}>Add Pallet</button>
+                    <button className="create mb-3" type="button" onClick={addPallet}>Add Pallet</button>
                   </div>
                   {palletCountExceeded && (
   <p className="error-text" style={{color:"red"}}>
@@ -491,7 +604,7 @@ const getUsdAmount = (container) => {
                       </div>
 
                       <div className="pallet-btn">
-                        <button type="button" onClick={() => removePallet(index)}>
+                        <button className="remove mb-3" type="button" onClick={() => removePallet(index)}>
                           Remove
                         </button>
                       </div>

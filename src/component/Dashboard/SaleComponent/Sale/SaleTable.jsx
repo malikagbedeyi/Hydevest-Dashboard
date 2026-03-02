@@ -42,20 +42,13 @@ const SaleTable = ({ sales, onDelete, onUpdate ,handleRowClick}) => {
     setSaleToDelete(null);
   };
 
-  // const handleRowClick = (sale) => {
-  //   setSelectedSale(sale);
-  // };
 
-  const handleUpdate = (updatedSale) => {
-    if (onUpdate) onUpdate(updatedSale);
-    setSelectedSale(null);
-  };
   const formatCurrency = (value) =>
   new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
   }).format(value || 0);
-  const formatDate = (date) => {
+  const formatDate = (date) => { 
     if (!date) return "";
   
     return new Date(date).toLocaleDateString("en-GB", {
@@ -79,17 +72,17 @@ const SaleTable = ({ sales, onDelete, onUpdate ,handleRowClick}) => {
             <thead>
               <tr>
                 <th>S/N</th>
-                {/* <th>Sale Option</th> */}
                 <th>Container</th>
                 <th>Container Tracking Number</th>
-                <th>No. of Pallets</th>
-                <th>Purchase Price Per Price </th>
+                {/* <th>No. of Pallets</th> */}
+                {/* <th>Purchase Price Per Price </th> */}
                 <th>Customer Name</th>
                 <th>Customer Phone</th> 
                 <th>Total Sale Amount</th>
                 <th>Total Amount Paid</th>
                  <th>Balance</th>
                 <th>Date Created</th>
+                <th>Status</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -102,18 +95,23 @@ const SaleTable = ({ sales, onDelete, onUpdate ,handleRowClick}) => {
                 currentData.map((sale, idx) => (
                   <tr key={sale.id} onClick={() => handleRowClick(sale)}>
                     <td>{startIndex + idx + 1}</td>
-                    <td>{sale.containers?.map(c => c.name).join(", ")}</td>
-                    <td>{sale.containers?.map(c =>`TN${ c.trackingNumber || "N/A"}`).join(", ")}</td>
-                    <td>{sale.noOfPallets}</td>
-                    <td>{sale.purchasePricePerPiece}</td>
-                    <td>{sale.customer?.name || "—"}</td>
-                    <td>{sale.customer?.phone || "—"}</td>
-                    <td>{formatCurrency(sale.totalSaleAmount)}</td>
-                    <td>{formatCurrency(sale.amountPaid)}</td>
-                    <td>{sale.balance === 0 ? <span style={{ color: "green" }}>Fully Paid</span>
-                     : formatCurrency(sale.balance)
+                    <td>{typeof sale.container?.title === "string"? sale.container.title: "—"}</td>
+                    <td>TN {sale.container.tracking_number}</td>
+                    {/* <td> <span style={{padding: "4px 10px",borderRadius: "12px",fontSize: "12px", background:sale.saleOption === "Box Sale" ? "#f3e8ff" : "#e0f2fe",
+        color:sale.saleOption === "Box Sale" ? "#581aae" : "#0369a1",}}>{sale.saleOption || "—"}</span></td> */}
+                    {/* <td>{sale.no_of_Pallets}</td> */}
+                    {/* <td>{sale.purchasePricePerPiece}</td> */}
+                    <td>{sale.customer.firstname || "—"} {sale.customer.lastname}</td>
+                    <td>{sale.customer.phone_no || "—"}</td>
+                    <td>{formatCurrency(sale.total_sale_amount || 0)}</td>
+                    <td>{formatCurrency(sale.amount_paid || 0)}</td>
+                    <td>{sale.discount === 0 ? <span style={{ color: "green" }}>Fully Paid</span>
+                     : formatCurrency(sale.discount)
                     }</td>
-                    <td>{formatDate(sale.createdAt)}</td>
+                    <td>{formatDate(sale.created_at)}</td>
+                    <td><span className={`status ${sale.status === 1 ? "active" : "pending"}`}
+                   style={{color:sale.status === 1 ? "green":"red"}}>
+                    {sale.status === 1 ? "Active" : "Pending"}</span></td>
                     <td onClick={(e) => e.stopPropagation()}>   
                       <button 
                         className="delete-btn"

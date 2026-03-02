@@ -1,175 +1,172 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
 import "../../../../assets/Styles/dashboard/controller.scss";
+
 import CreatePreSale from "./CreatePreSale";
 import PreSaleTable from "./PreSaleTable";
+import DrilldownPresale from "./DrilldownPresale";
+import PresaleLog from "./PresaleLog";
 
-const STORAGE_KEY = "presales_data";
+import { PresaleServices } from "../../../../services/Sale/presale";
+import { SaleServices } from "../../../../services/Sale/sale";
 
-const PreSaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
-  const TRIP_KEY = "trip_data";
-  const [trips, setTrips] = useState(() => {
-    return JSON.parse(localStorage.getItem(TRIP_KEY)) || [];
-  });
+const PreSaleController = ({ openSubmenu }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [containers, setContainers] = useState(() => {
-    let allContainers = [];
-    trips.forEach((trip) => {
-      const tripContainers =
-        JSON.parse(localStorage.getItem(`trip-${trip.id}-container`)) || [];
-  
-      // Get the FX rate for this trip
-      const avgRate = Number(
-        localStorage.getItem(`trip-${trip.id}-avg_container_rate`) || 0
-      );
-  
-      tripContainers.forEach((c) => {
-        c.modelName = trip.title || "Unknown";
-        c.avgRate = avgRate; // attach the correct FX rate per container
-      });
-  
-      allContainers = [...allContainers, ...tripContainers];
-    });
-    return allContainers;
-  });
-  
-  useEffect(() => {
-    let allContainers = [];
-    trips.forEach((trip) => {
-      const tripContainers =
-        JSON.parse(localStorage.getItem(`trip-${trip.id}-container`)) || [];
-const avgRate =
-  Number(localStorage.getItem(`trip-${trip.id}-avg_container_rate`)) || 0;
+  const [datas, setDatas] = useState([]);
+  const [containers, setContainers] = useState([]);
 
-tripContainers.forEach((c) => {
-  c.modelName = trip.title || "Unknown";
-  c.avgRate = avgRate; // 🔑 attach FX rate
-});
+  const [view, setView] = useState("table"); // table | create | edit
+  const [activeTab, setActiveTab] = useState("table"); // table | logs
 
-      allContainers = [...allContainers, ...tripContainers];
-    });
-    setContainers(allContainers);
-    setView(allContainers.length ? "table" : "empty");
-  }, [trips]);
-  
-  const filteredContainers = containers.filter((c) => {
-    const title = c.title ?? "";
-    const modelName = c.modelName ?? "";
-  
-    return (
-      title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      modelName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-  
-  const [datas, setdatas] = useState(() => {
+  const [editingSale, setEditingSale] = useState(null);
+  const [page, setPage] = useState(1);
+const [loadingTable, setLoadingTable] = useState(false);
+ /* ================= FETCH SALE CONTAINERS ================= */
+useEffect(() => {
+  const fetchContainers = async () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const parsed = stored ? JSON.parse(stored) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
+      // Use Sale container list endpoint instead of presale
+      const res = await PresaleServices.containerList({});
+      setContainers(res.data?.record ?? []);
+    } catch (err) {
+      console.error("Failed to fetch sale containers:", err);
+      setContainers([]);
     }
-  });
+  };
 
-  const [view, setView] = useState(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const parsed = stored ? JSON.parse(stored) : [];
-      return Array.isArray(parsed) && parsed.length > 0 ? "table" : "empty";
-    } catch {
-      return "empty";
-    }
-  });
+  fetchContainers();
+}, []);
 
-  const [hydrated, setHydrated] = useState(false);
-
-  /* ---------------------------------
-     HYDRATION GUARD
-  ---------------------------------- */
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  /* ---------------------------------
-     PERSIST TO LOCAL STORAGE
-  ---------------------------------- */
-  useEffect(() => {
-    if (!hydrated) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(datas));
-  }, [datas, hydrated]);
-
-  /* ---------------------------------
-     AUTO OPEN CREATE (DASHBOARD)
-  ---------------------------------- */
-  useEffect(() => {
-    if (autoOpenCreate) {
-      setView("create");
-      setAutoOpenCreate(false);
-    }
-  }, [autoOpenCreate, setAutoOpenCreate]);
-
-const handleDeletePreSale = (createdAt) => {
-  setdatas(prev => prev.filter(item => item.createdAt !== createdAt));
+  /* ================= FETCH PRESALES ================= */
+  const fetchPreSales = async (pageNum = page) => {
+  setLoadingTable(true);
+  try {
+    const res = await PresaleServices.list({
+      page: pageNum,
+      search: searchTerm || undefined,
+    });
+    setDatas(res.data?.record?.data ?? []);
+  } catch (err) {
+    console.error(err);
+    setDatas([]);
+  } finally {
+    setLoadingTable(false);
+  }
 };
 
+  useEffect(() => {
+    fetchPreSales(page);
+  }, [page]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchPreSales(1);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  /* ================= EDIT VIEW ================= */
+  if (view === "edit" && editingSale) {
+    return (
+<DrilldownPresale
+  data={editingSale}
+  goBack={() => {
+    setView("table");
+    fetchPreSales(page); // <-- REFRESH THE TABLE DATA
+  }}
+  onUpdate={(updatedRecord, navigate = true) => {
+    setDatas(prev =>
+      prev.map(d =>
+        d.pre_sale_uuid === updatedRecord.pre_sale_uuid
+          ? updatedRecord
+          : d
+      )
+    );
+  }}
+/>
+    );
+  }
+
+  /* ================= CREATE VIEW ================= */
+  if (view === "create") {
+    return (
+      <CreatePreSale
+        containersData={containers}
+        users={datas}
+        setUsers={setDatas}
+        setView={setView}
+        openSubmenu={openSubmenu}
+      />
+    );
+  }
+
+  /* ================= MAIN CONTROLLER ================= */
   return (
     <div className="controller">
       <div className="controller-container">
         <div className="controller-content">
 
-          {/* TOP BAR */}
-          {(view === "empty" || view === "table") && (
-            <div className="top-content">
-              <div className="top-content-wrapper">
-                <div className="left-wrapper" />
+          {/* ===== TOP BAR ===== */}
+          <div className="top-content">
+            <div className="top-content-wrapper">
+              <div className="left-wrapper" />
 
-                <div className="right-wrapper">
+              <div className="right-wrapper">
                 <div className="right-wrapper-input">
-                    <Search className="input-icon" />
-                    <input
-                      type="text"
-                      placeholder="Search"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="select-input">
-                    <div className="filter">
-                      <span>Add Filter</span>
-                      <Filter />
-                    </div>
-                  </div>
-
-                  <div className="select-input">
-                    <div className="select-input-field">
-                      <span>All Field</span>
-                      <ChevronDown />
-                    </div>
-                  </div>
-
-                  <div className="import-input">
-                    <p>Import</p>
-                  </div>
-
-                  <div className="import-input">
-                    <p>Export</p>
-                  </div>
-
-                  <button onClick={() => setView("create")}>
-                    Create Pre-Sale
-                  </button>
+                  <Search className="input-icon" />
+                  <input
+                    placeholder="Search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
+
+                <div className="select-input">
+                  <div className="filter">
+                    <span>Add Filter</span>
+                    <Filter />
+                  </div>
+                </div>
+
+                <div className="select-input">
+                  <div className="select-input-field">
+                    <span>All Field</span>
+                    <ChevronDown />
+                  </div>
+                </div>
+
+                <button onClick={() => setView("create")}>
+                  Create Pre-Sale
+                </button>
               </div>
-
             </div>
-          )}
 
-          {/* MAIN CONTENT */}
+            {/* ===== TABS ===== */}
+            <div className="log-tab-section">
+              <div className="tab-content">
+                <ul>
+                  <li
+                    className={activeTab === "table" ? "active" : ""}
+                    onClick={() => setActiveTab("table")}
+                  >
+                    Pre-Sale Table
+                  </li>
+                  <li
+                    className={activeTab === "logs" ? "active" : ""}
+                    onClick={() => setActiveTab("logs")}
+                  >
+                    Activity Log
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* ===== MAIN CONTENT ===== */}
           <div className="main-content">
-            {/* EMPTY STATE */}
-            {datas.length === 0 && view === "empty" && (
+                 {datas.length === 0 && view === "empty" && (
               <div className="main-content-image">
                 <div className="main-content-image-text">
                   <p>No Pre-sale Created Yet</p>
@@ -177,28 +174,23 @@ const handleDeletePreSale = (createdAt) => {
                 </div>
               </div>
             )}
-
-            {/* TABLE */}
-            {datas.length > 0 && (view === "table" || view === "empty") && (
+            {activeTab === "table" && (
               <PreSaleTable
-               preSales={datas}
-              onDelete={handleDeletePreSale}
+                preSales={datas}
+                page={page}
+                setPage={setPage}
+                onEdit={(sale) => {
+                  setEditingSale(sale);
+                  setView("edit");
+                }}
               />
-
             )}
 
-            {/* CREATE */}
-            {view === "create" && (
-             <CreatePreSale
-             containersData={filteredContainers}
-             users={datas}
-             setUsers={setdatas}
-             setView={setView}
-             openSubmenu={openSubmenu}
-           />           
+            {activeTab === "logs" && (
+              <PresaleLog  preSaleUuid={editingSale?.pre_sale_uuid}/>
             )}
-
           </div>
+
         </div>
       </div>
     </div>

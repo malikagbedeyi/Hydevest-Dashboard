@@ -13,9 +13,22 @@ export const ContainerServices = {
   edit: async (payload) => {
     return api.post('/systemuser/trip/container/edit', payload);
   },
-   change_approval: async (payload) => {
-    return api.post('/systemuser/trip/container/changeapproval', payload);
-  },
+  change_approval: async (payload) => {
+  const formData = new URLSearchParams();
+
+  formData.append("container_uuid", payload.container_uuid);
+  formData.append("status", payload.status);
+
+  return api.post(
+    "/systemuser/trip/container/changeapproval",
+    formData,
+    {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    }
+  );
+},
    entityList: async (params) => {
     return api.get('/systemuser/trip/container/entitylist', { params });
   },

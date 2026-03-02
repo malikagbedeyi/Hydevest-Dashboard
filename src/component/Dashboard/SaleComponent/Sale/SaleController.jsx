@@ -4,215 +4,197 @@ import "../../../../assets/Styles/dashboard/controller.scss";
 import CreateSale from "./CreateSale";
 import SaleTable from "./SaleTable";
 import DrilldownSale from "./DrildownSale";
-import { useLocation } from "react-router-dom";
-
-const STORAGE_KEY = "sales_data";
-const PRESALE_KEY = "presales_data";
+import { SaleServices } from "../../../../services/Sale/sale";
 
 const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
+  const [sales, setSales] = useState([]);
   const [selectedSale, setSelectedSale] = useState(null);
-  const location = useLocation();
-  // Initialize sales from localStorage
-  const [sales, setSales] = useState(() => {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  });
-  const TRIP_KEY = "trip_data";
-  const [trips, setTrips] = useState(() => {
-    return JSON.parse(localStorage.getItem(TRIP_KEY)) || [];
-  });
-  const [searchTerm, setSearchTerm] = useState("");
+  const [view, setView] = useState("empty");
+  const [loading, setLoading] = useState(false);
+ const [containerPreSales, setContainerPreSales] = useState([]);
+  /* ===================== FETCH SALES ===================== */
+ const fetchSales = async () => {
+  setLoading(true);
+  try {
+    const res = await SaleServices.list({});
+    
+    const records = res?.data?.record?.data || [];
 
-  // Set view based on existing sales
-  const [view, setView] = useState(() => {
-    const savedSales = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    return savedSales.length ? "table" : "empty" ;
-  });
+    setSales(records);
+    console.log("sale data", records);
 
-  const [presales, setPresales] = useState([]);
-  // Load presales and add serial number (S/N)
+    setView(records.length ? "table" : "empty");
+  } catch (err) {
+    console.error("Failed to load sales", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
   useEffect(() => {
-    const savedPresales = JSON.parse(localStorage.getItem(PRESALE_KEY)) || [];
-    const presalesWithSN = savedPresales.map((p, index) => ({ ...p, sn: index + 1 }));
-    setPresales(presalesWithSN);
+    fetchSales();
   }, []);
 
-  // Persist sales whenever it updates
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sales));
-  }, [sales]);
-
-  // Auto-open create modal if requested
+  /* ===================== AUTO OPEN CREATE ===================== */
   useEffect(() => {
     if (autoOpenCreate) {
       setView("create");
       setAutoOpenCreate(false);
     }
   }, [autoOpenCreate, setAutoOpenCreate]);
-  const [containers, setContainers] = useState(() => {
-    let allContainers = [];
-    trips.forEach((trip) => {
-      const tripContainers =
-        JSON.parse(localStorage.getItem(`trip-${trip.id}-container`)) || [];
-      tripContainers.forEach((c) => (c.modelName = trip.title || "Unknown"));
-      allContainers = [...allContainers, ...tripContainers];
-    });
-    return allContainers;
-  });
-  useEffect(() => {
-    let allContainers = [];
-    trips.forEach((trip) => {
-      const tripContainers =
-        JSON.parse(localStorage.getItem(`trip-${trip.id}-container`)) || [];
-      tripContainers.forEach((c) => (c.modelName = trip.title || "Unknown"));
-      allContainers = [...allContainers, ...tripContainers];
-    });
-    setContainers(allContainers);
-    setView(allContainers.length ? "table" : "empty");
-  }, [trips]);
-  useEffect(() => {
-    setSales(prev =>
-      prev.map(sale => ({
-        ...sale,
-        totalSaleAmount: Number(sale.totalSaleAmount) || 0,
-        noOfPallets: Number(sale.noOfPallets) || 0,
-        purchasePricePerPiece: Number(sale.purchasePricePerPiece) || 0,
-      }))
-    );
-  }, []);
 
-
-  const filteredContainers = containers.filter((c) => {
-    const title = c.title ?? "";
-    const modelName = c.modelName ?? "";
-  
-    return (
-      title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      modelName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-  const migrateSalesTrackingNumbers = (sales, containers) => {
-    let changed = false;
-  
-    const containerMap = {};
-    containers.forEach(c => {
-      containerMap[c.id] = c.trackingNumber;
-    });
-  
-    const updatedSales = sales.map(sale => {
-      const updatedContainers = sale.containers.map(c => {
-        if (!c.trackingNumber || c.trackingNumber === "TN-UNKNOWN") {
-          const realTracking = containerMap[c.containerId];
-          if (realTracking) {
-            changed = true;
-            return {
-              ...c,
-              trackingNumber: realTracking,
-            };
-          }
-        }
-        return c;
-      });
-  
-      return {
-        ...sale,
-        containers: updatedContainers,
-      };
-    });
-  
-    return { updatedSales, changed };
-  };
-  const normalizedContainers = containers.map(c => ({
-    ...c,
-    name: c.name || c.title || "Unnamed Container",
-    trackingNumber:c.trackingNumber ||  "TN-UNKNOWN",
-  }));
-  useEffect(() => {
-    if (!sales.length || !normalizedContainers.length) return;
-  
-    const { updatedSales, changed } =
-      migrateSalesTrackingNumbers(sales, normalizedContainers);
-  
-    if (changed) {
-      setSales(updatedSales);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
-      console.log("✅ Old sales migrated with tracking numbers");
-    }
-  }, [normalizedContainers]);
-  
-
-
-  
-  // Add a new sale
-
-  const handleAddSale = (newSale) => {
-    const saleId = newSale.id; // 🔥 single source of truth
-  
-    const updatedSales = [...sales, newSale];
-    setSales(updatedSales);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
+  /* ===================== CREATE SALE ===================== */
+const handleAddSale = async (payload) => {
+  try {
+    await SaleServices.create(payload);
+    await fetchSales();
     setView("table");
-  
-    if (Number(newSale.amountPaid) > 0) {
-      const recoveryData =
-        JSON.parse(localStorage.getItem("recovery_storage")) || [];
-  
-      const balanceAfter = Math.max(
-        Number(newSale.totalSaleAmount || 0) - Number(newSale.amountPaid),
-        0
-      );
-  
-      const firstRecovery = {
-        id: Date.now(),               // recovery id
-        saleId: saleId,               // ✅ LINK TO SALE
-        customerName: newSale.customer?.name || "Unknown",
-        customerPhone: newSale.customer?.phone || "N/A",
-        amountPaid: Number(newSale.amountPaid),
-        balanceAfter,
-        createdAt: new Date().toISOString(),
-        status: balanceAfter === 0 ? "Approved" : "Pending",
-        isInitial: true,
-      };
-  
-      localStorage.setItem(
-        "recovery_storage",
-        JSON.stringify([...recoveryData, firstRecovery])
-      );
+  } catch (err) {
+    console.error("Create sale failed");
+
+    if (err.response) {
+      console.error("Backend message:", err.response.data);
+      console.error("Status:", err.response.status);
+    } else {
+      console.error(err.message);
+    }
+  }
+};
+
+  /* ===================== DELETE SALE ===================== */
+  const handleDeleteSale = async (sale) => {
+    try {
+      await SaleServices.delete(sale.sale_uuid);
+      await fetchSales();
+    } catch (err) {
+      console.error("Delete sale failed", err);
     }
   };
-  
-  const handleDeleteSale = (saleId) => {
-    // 1️⃣ Delete sale
-    const updatedSales = sales.filter((s) => s.id !== saleId);
-    setSales(updatedSales);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
-  
-    // 2️⃣ Delete linked recoveries
-    const recoveries =
-      JSON.parse(localStorage.getItem("recovery_storage")) || [];
-  
-    const filteredRecoveries = recoveries.filter(
-      (r) => r.saleId !== saleId
-    );
-  
-    localStorage.setItem(
-      "recovery_storage",
-      JSON.stringify(filteredRecoveries)
-    );
-  };
-  const handleRowClick = (sale) => {
-    setSelectedSale(sale);
-    setView("drilldown"); // 🔥 switch view to drilldown page
-  };
-  
-  // const handleUpdate = (updatedSale) => {
-  //   if (onUpdate) onUpdate(updatedSale);
-  //   setSelectedSale(null);
-  // };
-  
+const fetchContainerPreSales = async () => {
+  try {
+    const res = await SaleServices.containerPreSales({});
+    // The response you shared already has container + presale
+    const data = res?.data?.record || [];
+    console.log(" container + presale",res?.data?.record)
+    setContainerPreSales(data);
+  } catch (err) {
+    console.error("Failed to load container pre-sales", err);
+  }
+};
+
+const normalizedContainers = containerPreSales.map(item => ({
+  id: item.id, // use numeric ID
+  container_uuid: item.container_uuid, // keep UUID separate
+  name: item.title,
+  trackingNumber: item.tracking_number,
+}));
+
+const normalizedPreSales = containerPreSales
+  .filter(item => item.presale)
+  .map(item => ({
+    id: item.presale.id,
+    container_id: item.id, // matches normalizedContainers.id
+    pre_sale_unique_id: item.presale.pre_sale_unique_id,
+    pre_sale_uuid: item.presale.pre_sale_uuid,
+    sale_option: item.presale.sale_option,
+    wc_pieces: item.presale.wc_pieces,
+    total_no_of_pallets: item.presale.total_no_of_pallets,
+    expected_sales_revenue: item.presale.expected_sales_revenue,
+    status: item.presale.status,
+    pricePerPic: item.presale.price_per_piece,
+  }));
+
+useEffect(() => {
+  fetchContainerPreSales();
+}, []);
+const fetchSaleDetails = async (sale_uuid) => {
+  setLoading(true);
+  try {
+    const res = await SaleServices.details({ sale_uuid });
+    const saleRecords = res?.data?.record || [];
+
+    if (!saleRecords.length) {
+      setSelectedSale(null);
+      setView("table");
+      return;
+    }
+
+
+    const saleInfo = saleRecords[0];
+
+
+    const containersMap = {};
+    saleRecords.forEach((rec) => {
+      const containerId = rec.container_id;
+
+      if (!containersMap[containerId]) {
+        containersMap[containerId] = {
+          containerId,
+          name: rec.container?.name || rec.container?.title || `Container ${containerId}`,
+          trackingNumber: rec.container?.tracking_number || "",
+          pallets: [],
+        };
+      }
+
+      if (rec.pallet) {
+        containersMap[containerId].pallets.push({
+          id: rec.pallet.id,
+          palletId: rec.pallet.id,
+          pieces: rec.pallet.pallet_pieces || rec.pallet_purchased || 0,
+          saleAmount: rec.sale_amount || 0,
+          palletOption: rec.price_diff ? 1 : 0,
+          total:
+            (rec.pallet.pallet_pieces || rec.pallet_purchased || 0) *
+            (rec.sale_amount || 0),
+        });
+      }
+    });
+
+    const normalizedContainers = Object.values(containersMap);
+
+    // Correct customer info
+  const customer = saleInfo.customer
+  ? {
+      name: `${saleInfo.customer.first_name || saleInfo.customer.firstname || ""} ${saleInfo.customer.last_name || saleInfo.customer.lastname || ""}`,
+      phone: saleInfo.customer.phone || saleInfo.customer.phone_no || "",
+      location: saleInfo.customer.location || saleInfo.customer.address || "",
+    }
+  : { name: "N/A", phone: "N/A", location: "N/A" };
+    // Correct amounts
+    const amountPaid = saleInfo.amount_paid ?? saleInfo.amountPaid ?? 0;
+    const totalSaleAmount = saleInfo.total_sale_amount || 0;
+    const balance = Math.max(totalSaleAmount - amountPaid, 0);
+
+    setSelectedSale({
+      containers: normalizedContainers,
+      customer,
+      amountPaid,
+      totalSaleAmount,
+      balance,
+      noOfPallets: normalizedContainers.reduce(
+        (sum, c) => sum + c.pallets.reduce((s, p) => s + (p.pieces || 0), 0),
+        0
+      ),
+    });
+
+    setView("drilldown");
+  } catch (err) {
+    console.error("Failed to load sale details", err);
+  } finally {
+    setLoading(false);
+  }
+};
+  /* ===================== DRILLDOWN ===================== */
+const handleRowClick = (sale) => {
+  if (!sale?.sale_uuid) return;
+  fetchSaleDetails(sale.sale_uuid);
+};
+
   return (
     <div className="controller">
       <div className="controller-container">
         <div className="controller-content">
+
           {(view === "empty" || view === "table") && (
             <div className="top-content">
               <div className="top-content-wrapper">
@@ -241,14 +223,16 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
                   <div className="import-input"><p>Import</p></div>
                   <div className="import-input"><p>Export</p></div>
 
-                  <button onClick={() => setView("create")}>Record Sale</button>
+                  <button onClick={() => setView("create")}>
+                    Record Sale
+                  </button>
                 </div>
               </div>
             </div>
           )}
 
           <div className="main-content">
-            {sales.length === 0 && view === "empty" && (
+            {view === "empty" && !loading && (
               <div className="main-content-image">
                 <div className="main-content-image-text">
                   <p>No sale Created Yet</p>
@@ -257,34 +241,31 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
               </div>
             )}
 
-            {sales.length > 0 && view === "table" && 
-            <SaleTable 
-            sales={sales}
-            onDelete={handleDeleteSale} 
-            handleRowClick={handleRowClick} />
-              }
+            {view === "table" && !loading && (
+              <SaleTable
+              sales={sales}
+             onDelete={handleDeleteSale}
+             handleRowClick={handleRowClick}
+              />
+            )}
+
 
             {view === "create" && (
              <CreateSale
-             preSales={presales}
-             sales={sales}
-             containersData={normalizedContainers}
              setView={setView}
-             openSubmenu={openSubmenu}
              onCreate={handleAddSale}
-           />           
+             sales={sales}
+             preSales={normalizedPreSales}
+             containersData={normalizedContainers}/>          
             )}
            {view === "drilldown" && selectedSale && (
   <DrilldownSale 
     data={selectedSale} 
     goBack={() => setView("table")} 
-    onUpdate={(updatedSale) => {
-      // Update the sales array
-      setSales((prevSales) =>
-        prevSales.map((s) => (s.id === updatedSale.id ? updatedSale : s))
-      );
-      setView("table");
-    }}
+   onUpdate={async () => {
+  await fetchSales();
+  setView("table");
+}}
   />
 )}
 
@@ -294,5 +275,5 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
     </div>
   );
 };
-
+//
 export default SaleController;

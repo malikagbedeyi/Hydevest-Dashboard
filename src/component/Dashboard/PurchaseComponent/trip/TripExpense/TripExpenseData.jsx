@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Plus, X, Edit, Trash2, ChevronDown, ChevronUp, Paperclip } from "lucide-react";
 import { ExpenseServices } from '../../../../../services/Trip/expense';
 
-const TripExpenseData = ({handleRowClick ,tripUuid, openDeletePopup , financeData}) => {
+const TripExpenseData = ({handleRowClick ,tripUuid, openDeletePopup , financeData ,setFinanceData}) => {
    
- const [data, setData] = useState([])
     const [search , setSearch ] = useState('')
     const [page,setPage] = useState(1)
     const [pagination,setPagination] = useState({})
@@ -13,7 +12,7 @@ const TripExpenseData = ({handleRowClick ,tripUuid, openDeletePopup , financeDat
 
     const itemsPerPage = 10;
     const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const totalPages = Math.ceil(financeData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
   
     const nextPage = () => currentPage < totalPages && setCurrentPage((p) => p + 1);
@@ -62,9 +61,9 @@ const fetchData = async (pageNum = page) => {
       to_date: '',
       page: pageNum,
     });
-    
-    setData(res.data?.record?.data || []);
+    setFinanceData(res.data?.record?.data || []);
     setPagination(res.data?.record || {});
+
   } catch (err) {
     console.error("Error fetching expenses:", err);
   } finally {
@@ -78,13 +77,13 @@ useEffect(() => {
 
 useEffect(() => {
   const timer = setTimeout(() => {
-    setPage(1);
+    if (page !== 1) setPage(1);
     fetchData(1);
   }, 400);
 
   return () => clearTimeout(timer);
 }, [search]);
-const currentData = data
+const currentData = financeData
   return (
     <div>
      <div className="userTable">
@@ -124,7 +123,14 @@ const currentData = data
                            <td>{item.rate}</td>
                            <td>{formatNGN(item.total_amount)}</td>
                             <td>{item.is_container_payment === 1? "Container Payment": "General"}</td>
-                            <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>
+                            <td>
+  {item.status === 1 ? (
+    <span style={{color:"green"}}>Approved</span>
+  ) : (
+    <span style={{color:"orange"}}>Pending</span>
+  )}
+</td>
+
                           <td onClick={(e) => e.stopPropagation()}>
                             <button
                               className="delete-btn"
