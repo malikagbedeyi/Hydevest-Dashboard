@@ -18,7 +18,20 @@ const ContainerController = () => {
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({});
   const [selectedContainer, setSelectedContainer] = useState(null);
+const [searchField, setSearchField] = useState("all");
+const [openFieldSelect, setOpenFieldSelect] = useState(false);
 
+const [showFilters, setShowFilters] = useState(false);
+const [openStatusSelect, setOpenStatusSelect] = useState(false);
+
+const [filters, setFilters] = useState({
+  status: "",
+  title: "",
+  container_unique_id: "",
+  date_created: "",
+  from_date: "",
+  to_date: ""
+});
   const fetchContainersWithFinance = async (pageNum = page) => {
     try {
       setLoading(true);
@@ -27,11 +40,9 @@ const ContainerController = () => {
          1️⃣ FETCH CONTAINERS
       ========================= */
       const params = {
-        page: pageNum,
-        title: search || undefined,
-        container_unique_id: search || undefined,
-        date_created: search || undefined,
-      };
+  ...filters,
+  page: pageNum
+};
 
       const containerRes = await ContainerServices.list(params);
       const containerData = containerRes.data?.record?.data || [];
@@ -64,10 +75,6 @@ return {
   ...item,
   amountUSD,
   quotedUSD,
-  // amountNGN:
-    // fxRate != null ? amountUSD * fxRate : null,
-  // quotedNGN:
-    // fxRate != null ? quotedUSD * fxRate : null,
 };
       });
 
@@ -83,18 +90,13 @@ return {
   /* =========================
      EFFECTS
   ========================= */
-  useEffect(() => {
+useEffect(() => {
+  const timer = setTimeout(() => {
     fetchContainersWithFinance(page);
-  }, [page]);
+  }, 400);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPage(1);
-      fetchContainersWithFinance(1);
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [search]);
+  return () => clearTimeout(timer);
+}, [page, filters]);
 /* =========================
    CALCULATE DRILL SUMMARY
 ========================= */
@@ -159,28 +161,189 @@ const totalUnitPriceUSD = containers.reduce(
               <div className="right-wrapper">
                 <div className="right-wrapper-input">
                   <Search className="input-icon" />
-                  <input
-                    placeholder="Search"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
+<input
+  placeholder="Search"
+  value={search}
+  onChange={(e) => {
+    const value = e.target.value;
+
+    setSearch(value);
+
+    setFilters((prev) => {
+      const updated = {
+        ...prev,
+        title: "",
+        container_unique_id: "",
+        date_created: ""
+      };
+
+      if (searchField === "all") {
+        updated.title = value;
+        updated.container_unique_id = value;
+      } else {
+        updated[searchField] = value;
+      }
+
+      return updated;
+    });
+  }}
+/>
                 </div>
+                <div className="select-input">
+               <div className="filter"
+  onClick={() => setShowFilters(!showFilters)}>
+  <span>Add Filter</span>
+  <Filter />
+</div>
+</div>
 
                 <div className="select-input">
-                  <div className="filter">
-                    <span>Add Filter</span>
-                    <Filter />
-                  </div>
-                </div>
+  <div className="select-input-field">
+    <div
+      className="custom-select-drop"
+      onClick={() => setOpenFieldSelect(!openFieldSelect)}
+    >
+      <div className="select-box">
+        <span>
+          {searchField === "all"
+            ? "All Field"
+            : searchField.charAt(0).toUpperCase() +
+              searchField.slice(1)}
+        </span>
+      </div>
 
-                <div className="select-input">
-                  <div className="select-input-field">
-                    <span>All Field</span>
-                    <ChevronDown />
+      <ChevronDown className={openFieldSelect ? "up" : "down"} />
+    </div>
+
+    {openFieldSelect && (
+      <div className="custom-select-dropdown">
+        {["all", "title","container ID","date_created"].map(
+          (field) => (
+            <div
+              key={field}
+              className="option-item"
+              onClick={() => {
+                setSearchField(field);
+                setOpenFieldSelect(false);
+              }}
+            >
+              {field === "all"
+                ? "All Field"
+                : field.replace("_", " ")}
+            </div>
+          )
+        )}
+      </div>
+    )}
+  </div>
+</div>
+  <div className="import-input">
+                    <p>Import</p>
                   </div>
-                </div>
+
+                  <div
+                    className="import-input"
+                    onClick={() => setView("export")}
+                  >
+                    <p>Export</p>
+                  </div>
               </div>
             </div>
+            {showFilters && (
+  <div className="filters-panel">
+
+    {/* STATUS */}
+    <div className="filter-item">
+      <div
+        className="custom-select-drop"
+        onClick={() => setOpenStatusSelect(!openStatusSelect)}
+      >
+        <div className="select-box">
+          <span>
+            {filters.status === ""
+              ? "All Status"
+              : filters.status === "1"
+              ? "Approved"
+              : "Pending"}
+          </span>
+        </div>
+
+        <ChevronDown className={openStatusSelect ? "up" : "down"} />
+      </div>
+
+      {openStatusSelect && (
+        <div className="custom-select-dropdown">
+          <div
+            className="option-item"
+            onClick={() => {
+              setFilters((prev) => ({
+                ...prev,
+                status: ""
+              }));
+              setOpenStatusSelect(false);
+            }}
+          >
+            All Status
+          </div>
+
+          <div
+            className="option-item"
+            onClick={() => {
+              setFilters((prev) => ({
+                ...prev,
+                status: "1"
+              }));
+              setOpenStatusSelect(false);
+            }}
+          >
+            Approved
+          </div>
+
+          <div
+            className="option-item"
+            onClick={() => {
+              setFilters((prev) => ({
+                ...prev,
+                status: "0"
+              }));
+              setOpenStatusSelect(false);
+            }}
+          >
+            Pending
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* FROM DATE */}
+    <div className="filter-item">
+      <input
+        type="date"
+        value={filters.from_date}
+        onChange={(e) =>
+          setFilters((prev) => ({
+            ...prev,
+            from_date: e.target.value
+          }))
+        }
+      />
+    </div>
+
+    {/* TO DATE */}
+    <div className="filter-item">
+      <input
+        type="date"
+        value={filters.to_date}
+        onChange={(e) =>
+          setFilters((prev) => ({
+            ...prev,
+            to_date: e.target.value
+          }))
+        }
+      />
+    </div>
+  </div>
+)}
       <div className="drill-summary-grid mt-5">
       <div className="drill-summary">
 <div className="summary-item">

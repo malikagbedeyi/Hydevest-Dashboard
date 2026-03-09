@@ -19,40 +19,45 @@ const TripController = () => {
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [loading, setLoading] = useState(false);
  const [activeTab, setActiveTab] = useState("table");
-
+const [searchField, setSearchField] = useState("all");
+const [openFieldSelect, setOpenFieldSelect] = useState(false);
+const [showFilters, setShowFilters] = useState(false);
+const [openStatusSelect, setOpenStatusSelect] = useState(false);
+const [openProgressSelect, setOpenProgressSelect] = useState(false);
+ const [filters, setFilters] = useState({
+  status: "",
+  progress: "",
+  title: "",
+  location: "",
+  date_created: "",
+  from_date: "",
+  to_date: ""
+});
   /* ================= FETCH TRIPS ================= */
-  const feacthTrip = async(pageNum = page) => {
-
-   try {
+ const feacthTrip = async (pageNum = page) => {
+  try {
     setLoading(true);
-       const res = await TripServices.list({
-      title: search,
-      location:search,
-      // search_fullname:search,
-      // date_created:search,
-      page : pageNum,
-    });
     
-    setTrip(res.data?.record.data || [])
-    setPagination(res.data?.record || [])
-   } catch(err) {
-     console.error(err);
-   }finally {
-    setLoading(false);
-   }
-  }
-useEffect(() => {
-  feacthTrip(page)
-},[page])
+    const res = await TripServices.list({
+      ...filters,
+      page: pageNum
+    });
 
+    setTrip(res.data?.record?.data || []);
+    setPagination(res.data?.record || {});
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
 useEffect(() => {
   const timer = setTimeout(() => {
-    setPage(1);
-    feacthTrip(1);
+    feacthTrip(page);
   }, 400);
 
   return () => clearTimeout(timer);
-}, [search]);
+}, [page, filters]);
   /* ===================== UI ===================== */
 
   return (
@@ -68,24 +73,73 @@ useEffect(() => {
                 <div className="right-wrapper">
                   <div className="right-wrapper-input">
                     <Search className="input-icon" />
-                   <input  placeholder="Search" value={search}
-                     onChange={(e) => setSearch(e.target.value)}
-                   />
+                   <input
+  placeholder="Search"
+  value={search}
+  onChange={(e) => {
+  const value = e.target.value;
+  setSearch(value);
+
+  setFilters((prev) => {
+    const updated = {
+      ...prev,
+      title: "",
+      location: "",
+      status: "",
+    };
+
+    if (searchField === "all") {
+      updated.title = value;
+      updated.location = value;
+    } else {
+      updated[searchField] = value;
+    }
+
+    return updated;
+  });
+  }}
+/>
                   </div>
 
-                  <div className="select-input">
-                    <div className="filter">
-                      <span>Add Filter</span>
-                      <Filter />
-                    </div>
-                  </div>
+<div className="select-input">
+  <div className="filter" onClick={() => setShowFilters(!showFilters)}>
+    <span>Add Filter</span>
+    <Filter />
+  </div>
+</div>
+      <div className="select-input">
+  <div className="select-input-field">
+    <div   className="custom-select-drop"
+      onClick={() => setOpenFieldSelect(!openFieldSelect)}
+    >
+      <div className="select-box">
+        <span>{searchField === "all"  ? "All Field" : searchField.charAt(0).toUpperCase() + searchField.slice(1)}  </span></div>
+     
+      <div className="custom-select">
+      <ChevronDown className={openFieldSelect ? "up" : "down"} />
+      </div>
+    </div>
 
-                  <div className="select-input">
-                    <div className="select-input-field">
-                      <span>All Field</span>
-                      <ChevronDown />
-                    </div>
-                  </div>
+    {openFieldSelect && (
+      <div className="custom-select-dropdown">
+        {["all", "title", "location", "status", "progress"].map((field) => (
+          <div
+            key={field}
+            className="option-item"
+            onClick={() => {
+              setSearchField(field);
+              setOpenFieldSelect(false);
+            }}
+          >
+            {field === "all"
+              ? "All Field"
+              : field.charAt(0).toUpperCase() + field.slice(1)}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
 
                   <div className="import-input">
                     <p>Import</p>
@@ -103,6 +157,126 @@ useEffect(() => {
                   </button>
                 </div>
               </div>
+                {showFilters && (
+  <div className="filters-panel">
+    {/* STATUS */}
+    <div className="filter-item">
+      <div
+        className="custom-select-drop"
+        onClick={() => setOpenStatusSelect(!openStatusSelect)}
+      >
+        <div className="select-box">
+          <span>
+            {filters.status === ""
+              ? "All Status"
+              : filters.status === "1"
+              ? "Active"
+              : "Pending"}
+          </span>
+        </div>
+
+        <ChevronDown className={openStatusSelect ? "up" : "down"} />
+      </div>
+
+      {openStatusSelect && (
+        <div className="custom-select-dropdown">
+          <div
+            className="option-item"
+            onClick={() => {
+              setFilters((prev) => ({ ...prev, status: "" }));
+              setOpenStatusSelect(false);
+            }}
+          >
+            All Status
+          </div>
+
+          <div
+            className="option-item"
+            onClick={() => {
+              setFilters((prev) => ({ ...prev, status: "1" }));
+              setOpenStatusSelect(false);
+            }}
+          >
+            Active
+          </div>
+
+          <div
+            className="option-item"
+            onClick={() => {
+              setFilters((prev) => ({ ...prev, status: "0" }));
+              setOpenStatusSelect(false);
+            }}
+          >
+            Pending
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* PROGRESS */}
+    <div className="filter-item">
+      <div
+        className="custom-select-drop"
+        onClick={() => setOpenProgressSelect(!openProgressSelect)}
+      >
+        <div className="select-box">
+          <span>{filters.progress || "All Progress"}</span>
+        </div>
+
+        <ChevronDown className={openProgressSelect ? "up" : "down"} />
+      </div>
+
+      {openProgressSelect && (
+        <div className="custom-select-dropdown">
+          {["", "NOT STARTED", "INTRANSIT", "COMPLETED"].map((p) => (
+            <div
+              key={p}
+              className="option-item"
+              onClick={() => {
+                setFilters((prev) => ({
+                  ...prev,
+                  progress: p
+                }));
+                setOpenProgressSelect(false);
+              }}
+            >
+              {p === "" ? "All Progress" : p}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {/* FROM DATE */}
+    <div className="filter-item">
+      <input
+        type="date"
+        value={filters.from_date}
+        onChange={(e) =>
+          setFilters((prev) => ({
+            ...prev,
+            from_date: e.target.value
+          }))
+        }
+      />
+    </div>
+
+    {/* TO DATE */}
+    <div className="filter-item">
+      <input
+        type="date"
+        value={filters.to_date}
+        onChange={(e) =>
+          setFilters((prev) => ({
+            ...prev,
+            to_date: e.target.value
+          }))
+        }
+      />
+    </div>
+
+  </div>
+)}
                 <div className="log-tab-section">
                 <div className="tab-content">
                   <ul>

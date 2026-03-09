@@ -21,17 +21,36 @@ const [pagination, setPagination] = useState({
   lastPage: 1,
   total: 0
 });
+const [search, setSearch] = useState("");
+const [searchField, setSearchField] = useState("all");
+const [openFieldSelect, setOpenFieldSelect] = useState(false);
+
+const [showFilters, setShowFilters] = useState(false);
+const [openPaymentStatusSelect, setOpenPaymentStatusSelect] = useState(false);
+
+const [filters, setFilters] = useState({
+  sale_unique_id: "",
+  sale_uuid: "",
+  container_uuid: "",
+  pre_sale_uuid: "",
+  customer_uuid: "",
+  payment_status: "",
+  date_created: "",
+  from_date: "",
+  to_date: ""
+});
   /* ===================== FETCH SALES ===================== */
 const fetchSales = async (pageNum = page) => {
   setLoading(true);
 
   try {
-    const res = await SaleServices.list({
-      page: pageNum
-    });
+   const res = await SaleServices.list({
+  ...filters,
+  page: pageNum
+});
 
     const record = res?.data?.record;
-
+    console.log(res.data)
     const records = record?.data || [];
 
     setSales(records);
@@ -52,16 +71,12 @@ const fetchSales = async (pageNum = page) => {
 };
 
 useEffect(() => {
-  fetchSales(page);
-}, [page]);
+  const timer = setTimeout(() => {
+    fetchSales(page);
+  }, 400);
 
-  /* ===================== AUTO OPEN CREATE ===================== */
-  useEffect(() => {
-    if (autoOpenCreate) {
-      setView("create");
-      setAutoOpenCreate(false);
-    }
-  }, [autoOpenCreate, setAutoOpenCreate]);
+  return () => clearTimeout(timer);
+}, [page, filters]);
 
   /* ===================== CREATE SALE ===================== */
 const handleAddSale = async (payload) => {
@@ -262,31 +277,180 @@ const handleRowClick = (sale) => {
                 <div className="right-wrapper">
                   <div className="right-wrapper-input">
                     <Search className="input-icon" />
-                    <input type="text" placeholder="Search" />
+                    <input
+  placeholder="Search"
+  value={search}
+  onChange={(e) => {
+    const value = e.target.value;
+
+    setSearch(value);
+
+    setFilters((prev) => {
+      const updated = {
+        ...prev,
+        sale_unique_id: "",
+        container_uuid: "",
+        customer_uuid: ""
+      };
+
+      if (searchField === "all") {
+        updated.sale_unique_id = value;
+      } else {
+        updated[searchField] = value;
+      }
+
+      return updated;
+    });
+  }}
+/>
                   </div>
 
                   <div className="select-input">
-                    <div className="filter">
+                    <div className="filter"onClick={() => setShowFilters(!showFilters)}>
                       <span>Add Filter</span>
                       <Filter />
                     </div>
                   </div>
 
-                  <div className="select-input">
-                    <div className="select-input-field">
-                      <span>All Field</span>
-                      <ChevronDown />
-                    </div>
-                  </div>
+<div className="select-input">
+  <div className="select-input-field">
 
-                  <div className="import-input"><p>Import</p></div>
-                  <div className="import-input"><p>Export</p></div>
+    <div
+      className="custom-select-drop"
+      onClick={() => setOpenFieldSelect(!openFieldSelect)}
+    >
+      <div className="select-box">
+        <span>
+          {searchField === "all"
+            ? "All Field"
+            : searchField.replace("_", " ")}
+        </span>
+      </div>
 
+      <ChevronDown className={openFieldSelect ? "up" : "down"} />
+    </div>
+
+    {openFieldSelect && (
+      <div className="custom-select-dropdown">
+
+        {[
+          "all",
+          "sale ID",
+          // "container_uuid",
+          // "customer_uuid",
+          "payment_status"
+        ].map((field) => (
+          <div
+            key={field}
+            className="option-item"
+            onClick={() => {
+              setSearchField(field);
+              setOpenFieldSelect(false);
+            }}
+          >
+            {field === "all"
+              ? "All Field"
+              : field.replace("_", " ")}
+          </div>
+        ))}
+
+      </div>
+    )}
+
+  </div>
+</div>
+
+                  {/* <div className="import-input"><p>Import</p></div> */}
+                  {/* <div className="import-input"><p>Export</p></div> */}
                   <button onClick={() => setView("create")}>
                     Record Sale
                   </button>
                 </div>
               </div>
+              {showFilters && (
+  <div className="filters-panel">
+
+    {/* PAYMENT STATUS */}
+    <div className="filter-item">
+
+      <div
+        className="custom-select-drop"
+        onClick={() =>
+          setOpenPaymentStatusSelect(!openPaymentStatusSelect)
+        }
+      >
+        <div className="select-box">
+          <span>
+            {filters.payment_status || "All Payment Status"}
+          </span>
+        </div>
+
+        <ChevronDown
+          className={
+            openPaymentStatusSelect ? "up" : "down"
+          }
+        />
+      </div>
+
+      {openPaymentStatusSelect && (
+        <div className="custom-select-dropdown">
+
+          {["", "Part Payment", "Full Payment"].map(
+            (status) => (
+              <div
+                key={status}
+                className="option-item"
+                onClick={() => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    payment_status: status
+                  }));
+
+                  setOpenPaymentStatusSelect(false);
+                }}
+              >
+                {status === ""
+                  ? "All Payment Status"
+                  : status}
+              </div>
+            )
+          )}
+
+        </div>
+      )}
+
+    </div>
+
+    {/* FROM DATE */}
+    <div className="filter-item">
+      <input
+        type="date"
+        value={filters.from_date}
+        onChange={(e) =>
+          setFilters((prev) => ({
+            ...prev,
+            from_date: e.target.value
+          }))
+        }
+      />
+    </div>
+
+    {/* TO DATE */}
+    <div className="filter-item">
+      <input
+        type="date"
+        value={filters.to_date}
+        onChange={(e) =>
+          setFilters((prev) => ({
+            ...prev,
+            to_date: e.target.value
+          }))
+        }
+      />
+    </div>
+
+  </div>
+)}
                      <div className="log-tab-section">
   <div className="tab-content">
     <ul>
