@@ -116,7 +116,7 @@ const calculateContainerNGN = (item, rate) =>
                <th>Quoted Amount (USD)</th>
                <th>Quoted Amount (NGN)</th>
                <th>Created By</th>
-              <th>Created Date</th>
+              {/* <th>Created Date</th> */}
               <th>Status</th>
               {/* <th>Actions</th> */}
             </tr>
@@ -142,7 +142,7 @@ const calculateContainerNGN = (item, rate) =>
                   <td>{formatMoney(item.amountNGN)}</td>
                   <td>{formatMoneyUSd(item.quoted_price_usd || "0")} </td>
                   <td>{formatMoney(item.quotedNGN)}</td>
-                  <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
+                  {/* <td>{item.creator_info.firstname} {item.creator_info.lastname}</td> */}
                   <td>{formatDate(item.created_at)}</td>
                   <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>
                 </tr>

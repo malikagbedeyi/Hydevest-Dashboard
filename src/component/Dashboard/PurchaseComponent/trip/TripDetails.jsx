@@ -707,7 +707,7 @@ const handleCloseMessage = () => {
   </div>
 </div>
 
-        <div className="grid-2 mt-4">
+        <div className="grid-3 mt-4">
          <div className="form-group">
   <label>Location</label>
   {!editLocation && (
@@ -744,9 +744,7 @@ const handleCloseMessage = () => {
     <input type="date" value={startDate} readOnly />
   )}
 </div>
-        </div>
-        <div className="grid-3 mt-4 mb-5">
-                   <div className="form-group">
+                    <div className="form-group">
   <label >End Date</label>
   {!editEndate && (
     <Edit size={16} onClick={() => setEditEndate(true)} />
@@ -764,7 +762,6 @@ const handleCloseMessage = () => {
     <input type="date" value={endDate} readOnly />
   )}
 </div>
-
         </div>
         </div>
        
