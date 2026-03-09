@@ -87,7 +87,6 @@ onCustomerResolved(mapped);
       });
 
       const raw = res.data?.data || res.data?.record || res.data;
-      console.log('customer',res.data)
       const mapped = {
         id: raw.id,
         user_uuid: raw.user_uuid,

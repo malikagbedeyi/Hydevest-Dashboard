@@ -193,7 +193,6 @@ if (attachments.length > 0) {
 
 }
 try {
-  console.log("Sending recovery payload:");
   
 setCreating(true);
 const res = await RecoveryServices.create(payload);
@@ -217,8 +216,6 @@ const res = await RecoveryServices.create(payload);
 
   if (err.response) {
 
-    console.log("Status:", err.response.status);
-    console.log("Backend message:", err.response.data);
 
     showError(
       err.response?.data?.message ||

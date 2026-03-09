@@ -435,7 +435,6 @@ const newSale = {
   
     onCreate(newSale);
     setView("table");
-    console.log("SALE BEING SAVED:", newSale);
 
   };
 

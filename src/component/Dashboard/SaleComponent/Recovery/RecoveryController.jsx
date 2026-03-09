@@ -37,7 +37,6 @@ const fetchRecoveries = async (pageNum = page) => {
       : [];
 
     setData(records);
-    console.log(result.data?.record)
     setPagination({
   page: result.data.record?.current_page || 1,
   limit: result.data.record?.per_page || 10,

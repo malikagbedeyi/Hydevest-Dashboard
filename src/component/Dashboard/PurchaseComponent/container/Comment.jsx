@@ -72,8 +72,8 @@ const fetchComments = async () => {
             <div key={index} className="comment-item mb-3">
               <div className="user">
                 <strong>
-                  {item.creator
-                    ? `${item.creator.firstname} ${item.creator.lastname}`
+                  {item.creator_info
+                    ? `${item.creator_info.firstname} ${item.creator_info.lastname}`
                     : "System"}
                 </strong>
                 <span>

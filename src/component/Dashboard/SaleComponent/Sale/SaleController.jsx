@@ -33,7 +33,6 @@ const fetchSales = async (pageNum = page) => {
     const record = res?.data?.record;
 
     const records = record?.data || [];
-    console.log(res.data?.record)
 
     setSales(records);
 
@@ -138,7 +137,6 @@ const fetchSaleDetails = async (sale_uuid, saleMasterData) => {
     const res = await SaleServices.details({ sale_uuid });
     const saleRecords = res?.data?.record || [];
 
-    console.log("sale details", saleRecords);
 
     if (!saleRecords.length) {
       setSelectedSale(null);

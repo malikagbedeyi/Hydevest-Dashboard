@@ -111,6 +111,7 @@ const totalRecoveryAmount = tableData.reduce(
                 <th>Amount Paid</th>
                 {/* <th>Balance</th> */}
                 <th>payment Status</th>
+                <th>Created By</th>
                 <th>Payment Date</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -138,13 +139,12 @@ const totalRecoveryAmount = tableData.reduce(
                     <td>{formatMoney(rec.amountPaid)}</td>
                     {/* <td>{formatMoney(rec.balance)}</td> */}
                     <td style={{color:rec?.sale?.payment_status=== "Full Payment" ? "green":"orange"}}> {rec?.sale?.payment_status}</td>
-
+                    <td>{rec.creator_info.firstname} {rec.creator_info.lastname}</td>
                     <td>{formatDate(rec.createdAt)}</td>
-
                     <td><span className={`status ${rec.status === 1 ? "Approve" : "In-transit"}`}
                    style={{color:rec.status === 1 ? "green":"red"}}>
                     {rec.status === 1 ? "Approve" : "In-transit"}</span></td>
-
+                    
                     <td onClick={(e) => e.stopPropagation()}>
                       <button
                         className="delete-btn"

@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
-import { TripServices } from "../../../../../services/Trip/trip";
+import { ExpenseServices } from "../../../../../services/Trip/expense";
+
 
 export const useTripFinance = (tripUuid) => {
   const [financeData, setFinanceData] = useState([]);
@@ -11,8 +12,8 @@ export const useTripFinance = (tripUuid) => {
     const fetchFinance = async () => {
       try {
         setLoading(true);
-        const res = await TripServices.getExpenses(tripUuid);
-        setFinanceData(res.data?.data || []);
+        const res = await ExpenseServices.list({ trip_uuid: tripUuid });
+        setFinanceData(res.data?.record?.data || res.data?.data || []);
       } catch (err) {
         console.error("Failed to fetch finance", err);
       } finally {
@@ -22,6 +23,7 @@ export const useTripFinance = (tripUuid) => {
 
     fetchFinance();
   }, [tripUuid]);
+
 
   const avgContainerRate = useMemo(() => {
     const valid = financeData.filter(
@@ -37,7 +39,6 @@ export const useTripFinance = (tripUuid) => {
     );
   }, [financeData]);
   
-console.log("avgContainerRate:", avgContainerRate);
   return {
     financeData,
     setFinanceData,

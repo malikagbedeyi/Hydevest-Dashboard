@@ -26,7 +26,6 @@ const currentData = sales;
 
 const confirmDelete = () => {
   if (!saleToDelete) return;
-  console.log("Deleting sale with UUID:", saleToDelete.sale_uuid);
   onDelete(saleToDelete.sale_uuid);
   setShowDeletePopup(false);
   setSaleToDelete(null);
@@ -103,7 +102,7 @@ const totalBalance= currentData.reduce(
           </div>
         </div>
         <div className="table-wrap">
-          <table className="table" style={{width:"150%",minWidth:"150%",maxWidth:"150%"}}>
+          <table className="table" style={{width:"170%",minWidth:"170%",maxWidth:"170%"}}>
             <thead>
               <tr>
                 <th>S/N</th>
@@ -118,6 +117,7 @@ const totalBalance= currentData.reduce(
                 <th>Total Amount Paid</th>
                  <th>Balance</th>
                  <th>Payment Status</th>
+                 <th>Created By</th>
                 <th>Date Created</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -146,6 +146,7 @@ const totalBalance= currentData.reduce(
     <span style={{ color: "green" }}>Fully Paid</span>
     ) : (formatCurrency(sale.total_sale_amount - sale.amount_paid))}</td>
                     <td style={{color:sale?.payment_status === "Full Payment" ? "green":"orange"}}>{sale?.sale_payments?.[0]?.payment_status}</td>
+                     <td>{sale.creator_info.firstname} {sale.creator_info.lastname}</td>
                     <td>{formatDate(sale.created_at)}</td>
                     <td><span className={`status ${sale.status === 1 ? "Approve" : "pending"}`}
                    style={{color:sale.status === 1 ? "green":"red"}}>

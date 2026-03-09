@@ -11,7 +11,6 @@ const PermissionService = {
         },
       }
     );
-    console.log(res.data)
     return {
       data: res.data?.record?.data || [],
       meta: {

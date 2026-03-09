@@ -148,7 +148,6 @@ const handleSave = async () => {
         pallet_pieces: pallets.map(p => p.pallet_pieces).join(","),
       };
 
-      console.log("🔵 SPLIT SALE PAYLOAD:", payload);
       response = await PresaleServices.editSplitSale(payload);
     }
 

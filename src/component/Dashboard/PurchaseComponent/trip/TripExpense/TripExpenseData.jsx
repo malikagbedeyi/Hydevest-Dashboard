@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Plus, X, Edit, Trash2, ChevronDown, ChevronUp, Paperclip } from "lucide-react";
 import { ExpenseServices } from '../../../../../services/Trip/expense';
 
-const TripExpenseData = ({handleRowClick ,tripUuid, openDeletePopup , financeData ,setFinanceData}) => {
+const TripExpenseData = ({handleRowClick ,reloadKey,tripUuid, openDeletePopup , financeData ,setFinanceData}) => {
    
     const [search , setSearch ] = useState('')
     const [page,setPage] = useState(1)
@@ -10,13 +10,20 @@ const TripExpenseData = ({handleRowClick ,tripUuid, openDeletePopup , financeDat
   const [selectedData, setSelectedData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-    const itemsPerPage = 10;
-    const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math.ceil(financeData.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-  
-    const nextPage = () => currentPage < totalPages && setCurrentPage((p) => p + 1);
-    const prevPage = () => currentPage > 1 && setCurrentPage((p) => p - 1);
+const currentPage = pagination.current_page || 1;
+const totalPages = pagination.last_page || 1;
+
+const nextPage = () => {
+  if (currentPage < totalPages) {
+    setPage(currentPage + 1);
+  }
+};
+
+const prevPage = () => {
+  if (currentPage > 1) {
+    setPage(currentPage - 1);
+  }
+};
 
     const formatCurrency = (value, currencyCode) => {
         const SAFE_CURRENCY_CODES = ["USD", "GBP", "EUR", "CAD", "AUD", "JPY", "CNY", "ZAR", "GHS", "NGN",];
@@ -63,7 +70,6 @@ const fetchData = async (pageNum = page) => {
     });
     setFinanceData(res.data?.record?.data || []);
     setPagination(res.data?.record || {});
-
   } catch (err) {
     console.error("Error fetching expenses:", err);
   } finally {
@@ -72,8 +78,8 @@ const fetchData = async (pageNum = page) => {
 };
 
 useEffect(() => {
-  fetchData(page)
-},[page])
+  fetchData(page);
+}, [page, reloadKey]);
 
 useEffect(() => {
   const timer = setTimeout(() => {
@@ -100,8 +106,9 @@ const currentData = financeData
                       <th>Rate</th>
                       <th>Amount (NGN)</th>
                       <th>Category</th>
+                      <th>Created By</th>
                       <th>Status</th>
-                      <th>Actions</th>
+                      {/* <th>Actions</th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -114,7 +121,7 @@ const currentData = financeData
                     ) : (
                       currentData.map((item, idx) => (
                         <tr key={item.id} onClick={() => handleRowClick(item)}>
-                          <td>{startIndex + idx + 1}</td>
+                          <td>{(pagination.from || 0) + idx}</td>
                           <td>{item.title}</td>
                           <td>{item.desc}</td> 
                           <td>{formatDate(item.date)}</td>
@@ -123,6 +130,7 @@ const currentData = financeData
                            <td>{item.rate}</td>
                            <td>{formatNGN(item.total_amount)}</td>
                             <td>{item.is_container_payment === 1? "Container Payment": "General"}</td>
+                           <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
                             <td>
   {item.status === 1 ? (
     <span style={{color:"green"}}>Approved</span>
@@ -131,7 +139,7 @@ const currentData = financeData
   )}
 </td>
 
-                          <td onClick={(e) => e.stopPropagation()}>
+                          {/* <td onClick={(e) => e.stopPropagation()}>
                             <button
                               className="delete-btn"
                               onClick={() => openDeletePopup(item)}
@@ -139,7 +147,7 @@ const currentData = financeData
                             >
                               <Trash2 color="red" size={16} />
                             </button>
-                          </td>
+                          </td> */}
                         </tr> 
                       ))
                     )}
@@ -147,18 +155,20 @@ const currentData = financeData
                 </table>
 
                 {totalPages > 1 && (
-                  <div className="pagination">
-                    <button onClick={prevPage} disabled={currentPage === 1}>
-                      Previous
-                    </button>
-                    <span>
-                      {currentPage} / {totalPages}
-                    </span>
-                    <button onClick={nextPage} disabled={currentPage === totalPages}>
-                      Next
-                    </button>
-                  </div>
-                )}
+  <div className="pagination">
+    <button onClick={prevPage} disabled={currentPage === 1}>
+      Previous
+    </button>
+
+    <span>
+      Page {currentPage} of {totalPages}
+    </span>
+
+    <button onClick={nextPage} disabled={currentPage === totalPages}>
+      Next
+    </button>
+  </div>
+)}
               </div>
             </div>
     </div>

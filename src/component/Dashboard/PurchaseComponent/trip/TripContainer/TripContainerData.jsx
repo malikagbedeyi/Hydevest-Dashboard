@@ -11,6 +11,21 @@ const TripContainerData = ({ containerData, setContainerData, handleContainerRow
     const [selectedData, setSelectedData] = useState(null);
     const [loading, setLoading] = useState(false);
     
+    const currentPage = pagination.current_page || 1;
+const totalPages = pagination.last_page || 1;
+
+const nextPage = () => {
+  if (currentPage < totalPages) {
+    setPage(currentPage + 1);
+  }
+};
+
+const prevPage = () => {
+  if (currentPage > 1) {
+    setPage(currentPage - 1);
+  }
+};
+
   //  containerData = data
  const formatMoney = (value) =>
   new Intl.NumberFormat("en-NG", {
@@ -48,6 +63,7 @@ const formatMoneyUSd = (value) =>
           });
           setContainerData(res.data?.record?.data || []);
           setPagination(res.data?.record || {});
+          console.log('container data ',res.data?.record)
         } catch (err) {
           console.error("Error fetching expenses:", err);
         } finally {
@@ -55,18 +71,17 @@ const formatMoneyUSd = (value) =>
         }
       };
       
-      useEffect(() => { 
-        fetchData(page)
-      },[page])
-      
-      useEffect(() => {
-        const timer = setTimeout(() => {
-          setPage(1);
-          fetchData(1);
-        }, 400);
-      
-        return () => clearTimeout(timer);
-      }, [search,reloadKey]);
+useEffect(() => {
+  fetchData(page);
+}, [page, reloadKey]);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setPage(1);
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [search]);
       
       const calculateContainerUSD = (item) => {
   const base =
@@ -100,9 +115,10 @@ const calculateContainerNGN = (item, rate) =>
                <th>Amount (NGN)</th>
                <th>Quoted Amount (USD)</th>
                <th>Quoted Amount (NGN)</th>
+               <th>Created By</th>
               <th>Created Date</th>
               <th>Status</th>
-              <th>Actions</th>
+              {/* <th>Actions</th> */}
             </tr>
           </thead>
           <tbody>
@@ -116,7 +132,7 @@ const calculateContainerNGN = (item, rate) =>
               containerData.map((item, idx) => (
                 <tr key={item.id} onClick={() => handleContainerRowClick(item)}
                 style={{ cursor: "pointer" }}>
-                  <td>{String(idx + 1).padStart(2, "0")}</td>
+                  <td>{(pagination.from || 0) + idx}</td>
                   <td>{item.title}</td>
                   <td>{item.desc || "-"}</td>
                   <td>TRN {item.tracking_number || "-"}</td>
@@ -126,17 +142,29 @@ const calculateContainerNGN = (item, rate) =>
                   <td>{formatMoney(item.amountNGN)}</td>
                   <td>{formatMoneyUSd(item.quoted_price_usd || "0")} </td>
                   <td>{formatMoney(item.quotedNGN)}</td>
+                  <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
                   <td>{formatDate(item.created_at)}</td>
                   <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>
-                  <td onClick={(e) => e.stopPropagation()}>
-                    <Trash2 size={16}
-                    color="red" style={{ cursor: "pointer" }}
-                    onClick={() => handleDeleteContainer(item.id)}/></td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
+        {totalPages > 1 && (
+  <div className="pagination">
+    <button onClick={prevPage} disabled={currentPage === 1}>
+      Previous
+    </button>
+
+    <span>
+      Page {currentPage} of {totalPages}
+    </span>
+
+    <button onClick={nextPage} disabled={currentPage === totalPages}>
+      Next
+    </button>
+  </div>
+)}
       </div>
     </div>
     </div>

@@ -135,7 +135,6 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
     if (changed) {
       setSales(updatedSales);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSales));
-      console.log("✅ Old sales migrated with tracking numbers");
     }
   }, [normalizedContainers]);
   
@@ -853,7 +852,6 @@ const handleCreate = async (customer) => {
       amount_paid: Math.min(Number(amountPaid) || 0, payload.total_sale_amount),
     };
 
-    console.log("Creating sale:", finalPayload);
 
     await onCreate(finalPayload);
 

@@ -74,6 +74,7 @@ const TripDetails = ({ trip, goBack }) => {
 const [message, setMessage] = useState(null);
 const [messageType, setMessageType] = useState(null);
 const[closePopup,setClosePopup] = useState(false)
+const [expenseReloadKey, setExpenseReloadKey] = useState(0);
   /* ================== TRIP META ================== */
   const [title, setTitle] = useState(trip?.title || "");
 const [description, setDescription] = useState(trip?.desc || "");
@@ -145,9 +146,8 @@ const hasChanges = () => {
 const handleAddFinance = async (payload) => {
   try {
     const res = await TripServices.createExpense(trip.trip_uuid, payload);
-
     setFinanceData((prev) => [res.data, ...prev]);
-
+    setExpenseReloadKey((k) => k + 1); 
     addLog({
       module: "Trip Expense",
       action: "Created",
@@ -155,6 +155,7 @@ const handleAddFinance = async (payload) => {
     });
 
     setShowModal(false);
+
   } catch (err) {
     console.error(err);
   }
@@ -189,44 +190,7 @@ useEffect(() => {
   /* ================== CONTAINER DATA ================== */
  const [containerData, setContainerData] = useState([]);
 
-useEffect(() => {
-  if (!trip?.trip_uuid) return;
 
-  const fetchContainers = async () => {
-    try {
-      const res = await TripServices.getContainers(trip.trip_uuid);
-
-      // Map to include calculated amounts
-      const containersWithAmounts = res.data.map((item) => {
-        const amountUSD =
-          (Number(item.unit_price_usd || 0) * Number(item.pieces || 0)) +
-          Number(item.shipping_amount_usd || 0);
-
-        const amountNGN = amountUSD * Number(avgContainerRate || 0);
-
-        const quotedUSD = Number(item.quoted_price_usd || 0);
-        const quotedNGN =
-          quotedUSD * Number(avgContainerRate || 0) +
-          (item.funding === "partner" ? Number(item.surcharge || 0) * Number(avgContainerRate || 0) : 0);
-
-        return {
-          ...item,
-          amountUSD,
-          amountNGN,
-          quotedUSD,
-          quotedNGN,
-        };
-      });
-
-      setContainerData(containersWithAmounts);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  fetchContainers();
-}, [trip?.trip_uuid, containerReloadKey, avgContainerRate]);
- 
 const handleAddContainer = (container) => {
   if (!container) return;
 
@@ -417,6 +381,7 @@ const totalExpenseUSD = financeData.reduce((sum, item) => {
 }, 0);
 
 const totalContainers = containerData.length;
+const totalTrip = financeData.length;
 
 const totalPieces = containerData.reduce(
   (sum, item) => sum + Number(item.pieces || 0),
@@ -618,8 +583,12 @@ const handleCloseMessage = () => {
 </div>
 
 <div className="summary-item">
-  <p className="small">Total Container</p>
-  <h2>{totalContainers}</h2>
+<p className="small">
+    {activeTab === "container"
+      ? "Total Container"
+      : "Total Trip"}
+  </p>
+  <h2>{  activeTab === "container" ? totalContainers : totalTrip}</h2>
 </div>
 
 <div className="summary-item">
@@ -655,7 +624,7 @@ const handleCloseMessage = () => {
             </div>
             <div className="title-header">
               <h4>Trip ID :</h4>
-              <p>{trip?.id}</p>
+              <p>{trip?.trip_unique_id}</p>
             </div>
           </div>
 
@@ -847,7 +816,7 @@ const handleCloseMessage = () => {
   <div className="finance-section">
     <TripExpenseData  financeData={financeData}   currentData={currentData} setFinanceData={setFinanceData}
     handleRowClick={handleRowClick}handleDeleteFinance={handleDeleteFinance}
-      openDeletePopup={openDeletePopup} tripUuid={trip.trip_uuid}/>
+      openDeletePopup={openDeletePopup} tripUuid={trip.trip_uuid} reloadKey={expenseReloadKey}/>
   </div>
 )}
 

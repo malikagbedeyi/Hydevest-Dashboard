@@ -48,9 +48,10 @@ const ContainerTable = ({data,loading,page,setPage,pagination,onRowClick,}) => {
               {/* <th>Amount (NGN)</th> */}
               <th>Quoted Amount (USD)</th>
               {/* <th>Quoted Amount (NGN)</th> */}
+              <th>Created By</th>
               <th>Created Date</th>
               <th>Status</th>
-              <th>Actions</th>
+              {/* <th>Actions</th> */}
             </tr>
           </thead>
 
@@ -84,7 +85,9 @@ const ContainerTable = ({data,loading,page,setPage,pagination,onRowClick,}) => {
                   {/* <td>{formatMoneyNGN(item.amountNGN)}</td> */}
                   <td>{formatMoneyUSD(item.quotedUSD)}</td>
                   {/* <td>{formatMoneyNGN(item.quotedNGN)}</td> */}
+                  <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
                   <td>{formatDate(item.created_at)}</td>
+
                   <td>
                     {item.status === 1 ? (
                       <span style={{ color: "green" }}>
@@ -96,13 +99,13 @@ const ContainerTable = ({data,loading,page,setPage,pagination,onRowClick,}) => {
                       </span>
                     )}
                   </td>
-                  <td onClick={(e) => e.stopPropagation()}>
+                  {/* <td onClick={(e) => e.stopPropagation()}>
                     <Trash2
                       size={16}
                       color="red"
                       style={{ cursor: "pointer" }}
                     />
-                  </td>
+                  </td> */}
                 </tr>
               ))
             )}

@@ -61,12 +61,14 @@
         }
               .top-content-wrapper{
                   display: flex;
+                  flex-wrap: wrap;
             justify-content:space-between;
             align-items: center;
             .left-wrapper{
             }
                 .right-wrapper{
                      display: flex;
+                     flex-wrap: wrap;
                      gap: 0.7vw;
             justify-content:center;
              align-items: center;

@@ -26,7 +26,6 @@ const UserController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
           page: pageNum,
         },
       });
-      console.log(res.data)
       setUsers(res.data?.record?.data || []);
       setPagination(res.data?.record || {});
     } catch (err) {

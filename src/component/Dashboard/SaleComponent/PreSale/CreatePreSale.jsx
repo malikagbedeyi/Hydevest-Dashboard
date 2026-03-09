@@ -32,7 +32,7 @@ const CreatePreSale = ({ users, setUsers, setView, containersData, setContainers
 // } else {
 //   setContainers([]);
 // }
-//         console.log("presale container dropdown data",response.data)
+
 //       } catch (err) {
 //         console.error("Failed to fetch containers:", err);
 //         setContainers([]);
@@ -69,8 +69,6 @@ const [expandedContainers, setExpandedContainers] = useState([]);
   const [openSelect, SetOpenSelect] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedValues, setSelectedValues] = useState([]);
-
-console.log("containersListData:", containersData);
 
 const filterOption = (containersData ?? []).filter((item) => {
   const title = item.title ?? "";
@@ -301,11 +299,6 @@ const handleCreate = async () => {
       setPopupMessage("✅ Pre-sale successfully created");
       setPopupType("success");
 
-      console.log("Final Payload:", payload);
-      console.log(
-        "Container UUIDs:",
-        selectedValues.map(c => c.container_uuid)
-      );
    } else {
   setPopupMessage(`❌ ${response?.data?.message || "Failed to create pre-sale"}`);
   setPopupType("error");

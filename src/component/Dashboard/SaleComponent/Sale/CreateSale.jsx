@@ -375,7 +375,6 @@ useEffect(() => {
     try {
       const res = await SaleServices.payments({ sale_uuid: form.presaleId });
       // You can process these if you want, e.g., show existing payment history
-      // console.log("Sale Payments:", res.data.record);
     } catch (err) {
       console.error("Failed to fetch sale payments", err);
     }
