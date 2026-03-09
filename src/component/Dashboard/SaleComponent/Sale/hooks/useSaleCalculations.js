@@ -1,11 +1,10 @@
 // hooks/useSaleCalculations.js
-
 export const totalPurchase = (pallet) => {
   const price = Number(pallet.purchasePrice) || 0;
   const pallets = Number(pallet.noOfPallets) || 0;
-  const piecesPerPallet = Number(pallet.palletOption) || 0;
+const pieces = Number(pallet.palletOption) || 0;
 
-  return price * pallets * piecesPerPallet;
+return price * pallets * pieces;
 };
 
 export const totalSaleAmount = (items = []) =>

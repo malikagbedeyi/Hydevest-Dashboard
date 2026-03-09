@@ -1,6 +1,7 @@
 import React from "react";
-import { X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, Plus } from "lucide-react";
 import { totalPurchase } from "./hooks/useSaleCalculations";
+// import "../../../../assets/Styles/dashboard/create.scss";
 
 const AddSaleItem = ({
   form,
@@ -9,15 +10,10 @@ const AddSaleItem = ({
   setSalePop,
   dynamicContainerOptions,
   formatNumber,
-
-  openContainerDropdowns,
-  setOpenContainerDropdowns,
-
   openPalletDropdowns,
   setOpenPalletDropdowns,
-
   palletOptionsByContainer,
-
+  activeContainerId,
   addPallet,
   handlePalletChange,
   handleSaveSaleItems,
@@ -25,13 +21,6 @@ const AddSaleItem = ({
   isPurchasePriceLowerThanPresale,
 }) => {
   if (!salePop) return null;
-
-  const toggleContainerDropdown = (index) => {
-    setOpenContainerDropdowns((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
-  };
 
   const togglePalletDropdown = (index) => {
     setOpenPalletDropdowns((prev) => ({
@@ -43,7 +32,6 @@ const AddSaleItem = ({
   return (
     <div className="add-sale-popup">
       <div className="popup-overlay" />
-
       <div className="add-sale-content">
         <X size={18} className="close" onClick={() => setSalePop(false)} />
 
@@ -51,106 +39,51 @@ const AddSaleItem = ({
           {/* ===== Header ===== */}
           <div className="header">
             <h5 style={{ fontSize: "1.2vw" }}>Add Sale</h5>
+            {/* ===== Add More Button ===== */}
             <button
               type="button"
               className="add-more-btn"
-              onClick={addPallet}
+              onClick={() => {const containerId =activeContainerId ||dynamicContainerOptions?.[0]?.id ||null;
+                if (!containerId) return;
+
+                const palletList = palletOptionsByContainer[containerId] || [];
+                if (!palletList.length) {
+                  alert("No pallets available for this container");
+                  return;
+                }
+
+                addPallet(containerId);
+              }}
             >
-              Add More
+              <Plus size={16} /> Add More
             </button>
           </div>
 
-          {/* ===== Pallets ===== */}
+          {/* ===== Pallet Items ===== */}
           {form.pallets.map((pallet, index) => {
             const palletOptions =
-              pallet.containerId
-                ? palletOptionsByContainer[pallet.containerId] || []
-                : [];
-
-            const selectedContainer = dynamicContainerOptions.find(
-              (c) => c.id === pallet.containerId
-            );
-
-            const selectedPalletMeta = palletOptions.find(
-              (p) => p.pallet_uuid === pallet.pallet_uuid
-            );
+              pallet.containerId ? palletOptionsByContainer[pallet.containerId] || [] : [];
 
             const remainingPallets =
-              selectedPalletMeta?.remaining_no_of_pallets ?? 0;
+              palletOptions.find((p) => p.pallet_uuid === pallet.pallet_uuid)
+                ?.remaining_no_of_pallets ?? 0;
 
             return (
               <div key={pallet.id}>
-                <div className="grid-5">
-
-                  {/* ===== Container Selector ===== */}
-                  {dynamicContainerOptions.length > 1 && (
-                    <div className="form-group-select">
-                      <label>Container</label>
-
-                      <div className="sale-custom-select">
-                        <div
-                          className="custom-select-drop"
-                          onClick={() => toggleContainerDropdown(index)}
-                        >
-                          <div className="select-box">
-                            {selectedContainer ? (
-                              <span>{selectedContainer.name}</span>
-                            ) : (
-                              <span className="placeholder">
-                                Select Container
-                              </span>
-                            )}
-                          </div>
-                          <ChevronDown
-                            className={
-                              openContainerDropdowns[index] ? "up" : "down"
-                            }
-                          />
-                        </div>
-
-                        {openContainerDropdowns[index] && (
-                          <div className="sale-select-dropdown">
-                            {dynamicContainerOptions.map((container) => (
-                              <span
-                                key={container.id}
-                                className="option-sale"
-                                onClick={() => {
-                                  handlePalletChange(index, "containerId", container.id);
-                                  handlePalletChange(index, "pallet_uuid", "");
-                                  handlePalletChange(index, "palletOption", "");
-                                  handlePalletChange(index, "noOfPallets", "");
-                                  setOpenContainerDropdowns((prev) => ({
-                                    ...prev,
-                                    [index]: false,
-                                  }));
-                                }}
-                              >
-                                {container.name}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
+                <div className="grid-2">
                   {/* ===== Purchase Price ===== */}
                   <div className="form-group">
                     <label>Purchase Price (Per Piece)</label>
-<input
-  type="number"
-  value={pallet.purchasePrice}
-  onChange={(e) =>
-    handlePalletChange(
-      index,
-      "purchasePrice",
-      Number(e.target.value) || 0
-    )
-  }
-/>
+                    <input
+                      type="number"
+                      value={pallet.purchasePrice}
+                      onChange={(e) =>
+                        handlePalletChange(index, "purchasePrice", Number(e.target.value) || 0)
+                      }
+                    />
                     {isPurchasePriceLowerThanPresale(pallet) && (
                       <small className="error">
-                        Price is lower than pre-sale price per piece
+                        Price is lower than pre-sale price per piece {pallet.pricePerPic}
                       </small>
                     )}
                   </div>
@@ -158,61 +91,47 @@ const AddSaleItem = ({
                   {/* ===== No of Pallets ===== */}
                   <div className="form-group">
                     <label>No. of Pallets Purchased</label>
-  <input
-  type="number"
-  min={0}
-  max={pallet.remaining_no_of_pallets}
-  value={pallet.noOfPallets}
-  onChange={(e) => {
-    const raw = Number(e.target.value) || 0;
-    const safeQty = Math.min(raw, pallet.remaining_no_of_pallets);
-
-    handlePalletChange(index, "noOfPallets", safeQty);
-  }}
-/>
-
-{pallet.remaining_no_of_pallets > 0 && (
-  <small className="error">
-    Only {pallet.remaining_no_of_pallets} pallet(s) remaining
-  </small>
-)}
+                    <input
+                      type="number"
+                      min={0}
+                      max={remainingPallets}
+                      disabled={remainingPallets === 0}
+                      value={pallet.noOfPallets}
+                      onChange={(e) => {
+                        const raw = Number(e.target.value) || 0;
+                        const safeQty = raw > remainingPallets ? remainingPallets : raw;
+                        handlePalletChange(index, "noOfPallets", safeQty);
+                      }}
+                    />
+                    <small className="error">
+                      {remainingPallets > 0
+                        ? `Only ${remainingPallets} pallet(s) remaining`
+                        : "No pallets remaining"}
+                    </small>
                   </div>
 
                   {/* ===== Pallet Distribution ===== */}
                   <div className="form-group-select">
                     <label>Pallet Distribution</label>
-
                     <div className="sale-custom-select">
                       <div
                         className="custom-select-drop"
                         onClick={() => togglePalletDropdown(index)}
                       >
                         <div className="select-box">
-                          {pallet.palletOption ? (
-                            `${pallet.palletOption} Pieces`
-                          ) : (
-                            <span className="placeholder">
-                              Pallet Option
-                            </span>
-                          )}
+                          {pallet.palletOption
+                            ? `${pallet.palletOption} Pieces`
+                            : <span className="placeholder">Pallet Option</span>}
                         </div>
-                        <ChevronDown
-                          className={
-                            openPalletDropdowns[index] ? "up" : "down"
-                          }
-                        />
+                        <ChevronDown className={openPalletDropdowns[index] ? "up" : "down"} />
                       </div>
 
                       {openPalletDropdowns[index] && (
                         <div className="sale-select-dropdown">
                           {!pallet.containerId ? (
-                            <span className="option-sale disabled">
-                              Select a container first
-                            </span>
+                            <span className="option-sale disabled">Select a container first</span>
                           ) : palletOptions.length === 0 ? (
-                            <span className="option-sale disabled">
-                              No pallet options available
-                            </span>
+                            <span className="option-sale disabled">No pallet options available</span>
                           ) : (
                             palletOptions.map((opt) => (
                               <span
@@ -221,13 +140,13 @@ const AddSaleItem = ({
                                 onClick={() => {
                                   handlePalletChange(index, "palletOption", opt.pallet_pieces);
                                   handlePalletChange(index, "pallet_uuid", opt.pallet_uuid);
-                                  setOpenPalletDropdowns((prev) => ({
-                                    ...prev,
-                                    [index]: false,
-                                  }));
+                                  setOpenPalletDropdowns((prev) => ({ ...prev, [index]: false }));
                                 }}
                               >
                                 {opt.pallet_pieces} Pieces
+                                {opt.remaining_no_of_pallets > 0
+                                  ? ` - ${opt.remaining_no_of_pallets} pallets remaining`
+                                  : " - No pallets remaining"}
                               </span>
                             ))
                           )}
@@ -239,12 +158,18 @@ const AddSaleItem = ({
                   {/* ===== Total ===== */}
                   <div className="form-group">
                     <label>Sale Amount</label>
-                    <input
-                      type="text"
-                      readOnly
-                      value={formatNumber(totalPurchase(pallet))}
-                    />
+                    <input type="text" readOnly value={formatNumber(totalPurchase(pallet))} />
                   </div>
+                </div>
+
+                {/* ===== Remove Button ===== */}
+                <div className="btn-row mt-2">
+                  <button
+                    className="cancel"
+                    onClick={() => removeAddSale(index)}
+                  >
+                    Remove
+                  </button>
                 </div>
 
                 <div className="seperate-sale" />
@@ -253,19 +178,9 @@ const AddSaleItem = ({
           })}
 
           {/* ===== Footer ===== */}
-          <div className="btn-row">
-            <button
-              className="cancel"
-              onClick={() => removeAddSale(form.pallets.length - 1)}
-            >
-              Remove
-            </button>
-
-            <button
-              className="create"
-              onClick={handleSaveSaleItems}
-            >
-              Save
+          <div className="btn-row mt-3">
+            <button className="create" onClick={handleSaveSaleItems}>
+              Save All
             </button>
           </div>
         </div>

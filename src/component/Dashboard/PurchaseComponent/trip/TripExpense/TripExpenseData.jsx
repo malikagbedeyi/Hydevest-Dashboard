@@ -140,7 +140,7 @@ const currentData = financeData
                               <Trash2 color="red" size={16} />
                             </button>
                           </td>
-                        </tr>
+                        </tr> 
                       ))
                     )}
                   </tbody>

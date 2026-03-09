@@ -1,70 +1,71 @@
-import { Trash2, Edit3 } from "lucide-react";
+  import { Trash2, Edit3 } from "lucide-react";
 
-const SaleItemsTable = ({ items = [], onDelete, onEdit,formatNumber }) => {
-  if (items.length === 0) return null;
+  const SaleItemsTable = ({ items = [], onDelete, onEdit,formatNumber,readOnly=false }) => {
+    if (items.length === 0) return null;
 
-  const formatDateTime = (value) => {
-    if (!value) return "-";
-    return new Date(value).toLocaleString("en-NG", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  };
-  
-  return (
-    <>
-    <div className="userTable mt-3">
-      <div className="table-wrap">
-        <table className="table" style={{
-          maxWidth:"100%"
-        }}>
-          <thead>
-            <tr>
-              <th>S/N</th>
-              <th>Container</th>
-              <th>Pieces</th>
-              <th>No. of Pallets</th>
-              <th>Pallet Option</th>
-              <th>Sale Amount</th>
-              <th>Action</th>
-              <th>Date Created</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {items.map((row, idx) => (
-              <tr key={row.palletId}>
-                <td>{idx + 1}</td>
-                <td>{row.containerName}</td>
-                <td>{formatNumber(row.purchasePrice)}</td>
-                <td>{row.noOfPallets}</td>
-                <td>{row.palletOption}</td>
-                <td>{formatNumber(row.total)}</td>
-                <td>
-                <button
-                    className="edit-btn"
-                    onClick={() => onEdit(row)}
-                  >
-                    <Edit3 size={16} />
-                  </button>
-                  <button
-                    className="delete-btn"
-                    onClick={() => onDelete(row)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-                <td>{formatDateTime(row.createdAt)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    const formatDateTime = (value) => {
+      if (!value) return "-";
+      return new Date(value).toLocaleString("en-NG", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+    };
     
-    </> 
-  );
-};
+    return (
+      <>
+      <div className="userTable mt-3">
+        <div className="table-wrap">
+          <table className="table" style={{
+            maxWidth:"100%"
+          }}>
+            <thead>
+              <tr>
+                <th>S/N</th>
+                <th>Container</th>
+                <th>Purchase Price </th>
+                <th>No. of Pallets</th>
+                <th>Pallet Distribution</th>
+                <th>Sale Amount</th>
+              {!readOnly && (  <th>Action</th>)}
+                <th>Date Created</th>
+              </tr>
+            </thead>
 
-export default SaleItemsTable;
+            <tbody>
+              {items.map((row, idx) => (
+                <tr key={row.palletId}>
+                  <td>{idx + 1}</td>
+                  <td>{row.containerName}</td>
+                  <td>{formatNumber(row.purchasePrice)}</td>
+                  <td>{row.noOfPallets}</td>
+                  <td>{row.palletOption}</td>
+                  <td>{formatNumber(row.total)}</td>
+                {!readOnly && (  <td>
+                     <button
+  className="edit-btn"
+  onClick={() => onEdit(row.palletId, row.containerId)}
+>
+  <Edit3 size={16} />
+</button>
+<button
+  className="delete-btn"
+  onClick={() => onDelete(row.palletId, row.containerId)}
+>
+  <Trash2 size={16} />
+</button>
+                  </td>
+                )}
+                  <td>{formatDateTime(row.createdAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      </> 
+    );
+  };
+
+  export default SaleItemsTable;
 

@@ -21,6 +21,11 @@ const PreSaleController = ({ openSubmenu }) => {
   const [editingSale, setEditingSale] = useState(null);
   const [page, setPage] = useState(1);
 const [loadingTable, setLoadingTable] = useState(false);
+const [pagination, setPagination] = useState({
+  currentPage: 1,
+  lastPage: 1,
+  total: 0,
+});
  /* ================= FETCH SALE CONTAINERS ================= */
 useEffect(() => {
   const fetchContainers = async () => {
@@ -38,14 +43,25 @@ useEffect(() => {
 }, []);
 
   /* ================= FETCH PRESALES ================= */
-  const fetchPreSales = async (pageNum = page) => {
+ const fetchPreSales = async (pageNum = page) => {
   setLoadingTable(true);
+
   try {
     const res = await PresaleServices.list({
       page: pageNum,
       search: searchTerm || undefined,
     });
-    setDatas(res.data?.record?.data ?? []);
+
+    const record = res.data?.record;
+
+    setDatas(record?.data ?? []);
+
+    setPagination({
+      currentPage: record?.current_page ?? 1,
+      lastPage: record?.last_page ?? 1,
+      total: record?.total ?? 0,
+    });
+
   } catch (err) {
     console.error(err);
     setDatas([]);
@@ -175,15 +191,16 @@ useEffect(() => {
               </div>
             )}
             {activeTab === "table" && (
-              <PreSaleTable
-                preSales={datas}
-                page={page}
-                setPage={setPage}
-                onEdit={(sale) => {
-                  setEditingSale(sale);
-                  setView("edit");
-                }}
-              />
+<PreSaleTable
+  preSales={datas}
+  page={pagination.currentPage}
+  lastPage={pagination.lastPage}
+  setPage={setPage}
+  onEdit={(sale) => {
+    setEditingSale(sale);
+    setView("edit");
+  }}
+/>
             )}
 
             {activeTab === "logs" && (

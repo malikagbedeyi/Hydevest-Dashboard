@@ -124,7 +124,7 @@ onCustomerResolved(mapped);
         {!foundCustomer && (
           <button
             type="button"
-            className="create-customer"
+            className="create"
             onClick={() => setShowAddCustomerFields(true)}
           >
             Add Customer

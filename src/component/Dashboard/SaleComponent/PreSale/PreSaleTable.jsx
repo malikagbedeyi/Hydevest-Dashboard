@@ -5,10 +5,8 @@ import CreateSale from "../Sale/CreateSale";
 import { Trash2 } from "lucide-react";
 import { PresaleServices } from "../../../../services/Sale/presale";
 
-const PreSaleTable = ({ preSales, onDelete, onEdit }) => {
+const PreSaleTable = ({ preSales, page, lastPage, setPage, onEdit }) => {
   const tableData = preSales;
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
   // const [tableData, setTableData] = useState([]);
 
   const [showDataDetails, setShowDataDetails] = useState(false);
@@ -38,13 +36,8 @@ const PreSaleTable = ({ preSales, onDelete, onEdit }) => {
 //   fetchPreSales();
 // }, []);
 
+const currentData = preSales;
 
-  const totalPages = Math.ceil(tableData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = tableData.slice(startIndex, startIndex + itemsPerPage);
-
-  const nextPage = () => currentPage < totalPages && setCurrentPage((p) => p + 1);
-  const prevPage = () => currentPage > 1 && setCurrentPage((p) => p - 1);
 
   const openDataDetails = (sale) => {
     setSelectedData(sale);
@@ -61,7 +54,7 @@ const PreSaleTable = ({ preSales, onDelete, onEdit }) => {
   // ✅ confirm delete
   const confirmDelete = () => {
     if (!saleToDelete) return;
-    onDelete(saleToDelete.createdAt);
+    // onDelete(saleToDelete.createdAt);
     setShowDeletePopup(false);
     setSaleToDelete(null);
   };
@@ -181,7 +174,7 @@ const PreSaleTable = ({ preSales, onDelete, onEdit }) => {
               ) : (
                 currentData.map((sale, idx) => (
                   <tr key={sale.pre_sale_uuid} onClick={() => onEdit(sale)}>
-                    <td>{startIndex + idx + 1}</td>
+                    <td>{  idx + 1}</td>
                     <td>{sale.sale_option}</td>
                     <td>{Array.isArray(sale.container?.title)? sale.container.title.join(", "): sale.container?.title || "—"}</td>
                     <td>{formatNumber(sale.wc_average_weight)}</td>
@@ -209,19 +202,21 @@ const PreSaleTable = ({ preSales, onDelete, onEdit }) => {
             </tbody>
           </table>
 
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button onClick={prevPage} disabled={currentPage === 1}>
-                Previous
-              </button>
-              <span>
-                {currentPage} / {totalPages}
-              </span>
-              <button onClick={nextPage} disabled={currentPage === totalPages}>
-                Next
-              </button>
-            </div>
-          )}
+          {/* {totalPages > 1 && ( */}
+<div className="pagination">
+  <button onClick={() => setPage(page - 1)} disabled={page === 1}>
+    Previous
+  </button>
+
+  <span>
+    {page} / {lastPage}
+  </span>
+
+  <button onClick={() => setPage(page + 1)} disabled={page === lastPage}>
+    Next
+  </button>
+</div>
+          {/* )} */}
         </div>
       </div>
 

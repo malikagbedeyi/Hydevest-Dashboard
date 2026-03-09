@@ -359,7 +359,7 @@ useEffect(() => {
                 onChange={handleChange}
                 type="number"
               />
-                      {editableData?.sale_option === "SPLIT SALE" && "MIXED SALE" && (
+                      {editableData?.sale_option === "SPLIT SALE" && (
               <EditableField  style={{display:"grid", gridTemplateColumns:"1fr"}}
                 label="Total No of Pallets"
                 field="total_no_of_pallets"

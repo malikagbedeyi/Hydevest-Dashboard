@@ -1,185 +1,384 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../../../assets/Styles/dashboard/create.scss";
-import { ChevronDown, Eye, File, Paperclip, Trash2 } from "lucide-react";
+import { ChevronDown, Paperclip, Trash2 } from "lucide-react";
+import { RecoveryServices } from "../../../../services/Sale/recovery";
 
-const CreateRecovery = ({ SalesData = [], setView, onCreate }) => {
+const CreateRecovery = ({ setView, onCreate }) => {
+
   /* ===================== STATE ===================== */
+
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedSale, setSelectedSale] = useState(null);
-  const [collapsedContainers , setCollapsedContainers] = useState(false)
+  const [customers, setCustomers] = useState([]);
+  const [customerSales, setCustomerSales] = useState([]);
+  const [customerSearch, setCustomerSearch] = useState("");
   const [openCustomerSelect, setOpenCustomerSelect] = useState(false);
   const [openSaleSelect, setOpenSaleSelect] = useState(false);
   const [amountPaid, setAmountPaid] = useState("");
-const [paymentDate, setPaymentDate] = useState("");
-const [error, setError] = useState("");
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [showPopup, setShowPopup] = useState(false);
+  const [amountPaidRaw, setAmountPaidRaw] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(customerSearch);
+  const [highlightIndex, setHighlightIndex] = useState(0);
+  const [loadingCustomer, setLoadingCustomer] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState(""); 
+  const [creating, setCreating] = useState(false);
+const [availablePayments] = useState(["Cash", "Transfer"]);
+  const [openPaymentDropdown, setOpenPaymentDropdown] = useState(false);
+  const [paymentDate, setPaymentDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
   const [attachments, setAttachments] = useState([]);
+  const [collapsedContainers, setCollapsedContainers] = useState(false);
+const [popup, setPopup] = useState({open: false,type: "", message: ""});
 
-  /* ===================== CUSTOMER OPTIONS ===================== */
-  const customerOptions = useMemo(() => {
-    const map = new Map();
-    SalesData.forEach((sale) => {
-      if (!sale.customer?.name || !sale.customer?.phone) return;
-  
-      const key = `${sale.customer.name}-${sale.customer.phone}`;
-  
-      if (!map.has(key)) {
-        map.set(key, {
-          name: sale.customer.name,
-          phone: sale.customer.phone,
-        });
+
+
+  /* ===================== CUSTOMER SEARCH ===================== */
+
+  useEffect(() => {
+
+  const timer = setTimeout(() => {
+    setDebouncedSearch(customerSearch);
+  }, 500);
+
+  return () => clearTimeout(timer);
+
+}, [customerSearch]);
+
+useEffect(() => {
+  if (!debouncedSearch) {
+    setCustomers([]);
+    return;
+  }
+  const fetchCustomers = async () => {
+
+    try {
+setLoadingCustomer(true);
+      const res = await RecoveryServices.getCustomer(customerSearch);
+setLoadingCustomer(false);
+      const customer = res?.data?.customer;
+
+      if (!customer) {
+        setCustomers([]);
+        return;
       }
-    });
-  
-    return Array.from(map.values());
-  }, [SalesData]);
 
-  // filtered customers based on search input
-  const filteredCustomers = useMemo(() => {
-    if (!customerSearch) return customerOptions;
-    return customerOptions.filter(c =>
-      c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-      c.phone.includes(customerSearch)
-    );
-  }, [customerSearch, customerOptions]);
-  
-  /* ===================== SALES BY CUSTOMER ===================== */
-  const customerSales = useMemo(() => {
-    if (!selectedCustomer) return [];
-  
-    return SalesData.filter(
-      sale =>
-        sale.customer?.name === selectedCustomer.name &&
-        sale.customer?.phone === selectedCustomer.phone &&
-        Number(sale.balance || 0) > 0
-    );
-  }, [selectedCustomer, SalesData]);
-  
-  /* ===================== CREATE RECOVERY ===================== */
-  const handleCreateRecovery = () => {
-    if (!selectedCustomer || !selectedSale) return;
-  
-    const paid = Number(amountPaid || 0);
-    const saleBalance = Number(selectedSale.balance || 0);
-  
-    if (paid <= 0) {
-      setError("Amount paid must be greater than zero");
-      return;
+      setCustomers([{
+        uuid: customer.user_uuid,
+        name: `${customer.firstname} ${customer.lastname}`,
+        phone: customer.phone_no
+      }]);
+
+    } catch (err) {
+
+      console.error("Customer fetch failed", err);
+      setCustomers([]);
+
     }
-  
-    if (paid > saleBalance) {
-      setError("Amount paid cannot be greater than outstanding balance");
-      return;
-    }
-  
-    const newBalance = saleBalance - paid;
-  
-    // 🔹 1. Create recovery record
-    const recoveryPayload = {
-      id: Date.now(),
-      customerName: selectedCustomer.name,
-      customerPhone: selectedCustomer.phone,
-      saleSN: selectedSale.sn,
-      saleId: selectedSale.id,
-      amountPaid: paid,
-      balanceAfter: newBalance,
-      status: "Pending",
-      createdAt: new Date().toISOString(),
-      attachments,
+
+  };
+
+  fetchCustomers();
+}, [customerSearch,debouncedSearch]);
+
+
+
+  /* ===================== FETCH SALES BY CUSTOMER ===================== */
+
+  useEffect(() => {
+
+    if (!selectedCustomer?.uuid) return;
+
+    const fetchCustomerSales = async () => {
+
+      try {
+
+        const res = await RecoveryServices.getCustomerSales(selectedCustomer.uuid);
+        const records = res?.data?.record || [];
+        const mapped = records.map((sale, idx) => ({
+
+          ...sale,
+          sn: idx + 1,
+          balance:
+            Number(sale.total_sale_amount || 0) -
+            Number(sale.amount_paid || 0) ,
+          noOfPallets: sale.presale?.total_no_of_pallets || 0,
+          customer: {
+            phone: selectedCustomer.phone
+          },
+          totalSaleAmount: sale.total_sale_amount,
+          amountPaid: sale.amount_paid,
+          createdAt: sale.created_at
+
+        }));
+
+        setCustomerSales(mapped);
+
+      } catch (err) {
+
+        console.error("Failed to load customer sales", err);
+        setCustomerSales([]);
+
+      }
+
     };
-    // 🔹 3. Save recovery
-    onCreate(recoveryPayload);
-  
-    setShowPopup(true);
-  };
-  
-  const closePopup = () => {
-    setShowPopup(false);
-    setView("table");
+
+    fetchCustomerSales();
+
+  }, [selectedCustomer]);
+const handleKeyDown = (e) => {
+
+  if (e.key === "ArrowDown") {
+    setHighlightIndex((prev) => Math.min(prev + 1, customers.length - 1));
+  }
+
+  if (e.key === "ArrowUp") {
+    setHighlightIndex((prev) => Math.max(prev - 1, 0));
+  }
+
+  if (e.key === "Enter") {
+    const customer = customers[highlightIndex];
+    if (customer) {
+      setSelectedCustomer(customer);
+      setOpenCustomerSelect(false);
+    }
+  }
+
+};
+
+  /* ===================== CREATE RECOVERY ===================== */
+
+  const handleCreateRecovery = async () => {
+
+    if (!selectedCustomer || !selectedSale) return;
+    const paid = Number(amountPaidRaw || 0); 
+    const saleBalance = Number(selectedSale.balance || 0);
+
+    if (paid <= 0) {
+      showError("Amount paid must be greater than zero");
+      return;
+    }
+
+    if (paid > saleBalance) {
+      showError("Amount paid cannot be greater than outstanding balance");
+      return;
+    }
+
+  let payload;
+
+if (attachments.length > 0) {
+  payload = new FormData();
+
+  payload.append("customer_uuid", selectedCustomer.uuid);
+  payload.append("sale_uuid", selectedSale.sale_uuid);
+  payload.append("amount", paid);
+  payload.append("payment_date", paymentDate);
+  payload.append("comment", "");
+  payload.append("payment_method", paymentMethod || "Cash");
+
+  attachments.forEach((file) => {
+    payload.append("attachment", file.file);
+  });
+
+} else {
+
+  payload = {
+    customer_uuid: selectedCustomer.uuid,
+    sale_uuid: selectedSale.sale_uuid,
+    amount: paid,
+    payment_date: paymentDate,
+    comment: "",
+    payment_method: paymentMethod || "Cash"
   };
 
-  const formatMoney = (value) => {
-    return new Intl.NumberFormat("en-NG", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(Number(value || 0));
-  };
-  const formatDate = (date) => {
-    if (!date) return "";
+}
+try {
+  console.log("Sending recovery payload:");
   
-    return new Date(date).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }).replace(/ /g, "-");
+setCreating(true);
+const res = await RecoveryServices.create(payload);
+  setCreating(false);
+  if (res?.data?.success) {
+    const message = res?.data?.message || "Recovery created successfully";
+
+    showSuccess(message);
+  } else {
+    showError(
+      res?.data?.message ||
+      res?.data?.error ||
+      "Failed to create recovery"
+    );
+
+  }
+
+} catch (err) {
+
+  console.error("Create recovery failed");
+
+  if (err.response) {
+
+    console.log("Status:", err.response.status);
+    console.log("Backend message:", err.response.data);
+
+    showError(
+      err.response?.data?.message ||
+      err.response?.data?.error ||
+      "Backend rejected the request"
+    );
+
+  } else {
+
+    showError("Network error. Please check your connection.");
+
+  }
+
+}
   };
+
+
+  /* ===================== RESET AFTER SUCCESS ===================== */
+const showSuccess = (message) => {
+  setPopup({
+    open: true, type: "success", message
+  });
+setTimeout(() => {
+  closePopup("success");
+}, 3000);
+
+}
+const showError = (message) => {
+  setPopup({
+    open: true,
+    type: "error",
+    message
+  });
+};
+
+const closePopup = (type) => {
+  setPopup({ open: false, type: "", message: "" });
+
+if (type === "success") {
+  onCreate(); 
+  setView("table");
+  setSelectedCustomer(null);
+  setSelectedSale(null);
+  setAmountPaid("");
+  setAmountPaidRaw("");
+  setAttachments([]);
+  setCustomerSales([]);
+  setCustomers([]);
+}
+};
+
+  /* ===================== HELPERS ===================== */
+
+  const formatMoney = (value) =>
+    new Intl.NumberFormat("en-NG", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(Number(value || 0));
+
   const formatNumber = (value) =>
-  new Intl.NumberFormat("en-NG").format(Number(value || 0));
+    new Intl.NumberFormat("en-NG").format(Number(value || 0));
+
+  const formatDate = (date) => {
+
+    if (!date) return "";
+
+    return new Date(date)
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      })
+      .replace(/ /g, "-");
+
+  };
+
 
   /* ===================== SUCCESS POPUP ===================== */
-  if (showPopup) {
-    return (
+
+  /* ===================== UI ===================== */
+
+  return (
+
+    <div className="trip-modal">
+
+       {popup.open && (
       <div className="trip-card-popup">
         <div className="trip-card-popup-container">
           <div className="popup-content">
             <div onClick={closePopup} className="delete-box">✕</div>
             <div className="popup-proceeed-wrapper">
-              <span>Recovery successfully created</span>
+              <span style={{ color: popup.type === "error" ? "#d32f2f" : "#2e7d32" }}>
+                {popup.message}
+              </span>
             </div>
           </div>
         </div>
       </div>
-    );
-  }
-
-  /* ===================== UI ===================== */
-  return (
-    
-    <div className="trip-modal">
+    )}
       <div className="create-container-modal">
         <div className="create-container-card">
-
-          <h2>Create Recovery</h2>
+          <div className="tab-section">
+          <h2 >Create Recovery</h2>
           <p>Select customer and sale</p>
 
+          {/* ================= CUSTOMER SELECT ================= */}
           <div className="grid-2">
-            {/* ================= CUSTOMER SELECT ================= */}
             <div className="form-group-select">
+
               <label>Customer</label>
+
               <div className="custom-select">
-                <div className="custom-select-drop" onClick={() => setOpenCustomerSelect(!openCustomerSelect)}>
+
+                <div
+                  className="custom-select-drop"
+                  onClick={() => {  setOpenCustomerSelect(!openCustomerSelect);
+                    if (!customers.length) {setCustomerSearch(""); }}}>
+
                   <div className="select-box">
+
                     {selectedCustomer ? (
-                      <span>{selectedCustomer.name} - {selectedCustomer.phone} </span>
+                      <span>
+                        {selectedCustomer.name} - {selectedCustomer.phone}
+                      </span>
                     ) : (
                       <span className="placeholder">Select Customer</span>
                     )}
+
                   </div>
-                  <ChevronDown className={openCustomerSelect ? "up" : "down"} />
+                  <ChevronDown className={openCustomerSelect ? "up" : "down"}  />
+
                 </div>
+
                 {openCustomerSelect && (
+
                   <div className="select-dropdown">
-                    {/* search input */}
+
                     <input
                       type="text"
-                      placeholder="Search Customer..."
+                      placeholder="Search customer by phone number"
                       value={customerSearch}
                       onChange={(e) => setCustomerSearch(e.target.value)}
                       className="search-input"
+                      onKeyDown={handleKeyDown}
                     />
-                    {filteredCustomers.map(customer => (
+                    {loadingCustomer && ( <div className="option-item">Searching...</div>)}
+                    {!loadingCustomer && customers.length === 0 && debouncedSearch && (
+                      <div className="option-item">Customer not found</div>)}
+                    {customers.map((customer) => (
                       <div
-                        key={`${customer.name}-${customer.phone}`}
+                        key={customer.uuid}
                         className="option-item"
                         onClick={() => {
-                          setSelectedCustomer(customer); 
-                          setSelectedSale(null);
-                          setOpenCustomerSelect(false);
-                          setCustomerSearch(""); // reset search
+                          setSelectedCustomer(customer);
+setCustomerSearch("");
+setOpenCustomerSelect(false);
+setCustomers([]);
                         }}
-                      > 
-                        <div>{customer.name} - {customer.phone}</div>
+                      >
+                        {customer.name} - {customer.phone}
                       </div>
                     ))}
                   </div>
@@ -187,194 +386,287 @@ const [error, setError] = useState("");
               </div>
             </div>
             {/* ================= SALE SELECT ================= */}
-            <div className="form-group-select">
-              <label>Sale ID </label>
-              <div className="custom-select">
-                <div  className="custom-select-drop" onClick={() => selectedCustomer && setOpenSaleSelect(!openSaleSelect)}  >
-                  <div className="select-box">
-                    {selectedSale ? (
-                      <span>{selectedSale.sn} - ₦{formatMoney(selectedSale.balance)}</span>
-                    ) : (
-                      <span className="placeholder">
-                        {selectedCustomer
-                          ? "Select Sale ID"
-                          : "Select customer first"}
-                      </span>
-                    )}
-                  </div>
-                  <ChevronDown className={openSaleSelect ? "up" : "down"}  />
-                </div>
-
-                {openSaleSelect && (
-                  <div className="select-dropdown">
-                    {customerSales.map(sale => (
-                      <div
-                        key={sale.sn}
-                        className="option-item"
-                        onClick={() => {
-                          setSelectedSale(sale);
-                          setOpenSaleSelect(false);
-                        }}
-                      >
+              <div className="form-group-select">
+                <label>Sale ID</label>
+                <div className="custom-select">
+                  <div className="custom-select-drop"
+                    onClick={() => selectedCustomer && setOpenSaleSelect(!openSaleSelect)} >
+                    <div className="select-box">
+                      {selectedSale ? (
                         <span>
-                         {sale.sn} - ₦{formatMoney(sale.balance)}
+                          {selectedSale.sale_unique_id} - ₦{formatMoney(selectedSale.balance)}
                         </span>
-                      </div>
-                    ))}
+
+                      ) : (
+
+                        <span className="placeholder">
+
+                          {selectedCustomer
+                            ? "Select Sale ID"
+                            : "Select customer first"}
+
+                        </span>
+
+                      )}
+
+                    </div>
+
+                    <ChevronDown className={openSaleSelect ? "up" : "down"} />
                   </div>
+
+                  {openSaleSelect && (
+                    <div className="select-dropdown">
+                      {customerSales.map((sale) => (
+                        <div  key={sale.sale_uuid} className="option-item"onClick={() => {
+                            setSelectedSale(sale); setOpenSaleSelect(false);}} >
+                          {sale.sale_unique_id} - ₦{formatMoney(sale.balance)}
+                        </div>
+                      ))}
+                    </div>
+
                 )}
               </div>
             </div>
           </div>
+
           {/* ================= SALE DETAILS ================= */}
+
           {selectedSale && (
             <div className="sale-grid-3">
-            <div className="container-details">
-            <div className="collapsed-container">
-            <h4>Sale Details</h4> 
-            <ChevronDown style={{cursor:"pointer"}} onClick={() => setCollapsedContainers(!collapsedContainers)}
-            className={collapsedContainers ? "up" : "down"}/>
-            </div> 
-            {selectedSale.balance === 0 ? (
-                <p style={{ color: "green" }}>Fully Paid</p>
-              ) : (
-                <ul className={collapsedContainers ? "" : "d-none"}>
+              <div className="container-details">
+                <div className="collapsed-container">
+                  <h4>Sale Details</h4>
+                  <ChevronDown  className={collapsedContainers ? "up" : "down"}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setCollapsedContainers(!collapsedContainers)}
+                  />
+                </div>
+                
+                {selectedSale.balance === 0 ? (
+                  <p style={{ color: "green" }}>Fully Paid</p>
+                ) : (
+                  <ul className={collapsedContainers ? "" : "d-none"}>
                     <li>No Of Pallets: {formatNumber(selectedSale.noOfPallets)}</li>
                     <li>Customer Phone: {selectedSale.customer?.phone}</li>
                     <li>Total Sale Amount: ₦{formatMoney(selectedSale.totalSaleAmount)}</li>
                     <li>Payment to Date: ₦{formatMoney(selectedSale.amountPaid)}</li>
                     <li>Outstanding Balance: ₦{formatMoney(selectedSale.balance)}</li>
                     <li>Date Created: {formatDate(selectedSale.createdAt)}</li>
-                </ul>
-              )}
+                  </ul>
+
+                )}
+
+              </div>
+
             </div>
-            </div>
+
           )}
 
-          {/* ================= RECOVERY SECTION & PAYMENT ================= */}
+
+          {/* ================= PAYMENT SECTION ================= */}
+
           <div className="sale-grid-3">
+
             <div className="payment-header">
-                <h5>Payment Details</h5>
+              <h5>Payment Details</h5>
             </div>
-            <div className="grid-2" style={{background:"#fff",padding:"10px"}}>
-            <div className="form-group">
-                <label>Amount Paid</label>
-                <input
-  type="number"
-  placeholder="Enter Amount Paid"
-  value={amountPaid}
-  min="0"
-  onChange={(e) => {
-    const value = Number(e.target.value || 0);
 
-    if (selectedSale && value > selectedSale.balance) {
-      setError("Amount paid cannot be more than outstanding balance");
-      return;
-    }
+            <div className="grid-2" style={{ background: "#fff", padding: "10px" }}>
+             <div className="form-group">
+  <label>Amount Paid</label>
+  <input
+    type="text"
+    placeholder="Enter Amount Paid"
+    value={amountPaidRaw.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} 
+    onChange={(e) => {
+      const raw = e.target.value.replace(/,/g, "");
+      const numberValue = Number(raw);
 
-    setError("");
-    setAmountPaid(value);
-  }}
-/>
-{error && <small style={{ color: "red" }}>{error}</small>}
+      if (isNaN(numberValue)) return;
 
-            </div>
-            <div className="form-group">
-                <label>Payment Date</label> 
-                <input
-  type="date"
-  value={paymentDate}
-  onChange={(e) => setPaymentDate(e.target.value)}
-  style={{ color: "gray" }}
-/>
+      if (selectedSale && numberValue > selectedSale.balance) {
+        showError("Amount paid cannot be greater than outstanding balance");
+        return;
+      }
 
-            </div>
-            </div>
-            <div className="form-group">
-            <label>Comment </label>
-                <textarea name="" id="" ></textarea>
-            </div>
-            <section className="attachments">
-            <input
-  type="file"
-  multiple
-  hidden
-  id="recovery-attachment"
-  onChange={(e) => {
-    const files = Array.from(e.target.files);
-
-    const mappedFiles = files.map((file) => ({
-      id: crypto.randomUUID(),
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      file, // actual File object
-    }));
-
-    setAttachments((prev) => [...prev, ...mappedFiles]);
-  }}
-/>
-
-<button
-  type="button"
-  className="attach-link"
-  onClick={() => document.getElementById("recovery-attachment").click()}
->
-  <Paperclip size={14} /> Attach File
-</button>
-
-            <div className="recent-files">
-  {attachments.length === 0 && (
-    <small style={{ color: "#999" }}>No attachments added</small>
-  )}
-
-  {attachments.map((f) => (
-    <div key={f.id} className="file-row">
-      <div>
-        <div className="small-muted">{f.name}</div>
-        <small>{(f.size / 1024).toFixed(1)} KB</small>
-      </div>
-
-      <div className="file-actions">
-        <Trash2
-          size={16}
-          style={{ cursor: "pointer" }}
-          onClick={() =>
-            setAttachments((prev) => prev.filter(a => a.id !== f.id))
-          }
-        />
-      </div>
-    </div>
-  ))}
+      setAmountPaidRaw(numberValue);
+    }}
+  />
 </div>
 
-          </section>
+              <div className="form-group">
+
+                <label>Payment Date</label>
+
+                <input
+                  type="date"
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                />
+
+              </div>
+<div className="form-group-select ">
+  <label>Payment Method</label>
+
+  <div className="custom-select">
+    <div className="custom-select-drop" onClick={() => setOpenPaymentDropdown(prev => !prev)}>
+      <div className="select-box">
+        {paymentMethod ? (
+          <span>{paymentMethod}</span>
+        ) : (
+          <span className="placeholder">Select Method</span>
+        )}
+      </div>
+      <div className="custom-select-icon">
+        <ChevronDown className={openPaymentDropdown ? "up" : "down"} />
+      </div>
+    </div>
+
+    {openPaymentDropdown && (
+      <div className="select-dropdown">
+        {availablePayments.map((method) => (
+          <span
+            key={method}
+            className="option-item"  style={{padding:"10px"}}
+            onClick={() => {
+              setPaymentMethod(method);
+              setOpenPaymentDropdown(false);
+            }}
+          >
+            {method}
+          </span>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+            {/* ================= COMMENT ================= */}
+            <div className="form-group">
+
+              <label>Comment</label>
+
+              <textarea />
+
+            </div>
+            </div>
+
+
+            {/* ================= ATTACHMENTS ================= */}
+
+            <section className="attachments">
+
+              <input
+                type="file"
+                multiple
+                hidden
+                id="recovery-attachment"
+                onChange={(e) => {
+
+                  const files = Array.from(e.target.files);
+
+                  const mappedFiles = files.map((file) => ({
+                    id: crypto.randomUUID(),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    file
+                  }));
+
+                  setAttachments((prev) => [...prev, ...mappedFiles]);
+
+                }}
+              />
+
+              <button
+                type="button"
+                className="attach-link"
+                onClick={() =>
+                  document.getElementById("recovery-attachment").click()
+                }
+              >
+
+                <Paperclip size={14} /> Attach File
+
+              </button>
+
+
+              <div className="recent-files">
+
+                {attachments.length === 0 && (
+                  <small style={{ color: "#999" }}>
+                    No attachments added
+                  </small>
+                )}
+
+                {attachments.map((f) => (
+
+                  <div key={f.id} className="file-row">
+
+                    <div>
+
+                      <div className="small-muted">{f.name}</div>
+
+                      <small>{(f.size / 1024).toFixed(1)} KB</small>
+
+                    </div>
+
+                    <div className="file-actions">
+
+                      <Trash2
+                        size={16}
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                          setAttachments((prev) =>
+                            prev.filter((a) => a.id !== f.id)
+                          )
+                        }
+                      />
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            </section>
+
           </div>
 
           {/* ================= ACTIONS ================= */}
+
           <div className="btn-row">
-            <button className="cancel" onClick={() => setView("table")}>
+
+            <button
+              className="cancel"
+              onClick={() => setView("table")}
+            >
               Cancel
             </button>
-            <button
+
+<button
   className="create"
   disabled={
+    creating ||
     !selectedCustomer ||
     !selectedSale ||
-    !amountPaid ||
-    amountPaid > selectedSale?.balance
+    !amountPaidRaw ||
+    amountPaidRaw > selectedSale?.balance
   }
   onClick={handleCreateRecovery}
 >
-  Create Recovery
+  {creating ? "Creating..." : "Create Recovery"}
 </button>
 
           </div>
 
         </div>
+        </div>
       </div>
     </div>
   );
+
 };
 
 export default CreateRecovery;

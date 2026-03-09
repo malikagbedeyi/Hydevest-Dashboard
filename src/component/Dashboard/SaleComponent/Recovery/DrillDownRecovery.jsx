@@ -51,7 +51,7 @@ const isApproved = editableData.status === "Approved";
         </div>
 
         {/* ACTIONS */}
-        <div className="actions">
+        {/* <div className="actions">
         {editableData.status !== "Approved" && (
   <button
     className="primary"
@@ -76,7 +76,7 @@ const isApproved = editableData.status === "Approved";
   </span>
 </div>
 
-        </div>
+        </div> */}
 
         <div className="drilldown-title">
           <h2>Recovery Details</h2>
@@ -97,10 +97,8 @@ const isApproved = editableData.status === "Approved";
 
           <div className="detail-row">
             <span className="label">Sale ID:</span>
-            <span className="value">{editableData.saleSN}</span>
+            <span className="value">{editableData.saleUniqueId}</span>
           </div>
-
-          {/* AMOUNT PAID (EDITABLE) */}
           <div className="detail-row">
             <span className="label">Amount Paid:</span>
             {editingField === "amountPaid" ? (
@@ -130,71 +128,35 @@ const isApproved = editableData.status === "Approved";
             )}
           </div>
 
-          {/* BALANCE (READ-ONLY) */}
           <div className="detail-row">
-            <span className="label">Outstanding Balance:</span>
+            <span className="label">Payment Status:</span>
             <span className="value">
-              {editableData.balance === 0 ? (
-                <span style={{ color: "green" }}>Fully Paid</span>
-              ) : (
-                `₦${formatMoney(editableData.balance)}`
-              )}
+              {editableData.paymentStatus }
             </span>
           </div>
-
-          {/* PAYMENT DATE */}
+  {/* DATE CREATED */}
           <div className="detail-row">
             <span className="label">Payment Date:</span>
-            <span className="value">
-              {formatDate(editableData.paymentDate)}
-            </span>
+            <span className="value">{formatDate(editableData.createdAt)}</span>
           </div>
-
           {/* COMMENT */}
           <div className="detail-row">
             <span className="label">Comment:</span>
-            {editingField === "comment" ? (
-              <div className="editable-field">
-                <input
-                  type="text"
-                  value={editableData.comment || ""}
-                  onChange={(e) => handleChange("comment", e.target.value)}
-                  onBlur={saveField}
-                  autoFocus
-                />
-                <Check className="icon-check" onClick={saveField} />
-              </div>
-            ) : (
-              <div className="editable-field">
-                <span className="value">{editableData.comment || "-"}</span>
-                <Edit
-                  className="icon-edit"
-                  onClick={() => toggleEdit("comment")}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* DATE CREATED */}
-          <div className="detail-row">
-            <span className="label">Date Created:</span>
-            <span className="value">{formatDate(editableData.createdAt)}</span>
+            <span className="value">{data?.comment ? data.comment : "No comment provided"}</span>
           </div>
 
           {/* ATTACHMENTS */}
           <div className="detail-row">
             <span className="label">Attachments:</span>
-            <div className="container-tags">
-              {editableData.attachments?.length ? (
-                editableData.attachments.map((file) => (
-                  <span key={file.id} className="tag">
-                    <File size={14} /> {file.name}
-                  </span>
-                ))
-              ) : (
-                <span className="value">No attachments</span>
-              )}
-            </div>
+            {data?.attachment ? (
+    <a href={data.attachment} target="_blank" 
+    rel="noopener noreferrer" className="attachment-link" style={{textDecoration:"none" ,color:"#581aae",marginLeft:"auto"}} >
+      View Attachment
+    </a>
+  ) : (
+    <span>No attachment</span>
+  )}
+  
           </div>
         </div>
 
@@ -203,7 +165,7 @@ const isApproved = editableData.status === "Approved";
           <button className="btn outline" onClick={goBack}>
             Previous
           </button>
-          <button
+          {/* <button
   className="btn primary"
   onClick={() => {
     scrollToTop();
@@ -212,7 +174,7 @@ const isApproved = editableData.status === "Approved";
   }}
 >
   Update
-</button>
+</button> */}
 
         </div>
       </div>

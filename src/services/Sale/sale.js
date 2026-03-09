@@ -2,15 +2,12 @@
 import api from "../api";
 
 export const SaleServices = {
-  // 🔹 List container pre-sales
   containerPreSales: (params) =>
     api.get("/systemuser/sales/containerList", { params }),
 
-  // 🔹 Get customer by phone
   getCustomer: (params) =>
     api.get("/systemuser/sales/getCustomer", { params }),
 
-  // 🔹 Get pallets for a pre-sale
   getPallets: (params) =>
     api.get("/systemuser/sales/getPallets", { params }),
 
@@ -45,15 +42,16 @@ export const SaleServices = {
 
   // 🔹 Delete sale
   delete: (sale_uuid) => {
-    const formData = new URLSearchParams();
-    formData.append("sale_uuid", sale_uuid);
-
-    return api.post("/systemuser/sales/delete", formData, {
+  return api.post(
+    "/systemuser/sales/delete",
+    { sale_uuid }, // JSON body
+    {
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json", // <-- important
       },
-    });
-  },
+    }
+  );
+},
 
   // 🔹 Logs
   logs: (params) =>

@@ -16,8 +16,8 @@ export const usePresaleHelpers = (preSales) => {
     if (!presale) return false;
 
     return (
-      Number(pallet.pieces) > 0 &&
-      Number(pallet.pieces) < Number(presale.pricePerPic || 0)
+       Number(pallet.purchasePrice) > 0 &&
+      Number(pallet.purchasePrice) < Number(presale.pricePerPic || 0)
     );
   };
 

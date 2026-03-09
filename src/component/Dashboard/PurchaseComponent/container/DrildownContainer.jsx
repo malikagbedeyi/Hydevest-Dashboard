@@ -1,6 +1,6 @@
 import React, { useState,useRef, useEffect } from "react";
 import "../../../../assets/Styles/dashboard/Purchase/drildowncontainer.scss";
-import {ChevronLeft,ChevronDown, ChevronUp, Paperclip, Download,  Edit,  Trash2,  X,  Eye,  File,  Plus, Calendar, SendHorizontal} from "lucide-react";
+import {ChevronLeft,ChevronDown, ChevronUp, Paperclip, Download,  Edit,  Trash2,  X,  Eye,  File,  Plus, Calendar, SendHorizontal, Check} from "lucide-react";
 import { ContainerServices } from "../../../../services/Trip/container";
 import Attachment from "./Attachment";
 import Comment from "./Comment";
@@ -21,7 +21,7 @@ const DrildownContainer = ({container = {},goBack = () => {},onUpdate,avgContain
         });
 
 const [form, setForm] = useState({
-  description: container?.desc || "",trackingNumber: container?.tracking_number || "",averageWeight: container?.average_weight || "",maxWeight: container?.max_weight || "",
+  title: container?.title || "", description: container?.desc || "",trackingNumber: container?.tracking_number || "",averageWeight: container?.average_weight || "",maxWeight: container?.max_weight || "",
 entity: container?.entity_uuid || null,invoiceNumber: container?.invoice_number || "",sourceNation: container?.source_nation || "",sourcePort: container?.source_port || "",
   destinationPort: container?.destination_port || "",supplyCode: container?.supplier_code || "",
   unitpieces: container?.pieces || "",unitPrice: container?.unit_price_usd || "",warehouseChargeNGN: container?.warehouse_charge_ngn || "",
@@ -32,7 +32,7 @@ entity: container?.entity_uuid || null,invoiceNumber: container?.invoice_number 
 
   /* EDIT STATES */
   const [edit, setEdit] = useState({
-    description: false, destination: false,
+    description: false, destination: false,title: false, 
     trackingNumber: false, sourceNation: false, unitpieces:false, sourcePart: false, supplyCode: false,
     destinationCountry: false, destinationPort: false, funding: false,  piece: false,
     unitPrice: false, warehouseChargeNGN: false,  offloadAndSorting:false ,shipping_amount_usd:false,surcharge:false
@@ -217,9 +217,41 @@ useEffect(() => {
       {/* HEADER */}
       <div className="drill-top">
         <div className="drill-title">
-        <h4 className="small-muted">Title: {container.title || "—"}</h4>
-        <p>Container ID : {container.id}</p>
-        </div>
+
+  {/* TITLE */}
+  <div className="editable-title">
+    <label className="small-muted">Title:</label>
+
+    {edit.title ? (
+      <input
+        type="text"
+        name="title"
+        value={form.title}
+        autoFocus
+        onChange={handleChange}
+        onBlur={() => toggleEdit("title")}
+        className="title-input"
+      />
+    ) : (
+      <h4 className="small-muted">{form.title || "—"}</h4>
+    )}
+        <Edit
+      size={16}
+      className={edit.title ? "d-none" : "edit-btn"}
+      onClick={() => toggleEdit("title")}
+    />
+    <Check size={16}
+      className={edit.title ? "edit-btn" : "d-none"}
+      onClick={() => toggleEdit("title")} />
+  </div>
+
+  {/* CONTAINER ID (READ-ONLY) */}
+  <div className="container-id">
+    <span className="label">Container ID:</span>
+    <span className="value">#{container.id}</span>
+  </div>
+
+</div>
         <div className="right-title">
              <div className="actions">
             {!approved && (
@@ -288,13 +320,14 @@ useEffect(() => {
         <div className="Description-wrapper">
             <div className="label-content">
                 <label>Description <span>*</span></label>
-                 <Edit className="edit-btn" onClick={() => toggleEdit("description")} size={16} />
+                 <Edit   className={edit.description ? "d-none" : "edit-btn"} onClick={() => toggleEdit("description")} size={16} />
+                  <Check size={16} className={edit.description ? "edit-btn" : "d-none"}onClick={() => toggleEdit("description")} />
             </div>
-            <div className="field">
+            <div className="field"> 
               {edit.description ? (
                 <textarea
                   name="description"
-                  value={form.description}
+                  value={form.description} 
                   onChange={handleChange}
                   autoFocus
                   onBlur={() => toggleEdit("description")}

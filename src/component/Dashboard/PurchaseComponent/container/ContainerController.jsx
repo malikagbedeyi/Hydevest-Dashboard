@@ -181,7 +181,7 @@ const totalUnitPriceUSD = containers.reduce(
                 </div>
               </div>
             </div>
-      <div className="drill-summary-grid">
+      <div className="drill-summary-grid mt-5">
       <div className="drill-summary">
 <div className="summary-item">
   <p className="small">Total Container</p>

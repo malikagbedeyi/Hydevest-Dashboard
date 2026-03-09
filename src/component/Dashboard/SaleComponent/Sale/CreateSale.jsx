@@ -9,12 +9,11 @@ import SaleCustomer from "./SaleCustomer";
 import AddSaleItem from "./AddSaleItem";
 
 const CreateSale = ({ setView, onCreate, preSales = [], containersData = [], sales = [] }) => {
-
   const [editingRow, setEditingRow] = useState(null);
   const [searchContainer, setSearchContainer] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
   const [presaleError, setPresaleError] = useState("");
-  const [selectedValues, setSelectedValues] = useState([]);
+  const [selectedContainer, setSelectedContainer] = useState(null);
   const [openContainerSelect, setOpenContainerSelect] = useState(false);
   const [salePop, setSalePop] = useState(false);
   const [activeContainerId, setActiveContainerId] = useState(null);
@@ -22,12 +21,13 @@ const CreateSale = ({ setView, onCreate, preSales = [], containersData = [], sal
   const [containerSales, setContainerSales] = useState({});
   const [collapsedContainers, setCollapsedContainers] = useState({});
   const [openPalletDropdowns, setOpenPalletDropdowns] = useState({});
+const [openPaymentDropdown, setOpenPaymentDropdown] = useState(false);
   const [palletOptionsByContainer, setPalletOptionsByContainer] = useState({});
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-
-  const dynamicContainerOptions = selectedValues;
-
+const [discount, setDiscount] = useState(0);
+const [paymentMethod, setPaymentMethod] = useState(""); // CASH or TRANSFER
+const [availablePayments, setAvailablePayments] = useState(["CASH", "TRANSFER"]);
   const { presaleByContainerId, isPurchasePriceLowerThanPresale } = usePresaleHelpers(preSales);
 
   const [form, setForm] = useState({
@@ -57,52 +57,42 @@ const CreateSale = ({ setView, onCreate, preSales = [], containersData = [], sal
     });
   };
 
- const addPallet = (containerId) => {
-  const resolvedContainerId =
-    containerId || activeContainerId || selectedValues[0]?.id;
+  const addPallet = (containerId) => {
+    const resolvedContainerId = containerId || activeContainerId || selectedContainer?.id;
+    if (!resolvedContainerId) return;
 
-  if (!resolvedContainerId) return;
+    const palletList = palletOptionsByContainer[resolvedContainerId] || [];
+    if (!palletList.length) {
+      setSuccessMessage("No pallets available for this container");
+      return;
+    }
 
-  const palletList = palletOptionsByContainer[resolvedContainerId] || [];
-  if (!palletList.length) {
-    setSuccessMessage("No pallets available for this container");
-    return;
-  }
+    const usedUUIDs = form.pallets.map(p => p.pallet_uuid);
+    const available = palletList.find(p => !usedUUIDs.includes(p.pallet_uuid));
+    if (!available) {
+      setSuccessMessage("All pallets for this container have been added");
+      return;
+    }
 
-  // Prevent duplicate pallet UUIDs
-  const usedUUIDs = form.pallets.map(p => p.pallet_uuid);
+    setForm(prev => ({
+      ...prev,
+      pallets: [
+        ...prev.pallets,
+        {
+          id: crypto.randomUUID(),
+          containerId: resolvedContainerId,
+          pallet_uuid: available.pallet_uuid,
+          palletOption: available.pallet_pieces,
+          purchasePrice: 0,
+          noOfPallets: 0,
+          remaining_no_of_pallets: available.remaining_no_of_pallets || 0,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    }));
 
-  const available = palletList.find(
-    p => !usedUUIDs.includes(p.pallet_uuid)
-  );
-
-  if (!available) {
-    setSuccessMessage("All pallets for this container have been added");
-    return;
-  }
-
-  setForm(prev => ({
-    ...prev,
-    pallets: [
-      ...prev.pallets,
-      {
-        id: crypto.randomUUID(),
-        containerId: resolvedContainerId,
-
-        pallet_uuid: available.pallet_uuid,
-        palletOption: available.pallet_pieces,
-
-        purchasePrice: "",
-        noOfPallets: "",
-
-        remaining_no_of_pallets: available.remaining_no_of_pallets || 0,
-        createdAt: new Date().toISOString(),
-      },
-    ],
-  }));
-
-  setSalePop(true);
-};
+    setSalePop(true);
+  };
 
   const removeAddSale = (index) => {
     const updated = form.pallets.filter((_, i) => i !== index);
@@ -118,27 +108,26 @@ const CreateSale = ({ setView, onCreate, preSales = [], containersData = [], sal
     setCollapsedContainers(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // ---------------------- SYNC SELECTED CONTAINERS ----------------------
+  // ---------------------- SYNC SELECTED CONTAINER ----------------------
   useEffect(() => {
-    if (!selectedValues.length) return;
+    if (!selectedContainer) return;
+    const id = selectedContainer.id;
     setContainerSales(prev => {
       const updated = { ...prev };
-      selectedValues.forEach(container => {
-        if (!updated[container.id]) {
-          updated[container.id] = {
-            container: {
-              id: container.id,
-              container_uuid: container.container_uuid,
-              name: container.name || container.title || "",
-              trackingNumber: container.trackingNumber || "TN-UNKNOWN",
-            },
-            pallets: [],
-          };
-        }
-      });
+      if (!updated[id]) {
+        updated[id] = {
+          container: {
+            id: selectedContainer.id,
+            container_uuid: selectedContainer.container_uuid,
+            name: selectedContainer.name || selectedContainer.title || "",
+            trackingNumber: selectedContainer.trackingNumber || "TN-UNKNOWN",
+          },
+          pallets: [],
+        };
+      }
       return updated;
     });
-  }, [selectedValues]);
+  }, [selectedContainer]);
 
   // ---------------------- FORMATTERS ----------------------
   const formatMoneyNGN = (value) => value === "" || value === null || value === undefined ? "" : "₦" + Number(value).toLocaleString("en-NG");
@@ -168,19 +157,25 @@ const CreateSale = ({ setView, onCreate, preSales = [], containersData = [], sal
   const computedNoOfPallets = totalPalletCount(containerSales);
   const computedPurchasePricePerPiece = totalPurchasePricePerPiece(containerSales);
 
-  const isBoxSale = useMemo(() => selectedValues.some(c => presaleByContainerId[c.id]?.saleOption === "Box Sale"), [selectedValues, presaleByContainerId]);
-  const isNonBoxSale = useMemo(() => selectedValues.some(c => presaleByContainerId[c.id]?.saleOption === "Split Sale"), [selectedValues, presaleByContainerId]);
 
-  const saleOptionType = useMemo(() => {
-    if (isBoxSale && isNonBoxSale) return "Mixed Sale";
-    if (isBoxSale) return "Box Sale";
-    return "Split Sale";
-  }, [isBoxSale, isNonBoxSale]);
 
-  const computedTotalSaleAmountFinal = isBoxSale ? Number(form.totalSaleAmount || 0) : computedTotalSaleAmount;
+const saleOptionType = useMemo(() => {
+  if (!selectedContainer) return "";
+  const presale = presaleByContainerId[selectedContainer.id];
+  return (presale?.sale_option || "").toLowerCase().trim();
+}, [selectedContainer, presaleByContainerId]);
 
-  const balance = amountPaid >= computedTotalSaleAmountFinal ? 0 : computedTotalSaleAmountFinal - amountPaid;
+const isBoxSale = saleOptionType === "box sale";
+const isSplitOrMixedSale = ["split sale", "mixed sale"].includes(saleOptionType);
 
+const computedTotalSaleAmountFinal = isBoxSale
+  ? Number(form.totalSaleAmount || 0) - discount
+  : computedTotalSaleAmount - discount;
+
+const balance =
+  amountPaid >= computedTotalSaleAmountFinal
+    ? 0
+    : computedTotalSaleAmountFinal - amountPaid;
   // ---------------------- CUSTOMER / PAYMENTS ----------------------
   const handleClick = () => {
     if (!selectedCustomer) {
@@ -189,234 +184,212 @@ const CreateSale = ({ setView, onCreate, preSales = [], containersData = [], sal
     }
     handleCreate(selectedCustomer);
   };
-
+  const getBackendPalletPieces = (containerId, palletUUID) => {
+  const pallets = palletOptionsByContainer[containerId] || [];
+  const pallet = pallets.find(p => p.pallet_uuid === palletUUID);
+  return Number(pallet?.pallet_pieces) || 0;
+};
 const buildCreatePayload = (customer) => {
-  if (!customer?.user_uuid) {
-    throw new Error("Customer is required");
-  }
+  if (!customer?.user_uuid) throw new Error("Customer is required");
+  if (!selectedContainer) throw new Error("Container is required");
 
-  const containers = Object.values(containerSales);
-  if (!containers.length) {
-    throw new Error("At least one container is required");
-  }
+  const presale = presaleByContainerId[selectedContainer.id];
+  if (!presale?.pre_sale_uuid) throw new Error(`Pre-sale not found for container ${selectedContainer.name}`);
 
-  const container = containers[0];
-  const presale = presaleByContainerId[container.container.id];
+  const containerData = containerSales[selectedContainer.id];
+  if (!containerData?.pallets?.length) throw new Error("No pallets added");
 
-  if (!presale?.pre_sale_uuid) {
-    throw new Error("Missing pre-sale UUID");
-  }
-
-  const purchase_prices = [];
-  const pallets_purchased = [];
-  const pallet_uuids = [];
-
-  container.pallets.forEach(p => {
-    if (!p.noOfPallets || !p.purchasePrice) return;
-
-    purchase_prices.push(p.purchasePrice);
-    pallets_purchased.push(p.noOfPallets);
-    pallet_uuids.push(p.pallet_uuid);
-  });
-
-  if (
-    !purchase_prices.length ||
-    purchase_prices.length !== pallets_purchased.length ||
-    pallets_purchased.length !== pallet_uuids.length
-  ) {
-    throw new Error("Invalid pallet data");
-  }
-
-  const total_sale_amount = container.pallets.reduce(
-    (sum, p) => sum + p.total,
-    0
-  );
+  const purchase_prices = containerData.pallets.map(p => Number(p.purchasePrice));
+  const pallets_purchased = containerData.pallets.map(p => Number(p.noOfPallets));
+  const pallet_uuids = containerData.pallets.map(p => p.pallet_uuid);
+  const pallet_pieces = containerData.pallets.map(p => p.palletOption);
 
   return {
-    container_uuid: container.container.container_uuid,
+    container_uuid: selectedContainer.container_uuid,
     pre_sale_uuid: presale.pre_sale_uuid,
     customer_uuid: customer.user_uuid,
-
-    purchase_prices: purchase_prices.join(","),
-    pallets_purchased: pallets_purchased.join(","),
-    pallet_uuids: pallet_uuids.join(","),
-
-    total_sale_amount,
+    purchase_prices: purchase_prices.join(","),       // ✅ array as CSV
+    pallets_purchased: pallets_purchased.join(","),   // ✅ array as CSV
+    pallet_uuids: pallet_uuids.join(","),             // ✅ array as CSV
+    pallet_pieces: pallet_pieces.join(","),           // ✅ array as CSV
     amount_paid: Number(amountPaid) || 0,
+    total_sale_amount: containerData.pallets.reduce((sum, p) => sum + Number(p.total || 0), 0) - discount,
+    discount,
+    payment_method: paymentMethod || "NO payment method selected",
+    balance,
   };
-  
 };
 
-  const handleCreate = async (customer) => {
-    try {
-      const payload = buildCreatePayload(customer);
-      console.log("Sale payload ready to send:", payload);
-      await onCreate(payload);
-      setView("table");
-      console.log("FINAL PAYLOAD:", payload);
-    } catch (err) {
-      console.error("Create sale failed", err);
-      if (err.response) setSuccessMessage(err.response.data?.message || "Failed to create sale");
-      else setSuccessMessage(err.message || "Failed to create sale");
-    }
-  };
+const handleCreate = async (customer) => {
+  try {
+    const payload = buildCreatePayload(customer);
 
-  // ---------------------- FETCH PALLETS ----------------------
-  useEffect(() => {
-    if (!selectedValues.length) return;
+    // Show loader while saving
+    setSuccessMessage("Saving sale...");
+    
+    const message = await onCreate(payload); // <-- get success message
+    setSuccessMessage(message);              // <-- show success popup
 
-    const fetchPalletsForContainers = async () => {
-      for (const container of selectedValues) {
-        const presale = presaleByContainerId[container.id];
-        if (!presale?.pre_sale_unique_id) continue;
-        if (palletOptionsByContainer[container.id]) continue;
+    // Reset form after success
+    setForm({ ...form, pallets: [], totalSaleAmount: "" });
+    setSelectedContainer(null);
+    setAmountPaid("");
+    setPaymentMethod("");
+    setDiscount(0);
 
-        try {
-          const res = await SaleServices.getPallets({ pre_sale_uuid: presale.pre_sale_uuid });
-          const pallets = res?.data?.pallets || [];
-const palletsWithUUID = pallets.map(p => ({
-  pallet_uuid: p.pallet_uuid,
-  pallet_pieces: Number(p.pallet_pieces) || 0,
-  remaining_no_of_pallets: Number(p.remaining_no_of_pallets) || 0
-}));
-          setPalletOptionsByContainer(prev => ({ ...prev, [container.id]: palletsWithUUID }));
-        } catch (err) {
-          console.error("Failed to fetch pallets for container:", container.name, err);
-        }
-      }
-    };
+    // Reload the table silently
+    setTimeout(() => setView("table"), 1200); // close popup automatically
+  } catch (err) {
+    const errorMsg =
+      err.response?.data?.message || err.message || "Failed to create sale";
+    setSuccessMessage(errorMsg);
+    console.error("Backend Error:", err.response?.data || err);
+  }
+};
+const handleSaveSaleItems = () => {
+  if (!form.pallets.length) return;
+  const containerId = activeContainerId;
+  if (!containerId) return;
 
-    fetchPalletsForContainers();
-  }, [selectedValues, presaleByContainerId]);
+  setContainerSales(prev => {
+    const updated = { ...prev };
+    if (!updated[containerId]) updated[containerId] = { container: activeContainer.container, pallets: [] };
 
-  // ---------------------- SELECTED CONTAINERS ERRORS ----------------------
-  useEffect(() => {
-    if (!selectedValues.length) {
-      setPresaleError("");
-      return;
-    }
-    const containersWithoutPresale = selectedValues.filter(c => !presaleByContainerId[c.id]);
-    setPresaleError(containersWithoutPresale.length ? "Some selected containers do not have a pre-sale" : "");
-  }, [selectedValues, presaleByContainerId]);
+    form.pallets.forEach(p => {
+      const price = Number(p.purchasePrice) || 0;
+      const qty = Math.min(Number(p.noOfPallets) || 0, Number(p.remaining_no_of_pallets) || 0);
+      const pieces = Number(p.palletOption) || 0;
 
-  useEffect(() => {
-    if (!activeContainerId && selectedValues.length) setActiveContainerId(selectedValues[0].id);
-  }, [selectedValues, activeContainerId]);
+      if (!price || !qty || !p.pallet_uuid) return;
 
+      const palletData = {
+        id: p.id,
+        pallet_uuid: p.pallet_uuid,
+        palletOption: pieces,
+        purchasePrice: price,
+        noOfPallets: qty,
+        total: price * qty * pieces, // ✅ store total here
+        createdAt: p.createdAt || new Date().toISOString(),
+      };
+
+      const index = updated[containerId].pallets.findIndex(x => x.id === p.id);
+      if (index === -1) updated[containerId].pallets.push(palletData);
+      else updated[containerId].pallets[index] = palletData;
+    });
+
+    return updated;
+  });
+
+  setForm(prev => ({ ...prev, pallets: [] })); 
+  setSalePop(false);
+  setEditingRow(null);
+};
+
+  // ---------------------- FILTER CONTAINERS ----------------------
   const filterContainers = (containersData || []).filter(item => {
     const name = item?.name ?? item?.title ?? "";
     return name.toLowerCase().includes(searchContainer.toLowerCase());
   });
 
   const toggleSelect = (item) => {
-    setSelectedValues(prev => {
-      const exists = prev.some(v => v.id === item.id);
-      if (exists) {
-        const hasSales = containerSales[item.id]?.pallets?.length > 0;
-        if (hasSales) { setSuccessMessage("You cannot remove a container that already has sale items"); return prev; }
-        return prev.filter(v => v.id !== item.id);
-      }
-      return [...prev, { id: item.id, container_uuid: item.container_uuid, name: item.name || item.title || "", trackingNumber: item.tracking_number || "TN-UNKNOWN" }];
-    });
+    if (activeContainerId && containerSales[item.id]?.pallets?.length > 0) {
+      setSuccessMessage("You cannot remove a container that already has sale items");
+      return;
+    }
+    setSelectedContainer(item);
   };
 
-  const closePopup = () => setSuccessMessage(null);
+  // ---------------------- FETCH PALLETS ----------------------
+  useEffect(() => {
+    if (!selectedContainer) return;
 
-  // ---------------------- SAVE / EDIT SALE ITEMS ----------------------
-const handleSaveSaleItems = () => {
-  if (!form.pallets.length) return;
+    const fetchPalletsForContainer = async () => {
+      const container = selectedContainer;
+      const presale = presaleByContainerId[container.id];
+      if (!presale?.pre_sale_unique_id) return;
+      if (palletOptionsByContainer[container.id]) return;
 
+      try {
+        const res = await SaleServices.getPallets({ pre_sale_uuid: presale.pre_sale_uuid });
+        const pallets = res?.data?.pallets || [];
+        const palletsWithUUID = pallets.map(p => ({
+          pallet_uuid: p.pallet_uuid,
+          pallet_pieces: Number(p.pallet_pieces) || 0,
+          remaining_no_of_pallets: Math.max(Number(p.remaining_no_of_pallets) || 0, 0)
+        }));
+        setPalletOptionsByContainer(prev => ({ ...prev, [container.id]: palletsWithUUID }));
+      } catch (err) {
+        console.error("Failed to fetch pallets for container:", container.name, err);
+      }
+    };
+
+    fetchPalletsForContainer();
+  }, [selectedContainer, presaleByContainerId]);
+
+  // ---------------------- SELECTED CONTAINER ERROR ----------------------
+  useEffect(() => {
+    if (!selectedContainer) {
+      setPresaleError("");
+      return;
+    }
+    const hasPresale = !!presaleByContainerId[selectedContainer.id];
+    setPresaleError(hasPresale ? "" : "This container does not have a pre-sale");
+  }, [selectedContainer, presaleByContainerId]);
+
+  useEffect(() => {
+    if (!activeContainerId && selectedContainer) setActiveContainerId(selectedContainer.id);
+  }, [selectedContainer, activeContainerId]);
+// Delete a sale item
+const handleDeleteSaleItem = (palletId, containerId) => {
   setContainerSales(prev => {
     const updated = { ...prev };
+    if (!updated[containerId]) return updated;
 
-    form.pallets.forEach(p => {
-      const {
-        containerId,
-        pallet_uuid,
-        purchasePrice,
-        noOfPallets,
-        remaining_no_of_pallets,
-      } = p;
-
-      if (!containerId || !pallet_uuid) return;
-
-      const safeQty = Math.min(
-        Number(noOfPallets) || 0,
-        Number(remaining_no_of_pallets) || 0
-      );
-
-      if (!updated[containerId]) {
-        const containerMeta = selectedValues.find(c => c.id === containerId);
-        if (!containerMeta) return;
-
-        updated[containerId] = {
-          container: {
-            id: containerMeta.id,
-            container_uuid: containerMeta.container_uuid,
-            name: containerMeta.name,
-          },
-          pallets: [],
-        };
-      }
-
- if (!p.palletOption || !p.purchasePrice || !safeQty) return;
-
-const palletData = {
-  id: p.id,
-  pallet_uuid,
-  palletOption: Number(p.palletOption),
-  purchasePrice: Number(p.purchasePrice),
-  noOfPallets: safeQty,
-  total:
-    Number(p.purchasePrice) *
-    safeQty *
-    Number(p.palletOption),
-  createdAt: p.createdAt,
-};
-
-      const index = updated[containerId].pallets.findIndex(
-        x => x.pallet_uuid === pallet_uuid
-      );
-
-      if (index === -1) {
-        updated[containerId].pallets.push(palletData);
-      } else {
-        updated[containerId].pallets[index] = palletData;
-      }
-    });
-
+    updated[containerId].pallets = updated[containerId].pallets.filter(p => p.id !== palletId);
     return updated;
   });
-
-  setForm(prev => ({ ...prev, pallets: [] }));
-  setSalePop(false);
-  setEditingRow(null);
 };
 
-  const handleEditSaleItem = (row) => {
-    const palletData = containerSales[row.containerId]?.pallets.find(p => p.id === row.palletId);
-    if (!palletData) return;
-    setForm(prev => ({ ...prev, pallets: [{ ...palletData }] }));
-    setActiveContainerId(row.containerId);
-    setSalePop(true);
-    setEditingRow({ containerId: row.containerId, palletIndex: containerSales[row.containerId].pallets.findIndex(p => p.id === row.palletId) });
+const handleEditSaleItem = (palletId, containerId) => {
+  const palletToEdit = containerSales[containerId]?.pallets.find(p => p.id === palletId);
+  if (!palletToEdit) return;
+
+  // Add containerId to the pallet object
+  setForm(prev => ({
+    ...prev,
+    pallets: [{ ...palletToEdit, containerId }],
+  }));
+
+  setActiveContainerId(containerId);
+  setSalePop(true);
+  setEditingRow(palletId);
+};
+
+
+ 
+// ---------------------- FETCH Payment ----------------------
+useEffect(() => {
+  if (!form.presaleId) return;
+
+  const fetchPayments = async () => {
+    try {
+      const res = await SaleServices.payments({ sale_uuid: form.presaleId });
+      // You can process these if you want, e.g., show existing payment history
+      // console.log("Sale Payments:", res.data.record);
+    } catch (err) {
+      console.error("Failed to fetch sale payments", err);
+    }
   };
 
-  const handleDeleteSaleItem = (row) => {
-    setContainerSales(prev => {
-      const updated = { ...prev };
-      updated[row.containerId].pallets = updated[row.containerId].pallets.filter(p => p.id !== row.palletId);
-      return updated;
-    });
-  };
-
+  fetchPayments();
+}, [form.presaleId]);
   // ---------------------- RENDER ----------------------
   if (successMessage) {
     return (
       <div className="trip-card-popup">
         <div className="trip-card-popup-container">
           <div className="popup-content">
-            <div onClick={closePopup} className="delete-box">✕</div>
+            <div onClick={() => setSuccessMessage(null)} className="delete-box">✕</div>
             <div className="popup-proceeed-wrapper">
               <span>{successMessage}</span>
             </div>
@@ -427,256 +400,302 @@ const palletData = {
   }
 
 
-  return (
-    <div className="trip-modal">
-      <div className="create-container-modal">
-        <div className="create-container-card">
-          <div className="header">
-            <h2>Create Sale</h2>
-            <X
-              size={18}
-              className="close"
-              onClick={() => setView(sales && sales.length > 0 ? "table" : "empty")}
-            />
-          </div>
-          <div className="tab-section">
-             {/* Container & Pre-Sale dropdowns */}
-      <div className="">
-  <p>Enter the details of new Sale</p>
+    return (
 
-  <div className="grid-2">
-    {/* ==================== Container Multi-select ==================== */}
-    <div className="form-group-select">
-      <label>Container</label>
-
-      <div className="custom-select">
-        <div className="custom-select-drop">
-          <div className="select-box">
-            {selectedValues.length === 0 ? (
-              <span className="placeholder">Select Container(s)</span>
-            ) : (
-              <div className="selected-tags">
-                {selectedValues.map((item) => (
-                  <span className="tag" key={item.id}>
-                    {item.name || item.title}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div
-            className="custom-select-icon"
-            onClick={() => setOpenContainerSelect(!openContainerSelect)}
-          >
-            <ChevronDown className={openContainerSelect ? "up" : "down"} />
-          </div>
+  <div className="trip-modal">
+    <div className="create-container-modal">
+      <div className="create-container-card">
+        <div className="header">
+          <h2>Create Sale</h2>
+          <X
+            size={18}
+            className="close"
+            onClick={() => setView(sales && sales.length > 0 ? "table" : "empty")}
+          />
         </div>
 
-        <div className={openContainerSelect ? "select-dropdown" : "d-none"}>
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchContainer}
-            onChange={(e) => setSearchContainer(e.target.value)}
-            className="search-input"
+        <div className="tab-section">
+          <p>Enter the details of new Sale</p>
+
+          <div className="grid-2">
+            {/* ==================== Container Select ==================== */}
+            <div className="form-group-select">
+              <label>Container</label>
+
+              <div className="custom-select">
+                <div className="custom-select-drop">
+                  <div className="select-box">
+                    {selectedContainer ? (
+                      <span>{selectedContainer.name || selectedContainer.title}</span>
+                    ) : (
+                      <span className="placeholder">Select Container</span>
+                    )}
+                  </div>
+
+                  <div
+                    className="custom-select-icon"
+                    onClick={() => setOpenContainerSelect(!openContainerSelect)}
+                  >
+                    <ChevronDown className={openContainerSelect ? "up" : "down"} />
+                  </div>
+                </div>
+
+                {openContainerSelect && (
+                  <div className="select-dropdown">
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchContainer}
+                      onChange={(e) => setSearchContainer(e.target.value)}
+                      className="search-input"
+                    />
+
+                    <div className="option">
+                      {filterContainers.map((item) => (
+                        <label key={item.id}>
+                          <input
+                          onClick={() => setOpenContainerSelect(false)}
+                            type="radio"
+                            checked={selectedContainer?.id === item.id}
+                            onChange={() => toggleSelect(item)}
+                          />
+                          <span>{item.name || item.title}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* ==================== Pre-sale ID ==================== */}
+            <div className="form-group">
+              <label>Pre-Sale ID</label>
+              <input
+                readOnly
+                className="readonly-input"
+                value={
+                  selectedContainer
+                    ? presaleByContainerId[selectedContainer.id]?.pre_sale_unique_id || ""
+                    : ""
+                }
+              />
+              {presaleError && <small className="error-text">{presaleError}</small>}
+            </div>
+          </div>
+
+          {/* ==================== Container Details / Pre-sale Info ==================== */}
+          {selectedContainer && (
+            <div className="sale-grid-3">
+              <div className="container-details">
+                <div className="collapsed-container">
+                  <h4 className="mt-4">{selectedContainer.name} - Pre-sale Details</h4>
+                  <ChevronDown
+                    onClick={() => toggleCollapsedContainer(selectedContainer.id)}
+                    className={collapsedContainers[selectedContainer.id] ? "up" : "down"}
+                  />
+                </div>
+                <ul className={collapsedContainers[selectedContainer.id] ? "" : "d-none"}>
+                  {presaleByContainerId[selectedContainer.id] ? (
+                    <>
+                      <li>Pre-Sale ID: {presaleByContainerId[selectedContainer.id].pre_sale_unique_id}</li>
+                      <li>Sale Option: {presaleByContainerId[selectedContainer.id].sale_option}</li>
+                      <li>Total Pieces: {presaleByContainerId[selectedContainer.id].wc_pieces}</li>
+                      <li>Total Pallets: {presaleByContainerId[selectedContainer.id].total_no_of_pallets}</li>
+                      <li>Expected Revenue: ₦{presaleByContainerId[selectedContainer.id].expected_sales_revenue}</li>
+                      <li>Status: {presaleByContainerId[selectedContainer.id].status}</li>
+                    </>
+                  ) : (
+                    <li className="error-text">This container has no pre-sale</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* ==================== Customer Section ==================== */}
+          <SaleCustomer
+            onCustomerResolved={(customer) => setSelectedCustomer(customer)}
           />
 
-          <div className="option">
-            {filterContainers.map((item) => {
-              const checked = selectedValues.some((v) => v.id === item.id);
+          {/* ==================== Sale Details ==================== */}
+          <div className="sale-details">
+            <div className="sale-header-details">
+              <h3 className="title-text">Sale Details</h3>
 
-              return (
-                <label key={item.id} onClick={() => setOpenContainerSelect(false)}>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleSelect(item)}
-                  />
-                  <span>{item.name || item.title}</span>
-                </label>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* ==================== Pre-sale Dropdown ==================== */}
-    <div className="form-group">
-      <label>Pre-Sale ID</label>
-<input
-  readOnly
-  className="readonly-input"
-  value={
-    selectedValues.length === 0
-      ? ""
-      : selectedValues
-          .map(c => presaleByContainerId[c.id]?.pre_sale_unique_id)
-          .filter(Boolean)
-          .map(sn => `ID:${sn}`)
-          .join(", ")
-  }
-/>
-{presaleError && <small className="error-text">{presaleError}</small>}
-    </div>
-  </div>
-
-  {/* ==================== Container Details / Pre-sale Info ==================== */}
-  {selectedValues.length > 0 && (
-    <div className="sale-grid-3">
-     {selectedValues.map(container => {
-  const presale = presaleByContainerId[container.id];
-  return (
-    <div key={container.id} className="container-details">
-      <div className="collapsed-container">
-        <h4 className="mt-4">{container.name} - Pre-sale Details</h4>
-        <ChevronDown
-          onClick={() => toggleCollapsedContainer(container.id)}
-          className={collapsedContainers[container.id] ? "up" : "down"}
-        />
-      </div>
-      <ul className={collapsedContainers[container.id] ? "" : "d-none"}>
-        {presale ? (
-          <>
-            <li>Pre-Sale ID: {presale.pre_sale_unique_id}</li>
-            <li>Sale Option: {presale.sale_option}</li>
-            <li>Total Pieces: {presale.wc_pieces}</li>
-            <li>Total Pallets: {presale.total_no_of_pallets}</li>
-            <li>Expected Revenue: ₦{presale.expected_sales_revenue}</li>
-            <li>Status: {presale.status}</li>
-          </>
-        ) : (
-          <li className="error-text">This container has no pre-sale</li>
-        )}
-      </ul>
-    </div>
-  );
-})}
-    </div>
-  )}
-
-        </div>
-            {/* Customer Section */}
-         <SaleCustomer
-  onCustomerResolved={(customer) => {
-    setSelectedCustomer(customer);
-  }}
-/>
-
-            {/* Sale Details */}
-            <div className="sale-details">
-  {/* Header */}
-  <div className="sale-header-details">
-      <>
-        <h3 className="title-text" >Sale Details</h3>
-
-{["Split Sale", "Mixed Sale"].includes(saleOptionType) && (
+{isSplitOrMixedSale && (
   <button
     type="button"
     className="add-item-btn"
     onClick={() => {
-const containerId = activeContainerId || selectedValues[0]?.id;
-if (!containerId || !palletOptionsByContainer[containerId]?.length) {
-  setSuccessMessage("No pallets loaded yet for this container");
-  return;
-}
-addPallet(containerId);
+      const containerId = activeContainerId || selectedContainer?.id;
+      if (!containerId || !palletOptionsByContainer[containerId]?.length) {
+        setSuccessMessage("No pallets loaded yet for this container");
+        return;
+      }
+      addPallet(containerId);
     }}
   >
     <Plus size={16} /> Add Item
   </button>
 )}
+            </div>
 
+            {/* ================= ADD SALE POPUP ================= */}
+            <AddSaleItem
+              formatNumber={formatNumber}
+              form={form}
+              setForm={setForm}
+              salePop={salePop}
+              setSalePop={setSalePop}
+              activeContainerId={activeContainerId}
+              dynamicContainerOptions={selectedContainer ? [selectedContainer] : []}
+              openContainerDropdowns={openContainerDropdowns}
+              setOpenContainerDropdowns={setOpenContainerDropdowns}
+              openPalletDropdowns={openPalletDropdowns}
+              setOpenPalletDropdowns={setOpenPalletDropdowns}
+              palletOptionsByContainer={palletOptionsByContainer}
+              addPallet={addPallet}
+              handlePalletChange={handlePalletChange}
+              handleSaveSaleItems={handleSaveSaleItems}
+              removeAddSale={removeAddSale}
+              isPurchasePriceLowerThanPresale={isPurchasePriceLowerThanPresale}
+            />
 
+            {/* ================= ACTIVE CONTAINER TOTALS / TABLE ================= */}
+            {activeContainer && activeContainer.pallets.length > 0 && (
+              <div className="sale-row">
+                {tableSaleItems.length > 0 && (
+                  <div className="sale-row mt-3">
+                    <SaleItemsTable
+                      items={tableSaleItems}
+                      onDelete={handleDeleteSaleItem}
+                      onEdit={handleEditSaleItem}
+                      formatNumber={formatNumber}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
-
-
-      </>
-  </div>
-
-  {/* ================= ADD SALE POPUP ================= */}
-  <div className={salePop ? "add-sale-popup" : "d-none"}>
-    <AddSaleItem formatNumber={formatNumber}
-    form={form} setForm={setForm} salePop={salePop} setSalePop={setSalePop}  activeContainerId={activeContainerId} dynamicContainerOptions={dynamicContainerOptions}
-    openContainerDropdowns={openContainerDropdowns}setOpenContainerDropdowns={setOpenContainerDropdowns} openPalletDropdowns={openPalletDropdowns} setOpenPalletDropdowns={setOpenPalletDropdowns}
-  palletOptionsByContainer={palletOptionsByContainer} addPallet={addPallet} handlePalletChange={handlePalletChange} handleSaveSaleItems={handleSaveSaleItems} removeAddSale={removeAddSale} isPurchasePriceLowerThanPresale={isPurchasePriceLowerThanPresale}
-/>
-  </div>
-
-  {/* ================= ACTIVE CONTAINER TOTALS ================= */}
-  {activeContainer && activeContainer.pallets.length > 0 && (() => {
-  return (
-    <div className="sale-row">
-     {/* ================= SALE ITEMS TABLE ================= */}
-{tableSaleItems.length > 0 && (
-  <div className="sale-row mt-3">
-    <SaleItemsTable
-      items={tableSaleItems}
-      onDelete={handleDeleteSaleItem}
-      onEdit={handleEditSaleItem}
-      formatNumber={formatNumber}
+            {/* ================== Totals & Payments ================== */}
+            <div className="grid-2 mt-3">
+  {/* Discount */}
+  <div className="form-group">
+    <label>Discount</label>
+    <input
+      type="text"
+      min={0}
+      value={discount}
+      onChange={(e) => {
+        const value = (e.target.value) || 0;
+        setDiscount(value);
+      }}
     />
   </div>
-)}
 
+  {/* Payment Method */}
+<div className="form-group-select">
+  <label>Payment Method</label>
+
+  <div className="custom-select">
+    <div className="custom-select-drop" onClick={() => setOpenPaymentDropdown(prev => !prev)}>
+      <div className="select-box">
+        {paymentMethod ? (
+          <span>{paymentMethod}</span>
+        ) : (
+          <span className="placeholder">Select Method</span>
+        )}
+      </div>
+      <div className="custom-select-icon">
+        <ChevronDown className={openPaymentDropdown ? "up" : "down"} />
+      </div>
     </div>
-  );
-})()}
-    <div className="grid-2 mt-3">
-<div className="form-group">
-  <label style={{ color: "#581aae" }}>Total Sale Amount</label>
 
-  <input
+    {openPaymentDropdown && (
+      <div className="select-dropdown">
+        {availablePayments.map((method) => (
+          <span
+            key={method}
+            className="option-item"  style={{padding:"10px"}}
+            onClick={() => {
+              setPaymentMethod(method);
+              setOpenPaymentDropdown(false);
+            }}
+          >
+            {method}
+          </span>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+ <div className="form-group">
+                <label style={{ color: "#581aae" }}>Total Sale Amount</label>
+
+<input
   type="text"
   readOnly={!isBoxSale}
   value={
-    isBoxSale
-      ? formatMoneyNGN(form.totalSaleAmount)
-      : formatMoneyNGN(computedTotalSaleAmount)
-  }
+  isBoxSale
+    ? formatMoneyNGN(form.totalSaleAmount - discount)
+    : formatMoneyNGN(computedTotalSaleAmount - discount)
+}
   onChange={(e) => {
     if (!isBoxSale) return;
-
     const raw = parseMoney(e.target.value);
-
-    setForm(prev => ({
-      ...prev,
-      totalSaleAmount: raw,
-    }));
+    setForm(prev => ({ ...prev, totalSaleAmount: raw }));
   }}
 />
+              </div>
 
-</div>
 
- <div className="form-group">
-  <label style={{ color: "#581aae" }}>Amount Paid</label>
-<input type="text"  value={formatMoneyNGN(amountPaid)}  onChange={(e) => { const raw = parseMoney(e.target.value);
-    const maxAmount = isBoxSale  ? Number(form.totalSaleAmount || 0) : computedTotalSaleAmount;
-    if (raw > maxAmount) {
-      setSuccessMessage("Amount cannot exceed total sale amount");
-      return;
-    }
-    setAmountPaid(raw);
-  }}/>
-</div>
-    </div>
+              <div className="form-group">
+                <label style={{ color: "#581aae" }}>Amount Paid</label>
+                <input
+                  type="text"
+                  value={formatMoneyNGN(amountPaid)}
+                  onChange={(e) => {
+                    const raw = parseMoney(e.target.value);
+                    const maxAmount = isBoxSale ? Number(form.totalSaleAmount || 0) : computedTotalSaleAmount;
+                    if (raw > maxAmount) {
+                      setSuccessMessage("Amount cannot exceed total sale amount");
+                      return;
+                    }
+                    setAmountPaid(raw);
+                  }}
+                />
+              </div>
+            </div>
 
-    <div className="btn-row">
-      <button  className="cancel"  onClick={() =>  setView(sales && sales.length > 0 ? "table" : "empty")  } >
-        Cancel </button>
-      <button className="create" disabled={!!presaleError ||(isBoxSale && !form.totalSaleAmount) ||(!isBoxSale && computedTotalSaleAmount <= 0)}
-      onClick={handleClick}> Create</button>
-
-    </div>
-</div>
+            {/* ================== Action Buttons ================== */}
+            <div className="btn-row">
+              <button
+                className="cancel"
+                onClick={() => setView(sales && sales.length > 0 ? "table" : "empty")}
+              >
+                Cancel
+              </button>
+              <button
+                className="create"
+                disabled={
+                  !!presaleError ||
+                  (isBoxSale && !form.totalSaleAmount) ||
+                  (!isBoxSale && computedTotalSaleAmount <= 0)
+                }
+                onClick={handleClick}
+              >
+                Create
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  </div>
 
-export default CreateSale;
+    );
+  };
+
+  export default CreateSale;
 
 

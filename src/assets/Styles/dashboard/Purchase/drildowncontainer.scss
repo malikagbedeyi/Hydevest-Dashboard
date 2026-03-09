@@ -100,6 +100,25 @@ input,textarea{
     p{
       font-size: 1.1vw;
     }
+    .editable-title{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 10px;
+      label{
+        margin: 0;
+      }
+      h4{
+        margin: 0;
+      }
+    .title-input{
+      border: none;
+      background: inherit;
+      margin: 0;
+      padding: 0;
+    }
+    } 
+
   }
 
   .right-title {

@@ -5,25 +5,46 @@ import CreateSale from "./CreateSale";
 import SaleTable from "./SaleTable";
 import DrilldownSale from "./DrildownSale";
 import { SaleServices } from "../../../../services/Sale/sale";
+import SaleLog from "./SaleLog";
 
 const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
   const [sales, setSales] = useState([]);
   const [selectedSale, setSelectedSale] = useState(null);
   const [view, setView] = useState("empty");
   const [loading, setLoading] = useState(false);
+   const [activeTab, setActiveTab] = useState("table");
  const [containerPreSales, setContainerPreSales] = useState([]);
+const [page, setPage] = useState(1);
+
+const [pagination, setPagination] = useState({
+  currentPage: 1,
+  lastPage: 1,
+  total: 0
+});
   /* ===================== FETCH SALES ===================== */
- const fetchSales = async () => {
+const fetchSales = async (pageNum = page) => {
   setLoading(true);
+
   try {
-    const res = await SaleServices.list({});
-    
-    const records = res?.data?.record?.data || [];
+    const res = await SaleServices.list({
+      page: pageNum
+    });
+
+    const record = res?.data?.record;
+
+    const records = record?.data || [];
+    console.log(res.data?.record)
 
     setSales(records);
-    console.log("sale data", records);
+
+    setPagination({
+      currentPage: record?.current_page ?? 1,
+      lastPage: record?.last_page ?? 1,
+      total: record?.total ?? 0
+    });
 
     setView(records.length ? "table" : "empty");
+
   } catch (err) {
     console.error("Failed to load sales", err);
   } finally {
@@ -31,9 +52,9 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
   }
 };
 
-  useEffect(() => {
-    fetchSales();
-  }, []);
+useEffect(() => {
+  fetchSales(page);
+}, [page]);
 
   /* ===================== AUTO OPEN CREATE ===================== */
   useEffect(() => {
@@ -46,36 +67,36 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
   /* ===================== CREATE SALE ===================== */
 const handleAddSale = async (payload) => {
   try {
-    await SaleServices.create(payload);
-    await fetchSales();
-    setView("table");
-  } catch (err) {
-    console.error("Create sale failed");
+    const response = await SaleServices.create(payload);
 
-    if (err.response) {
-      console.error("Backend message:", err.response.data);
-      console.error("Status:", err.response.status);
-    } else {
-      console.error(err.message);
-    }
+    // Reload the sales silently
+    await fetchSales();
+
+    return response?.data?.message || "Sale created successfully!";
+  } catch (err) {
+    console.error("Create sale failed", err);
+    throw err;
   }
 };
 
   /* ===================== DELETE SALE ===================== */
-  const handleDeleteSale = async (sale) => {
-    try {
-      await SaleServices.delete(sale.sale_uuid);
-      await fetchSales();
-    } catch (err) {
-      console.error("Delete sale failed", err);
+ const handleDeleteSale = async (sale_uuid) => {
+  try {
+    const res = await SaleServices.delete(sale_uuid);
+    await fetchSales();
+  } catch (err) {
+    if (err.response) {
+      console.error("Delete sale failed:", err.response.data); // 🔹 backend message
+    } else {
+      console.error("Delete sale failed:", err.message);
     }
-  };
+  }
+};
 const fetchContainerPreSales = async () => {
   try {
     const res = await SaleServices.containerPreSales({});
     // The response you shared already has container + presale
     const data = res?.data?.record || [];
-    console.log(" container + presale",res?.data?.record)
     setContainerPreSales(data);
   } catch (err) {
     console.error("Failed to load container pre-sales", err);
@@ -107,11 +128,17 @@ const normalizedPreSales = containerPreSales
 useEffect(() => {
   fetchContainerPreSales();
 }, []);
-const fetchSaleDetails = async (sale_uuid) => {
+
+
+/* ===================== FETCH SALE DETAILS ===================== */
+const fetchSaleDetails = async (sale_uuid, saleMasterData) => {
   setLoading(true);
+
   try {
     const res = await SaleServices.details({ sale_uuid });
     const saleRecords = res?.data?.record || [];
+
+    console.log("sale details", saleRecords);
 
     if (!saleRecords.length) {
       setSelectedSale(null);
@@ -119,75 +146,109 @@ const fetchSaleDetails = async (sale_uuid) => {
       return;
     }
 
+    const saleMaster = saleMasterData;
 
-    const saleInfo = saleRecords[0];
-
+    /* ================= GROUP CONTAINERS ================= */
 
     const containersMap = {};
-    saleRecords.forEach((rec) => {
-      const containerId = rec.container_id;
 
-      if (!containersMap[containerId]) {
-        containersMap[containerId] = {
-          containerId,
-          name: rec.container?.name || rec.container?.title || `Container ${containerId}`,
-          trackingNumber: rec.container?.tracking_number || "",
-          pallets: [],
+   saleRecords.forEach((rec) => {
+  const containerId = rec.container_id;
+
+  // Initialize container only if it doesn't exist
+  if (!containersMap[containerId]) {
+    const containerMeta = containerPreSales.find(c => c.id === containerId);
+    containersMap[containerId] = {
+      containerId,
+      name: containerMeta?.title || containerMeta?.name || "Unknown Container",
+      trackingNumber: containerMeta?.tracking_number || "",
+      pallets: [],
+    };
+  }
+
+  // Push the pallet into the existing container
+  containersMap[containerId].pallets.push({
+    id: rec.sale_detail_uuid,
+    palletId: rec.pallet_id,
+    purchase_price: Number(rec.purchase_price) || 0,
+    pallet_purchased: Number(rec.pallet_purchased) || 0,
+    pallet_pieces: Number(rec.pallet?.pallet_pieces) || 0,
+    sale_amount: Number(rec.sale_amount) || 0,
+    created_at: rec.created_at,
+  });
+});
+
+    /* ================= COUNT PALLETS ================= */
+
+    const totalPalletsCount = saleRecords.reduce(
+      (sum, rec) => sum + (Number(rec.pallet_purchased) || 0),
+      0
+    );
+
+    /* ================= CUSTOMER ================= */
+
+    const customer = saleMaster.customer
+      ? {
+          name: `${saleMaster.customer.firstname || saleMaster.customer.first_name || ""} ${saleMaster.customer.lastname || saleMaster.customer.last_name || ""}`,
+          phone: saleMaster.customer.phone_no || "",
+          location: saleMaster.customer.address || "N/A",
+        }
+      : {
+          name: "N/A",
+          phone: "N/A",
+          location: "N/A",
         };
-      }
 
-      if (rec.pallet) {
-        containersMap[containerId].pallets.push({
-          id: rec.pallet.id,
-          palletId: rec.pallet.id,
-          pieces: rec.pallet.pallet_pieces || rec.pallet_purchased || 0,
-          saleAmount: rec.sale_amount || 0,
-          palletOption: rec.price_diff ? 1 : 0,
-          total:
-            (rec.pallet.pallet_pieces || rec.pallet_purchased || 0) *
-            (rec.sale_amount || 0),
-        });
-      }
-    });
+    /* ================= TOTALS ================= */
 
-    const normalizedContainers = Object.values(containersMap);
+    const totalSaleAmount =
+      saleMaster.total_sale_amount ??
+      saleRecords.reduce(
+        (sum, r) => sum + Number(r.sale_amount || 0),
+        0
+      );
 
-    // Correct customer info
-  const customer = saleInfo.customer
-  ? {
-      name: `${saleInfo.customer.first_name || saleInfo.customer.firstname || ""} ${saleInfo.customer.last_name || saleInfo.customer.lastname || ""}`,
-      phone: saleInfo.customer.phone || saleInfo.customer.phone_no || "",
-      location: saleInfo.customer.location || saleInfo.customer.address || "",
-    }
-  : { name: "N/A", phone: "N/A", location: "N/A" };
-    // Correct amounts
-    const amountPaid = saleInfo.amount_paid ?? saleInfo.amountPaid ?? 0;
-    const totalSaleAmount = saleInfo.total_sale_amount || 0;
+    const amountPaid =
+      Number(saleMaster.amount_paid) ||
+      Number(saleMaster.sale_payments?.[0]?.amount) ||
+      0;
+
     const balance = Math.max(totalSaleAmount - amountPaid, 0);
 
+const paymentStatus =
+  amountPaid >= totalSaleAmount ? "Fully Paid" : "Outstanding";
+
+    const discount = Number(saleMaster.discount) || 0
+
+const container = saleMaster.container?.title || "—"
+
+    /* ================= FINAL DATA ================= */
+
     setSelectedSale({
-      containers: normalizedContainers,
+      sale_uuid: saleMaster.sale_uuid,
+      containers: Object.values(containersMap),
       customer,
       amountPaid,
       totalSaleAmount,
+      discount,
       balance,
-      noOfPallets: normalizedContainers.reduce(
-        (sum, c) => sum + c.pallets.reduce((s, p) => s + (p.pieces || 0), 0),
-        0
-      ),
+      paymentStatus,
+      noOfPallets: totalPalletsCount,
     });
 
     setView("drilldown");
+
   } catch (err) {
     console.error("Failed to load sale details", err);
   } finally {
     setLoading(false);
   }
 };
+
   /* ===================== DRILLDOWN ===================== */
 const handleRowClick = (sale) => {
   if (!sale?.sale_uuid) return;
-  fetchSaleDetails(sale.sale_uuid);
+  fetchSaleDetails(sale.sale_uuid, sale);
 };
 
   return (
@@ -228,6 +289,25 @@ const handleRowClick = (sale) => {
                   </button>
                 </div>
               </div>
+                     <div className="log-tab-section">
+  <div className="tab-content">
+    <ul>
+      <li
+        className={activeTab === "table" ? "active" : ""}
+        onClick={() => setActiveTab("table")}
+      >
+        Recovery Table
+      </li>
+
+      <li
+        className={activeTab === "logs" ? "active" : ""}
+        onClick={() => setActiveTab("logs")}
+      >
+        Activity Log
+      </li>
+    </ul>
+  </div>
+</div>
             </div>
           )}
 
@@ -241,15 +321,19 @@ const handleRowClick = (sale) => {
               </div>
             )}
 
-            {view === "table" && !loading && (
-              <SaleTable
-              sales={sales}
-             onDelete={handleDeleteSale}
-             handleRowClick={handleRowClick}
-              />
+            {view === "table" && !loading && activeTab === "table" && (
+<SaleTable
+  sales={sales}
+  page={pagination.currentPage}
+  lastPage={pagination.lastPage}
+  setPage={setPage}
+  onDelete={handleDeleteSale}
+  handleRowClick={handleRowClick}
+/>
             )}
-
-
+                   {view === "table" && !loading && activeTab === "logs" && (
+                    <SaleLog />
+                   )}
             {view === "create" && (
              <CreateSale
              setView={setView}
@@ -258,15 +342,17 @@ const handleRowClick = (sale) => {
              preSales={normalizedPreSales}
              containersData={normalizedContainers}/>          
             )}
-           {view === "drilldown" && selectedSale && (
-  <DrilldownSale 
-    data={selectedSale} 
-    goBack={() => setView("table")} 
-   onUpdate={async () => {
-  await fetchSales();
-  setView("table");
-}}
-  />
+           {view === "drilldown" && selectedSale && !loading &&  (
+<DrilldownSale 
+  data={selectedSale}
+  sales={selectedSale}
+  goBack={() => setView("table")}
+   preSales={normalizedPreSales}
+  onUpdate={async () => {
+    await fetchSales();
+    setView("table");
+  }}
+/>
 )}
 
           </div>

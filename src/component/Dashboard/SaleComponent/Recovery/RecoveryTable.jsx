@@ -3,13 +3,17 @@ import "../../../../assets/Styles/dashboard/Sale/presaleTable.scss";
 import { Trash2 } from "lucide-react";
 import DrillDownRecovery from "./DrillDownRecovery";
 
-const RecoveryTable = ({ data = [], onDelete, onUpdate }) => {
+const RecoveryTable = ({
+  data = [],
+  pagination = {},
+  onPageChange,
+  onDelete,
+  onUpdate,
+  handleRowClick,
+}) => {
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
   const [tableData, setTableData] = useState([]);
 
-  const [selectedRecovery, setSelectedRecovery] = useState(null); // track clicked recovery
 
   // 🔴 delete popup state
   const [showDeletePopup, setShowDeletePopup] = useState(false);
@@ -18,56 +22,86 @@ const RecoveryTable = ({ data = [], onDelete, onUpdate }) => {
   useEffect(() => {
     setTableData(data || []);
   }, [data]);
-  
-
-  const totalPages = Math.ceil(tableData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = tableData.slice(startIndex, startIndex + itemsPerPage);
-  const nextPage = () => currentPage < totalPages && setCurrentPage(p => p + 1);
-  const prevPage = () => currentPage > 1 && setCurrentPage(p => p - 1);
 
   const openDeletePopup = (e, recovery) => {
     e.stopPropagation();
     setRecoveryToDelete(recovery);
     setShowDeletePopup(true);
   };
+
   const confirmDelete = () => {
     if (!recoveryToDelete) return;
-    onDelete(recoveryToDelete.id);
+    onDelete(recoveryToDelete.recovery_uuid);
     setShowDeletePopup(false);
     setRecoveryToDelete(null);
   };
+
   const cancelDelete = () => {
     setShowDeletePopup(false);
     setRecoveryToDelete(null);
   };
-  const handleRowClick = (recovery) => {
-    setSelectedRecovery(recovery);
-  };
-  const handleUpdate = (updatedRecovery) => {
-    if (onUpdate) onUpdate(updatedRecovery);
-    setSelectedRecovery(null);
-  };
+
+
+  // const handleUpdate = (updatedRecovery) => {
+  //   if (onUpdate) onUpdate(updatedRecovery);
+  //   setSelectedRecovery(null);
+  // };
+
   const formatMoney = (value) =>
     new Intl.NumberFormat("en-NG", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(Number(value || 0));
+
   const formatDate = (date) => {
     if (!date) return "";
     return new Date(date)
-      .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
       .replace(/ /g, "-");
   };
-  if (selectedRecovery) {
-    return <DrillDownRecovery data={selectedRecovery} goBack={() => setSelectedRecovery(null)} onUpdate={handleUpdate} />;
-  }
+
+const totalRecoveries = tableData.length;
+
+const totalCustomers = new Set(
+  tableData.map((rec) => rec.customerPhone)
+).size;
+
+const totalRecoveryAmount = tableData.reduce(
+  (sum, rec) => sum + Number(rec.amountPaid || 0),
+  0
+);
 
   return (
     <>
-      <div className="userTable">
+      <div className="userTable mt-5">
+        <div className="drill-summary-grid">
+          <div className="drill-summary">
+            <div className="summary-item">
+              <p className="small">Total Recovery</p>
+              <h2>{totalRecoveries}</h2>
+            </div>
+
+            <div className="summary-item">
+              <p className="small">Total Customer</p>
+              <h2>{totalCustomers}</h2>
+            </div>
+
+            <div className="summary-item">
+              <p className="small">Total Recovery Amount (NGN)</p>
+              <h2>{formatMoney(totalRecoveryAmount)}</h2>
+            </div>
+
+          </div>
+        </div>
         <div className="table-wrap">
-          <table className="table" style={{width:"100%",minWidth:"100%",maxWidth:"100%"}}>
+          <table
+            className="table"
+            style={{ width: "100%", minWidth: "100%", maxWidth: "100%" }}
+          >
             <thead>
               <tr>
                 <th>S/N</th>
@@ -75,7 +109,8 @@ const RecoveryTable = ({ data = [], onDelete, onUpdate }) => {
                 <th>Customer Name</th>
                 <th>Phone</th>
                 <th>Amount Paid</th>
-                <th>Balance</th>
+                {/* <th>Balance</th> */}
+                <th>payment Status</th>
                 <th>Payment Date</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -83,30 +118,42 @@ const RecoveryTable = ({ data = [], onDelete, onUpdate }) => {
             </thead>
 
             <tbody>
-              {currentData.length === 0 ? (
+              {tableData.length === 0 ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: "center" }}>No Recoveries Found</td>
+                  <td colSpan="9" style={{ textAlign: "center" }}>
+                    No Recoveries Found
+                  </td>
                 </tr>
               ) : (
-                currentData.map((rec, idx) => (
-                  <tr key={rec.id} onClick={() => handleRowClick(rec)}>
-                    <td>{startIndex + idx + 1}</td>
-                    <td>{rec.saleId}</td>
+                tableData.map((rec, idx) => (
+                  <tr key={rec.id} onClick={() => handleRowClick?.(rec)}>
+                    <td>
+                      {(pagination.page - 1) * pagination.limit + idx + 1}
+                    </td>
+
+                    <td>{rec.sale?.sale_unique_id}</td>
                     <td>{rec.customerName}</td>
                     <td>{rec.customerPhone}</td>
+
                     <td>{formatMoney(rec.amountPaid)}</td>
-                    <td> {rec.balanceAfter === 0 ? <span style={{ color: "green" }}>Fully Paid</span>  : formatMoney(rec.balanceAfter)} </td>
+                    {/* <td>{formatMoney(rec.balance)}</td> */}
+                    <td style={{color:rec?.sale?.payment_status=== "Full Payment" ? "green":"orange"}}> {rec?.sale?.payment_status}</td>
+
                     <td>{formatDate(rec.createdAt)}</td>
-                    <td>{rec.status === "Approved" ? (
-                        <span style={{ color: "green", fontWeight: 600 }}>Approved</span>) : (
-                        <span style={{ color: "orange", fontWeight: 600 }}>In Transit</span>)}
-</td>
+
+                    <td><span className={`status ${rec.status === 1 ? "Approve" : "In-transit"}`}
+                   style={{color:rec.status === 1 ? "green":"red"}}>
+                    {rec.status === 1 ? "Approve" : "In-transit"}</span></td>
 
                     <td onClick={(e) => e.stopPropagation()}>
                       <button
                         className="delete-btn"
                         onClick={(e) => openDeletePopup(e, rec)}
-                        style={{ background: "transparent", border: "none", cursor: "pointer" }}
+                        style={{
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                        }}
                       >
                         <Trash2 color="red" size={16} />
                       </button>
@@ -117,13 +164,24 @@ const RecoveryTable = ({ data = [], onDelete, onUpdate }) => {
             </tbody>
           </table>
 
-          {totalPages > 1 && (
+          {/* Backend Pagination */}
+          {pagination.totalPages > 1 && (
             <div className="pagination">
-              <button onClick={prevPage} disabled={currentPage === 1}>
+              <button
+                onClick={() => onPageChange(pagination.page - 1)}
+                disabled={pagination.page === 1}
+              >
                 Previous
               </button>
-              <p>{currentPage} / {totalPages}</p>
-              <button onClick={nextPage} disabled={currentPage === totalPages}>
+
+              <p>
+                {pagination.page} / {pagination.totalPages}
+              </p>
+
+              <button
+                onClick={() => onPageChange(pagination.page + 1)}
+                disabled={pagination.page === pagination.totalPages}
+              >
                 Next
               </button>
             </div>
@@ -138,10 +196,17 @@ const RecoveryTable = ({ data = [], onDelete, onUpdate }) => {
             <div className="popup-content">
               <div className="popup-proceeed-wrapper">
                 <p>Are you sure you want to delete this recovery?</p>
+
                 <div className="btn-row-delete">
-                  <button className="cancel" onClick={cancelDelete}>Cancel</button>
-                  <button className="create" onClick={confirmDelete}>Delete</button>
+                  <button className="cancel" onClick={cancelDelete}>
+                    Cancel
+                  </button>
+
+                  <button className="create" onClick={confirmDelete}>
+                    Delete
+                  </button>
                 </div>
+
               </div>
             </div>
           </div>
