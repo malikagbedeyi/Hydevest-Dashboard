@@ -40,7 +40,7 @@ const TripLog = ({ trip, formatDate }) => {
                 <th>Action</th>
                 <th>Title</th>
                 <th>Date & Time</th>
-                <th>Actions</th>
+                {/* <th>Actions</th> */}
               </tr>
             </thead>
 
@@ -76,14 +76,14 @@ const TripLog = ({ trip, formatDate }) => {
                       {formatDate(log.date)}{" "}
                       {new Date(log.date).toLocaleTimeString()}
                     </td>
-                    <td>
+                    {/* <td>
                       <Trash2
                         size={16}
                         color="red"
                         style={{ cursor: "pointer" }}
                         onClick={() => handleDeleteLog(log.id)}
                       />
-                    </td>
+                    </td> */}
                   </tr>
                 ))
               )}
