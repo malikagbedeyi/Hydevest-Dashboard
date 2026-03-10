@@ -71,7 +71,6 @@ const fetchData = async (pageNum = page) => {
     });
     setFinanceData(res.data?.record?.data || []);
     setPagination(res.data?.record || {});
-    console.log(res.data)
   } catch (err) {
     console.error("Error fetching expenses:", err);
   } finally {

@@ -126,41 +126,22 @@ const hasChanges = () => {
 
   /* ================== FINANCE DATA ================== */
   const {financeData,setFinanceData,avgContainerRate,loading: financeLoading,} = useTripFinance(trip?.trip_uuid);
-// const [financeData, setFinanceData] = useState([]);
 
-// useEffect(() => {
-//   if (!trip?.trip_uuid) return;
+  const showMessage = (msg, type = "success") => {
+  setMessage(msg);
+  setMessageType(type);
+};
 
-//   const fetchFinance = async () => {
-//     try {
-//       const res = await TripServices.getExpenses(trip.trip_uuid);
-//       setFinanceData(res.data?.data || []);
-//     } catch (err) {
-//       console.error("Failed to fetch finance", err);
-//     }
-//   };
+const handleAddFinance = (payload) => {
 
-//   fetchFinance();
-// }, [trip?.trip_uuid]);
+  setExpenseReloadKey(prev => prev + 1);
 
-const handleAddFinance = async (payload) => {
-  try {
-    await TripServices.createExpense(trip.trip_uuid, payload);
+  addLog({
+    module: "Trip Expense",
+    action: "Created",
+    title: payload.title,
+  });
 
-    // force table reload
-    setExpenseReloadKey((prev) => prev + 1);
-
-    addLog({
-      module: "Trip Expense",
-      action: "Created",
-      title: payload.title,
-    });
-
-    setShowModal(false);
-
-  } catch (err) {
-    console.error(err);
-  }
 };
 
 const handleDeleteFinance = (id) => {
@@ -857,6 +838,7 @@ const handleCloseMessage = () => {
       {showModal && activeTab === "finance" && !showItemData &&  (
         <div className="modal-overlay">
           <TripExpense
+          showMessage={showMessage}
             onCreate={handleAddFinance}
             setShowItemData={setShowItemData}
             setShowModal={setShowModal}

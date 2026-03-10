@@ -20,7 +20,7 @@ const TripFinnce = ({ setTrip, trip, goBack, onApprovalChange }) => {
   const [approved, setApproved] = useState(false);
   const [title, setTitle] = useState(trip?.title || "No Title Set");
   const [type, setType] = useState(trip?.location || "type not set");
-  const [date, setDate] = useState(trip?.created_at || "Date not set");
+const [date, setDate] = useState(trip?.date || trip?.created_at || "");
   const [description, setDescription] = useState(trip?.desc || "");
   const [activeTab, setActiveTab] = useState("comments");
   const [loading, setLoading] = useState(false);
@@ -121,7 +121,10 @@ const [editDate, setEditDate] = useState(false);
           .replace(/ /g, "-")
       : "-";
 
-
+const formatInputDate = (date) => {
+  if (!date) return "";
+  return new Date(date).toISOString().split("T")[0];
+};
   return (
     <div className="finance-wrapper" ref={scrollRef}>
       {/* Header */}
@@ -276,7 +279,7 @@ const [editDate, setEditDate] = useState(false);
       {editDate ? (
         <input
           type="date"
-          value={formatDate(date)}
+          value={formatInputDate(date)}
           autoFocus
           onChange={(e) => setDate(e.target.value)}
           onBlur={() => setEditDate(false)}

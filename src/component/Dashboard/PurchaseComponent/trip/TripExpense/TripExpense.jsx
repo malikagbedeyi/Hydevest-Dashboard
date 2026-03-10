@@ -21,12 +21,13 @@ const CURRENCIES = [
   { label: "General Payment", value: 0 },
 ];
 
-const TripExpense = ({ onCreate, setShowItemData, setShowModal, tripUuid }) => {
+const TripExpense = ({ onCreate, setShowItemData, setShowModal, tripUuid ,showMessage}) => {
   const [openTypeSelect, setOpenTypeSelect] = useState(false);
   const [typeSearch, setTypeSearch] = useState(false);
   const [openCurrencySelect, setOpenCurrencySelect] = useState(false);
 const [openPaymentSelect, setOpenPaymentSelect] = useState(false);
-
+const [message, setMessage] = useState(null);
+const [messageType, setMessageType] = useState("success");
 const [form, setForm] = useState({
   title: "",
   description: "",
@@ -42,6 +43,7 @@ const [form, setForm] = useState({
 });
 
   /** ---------- handlers ---------- */
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => {
@@ -70,14 +72,17 @@ const handlePaymentSelect = (option) => {
     setOpenCurrencySelect(false);
   };
 
-  const handleCreate = async () => {
+const handleCreate = async () => {
   try {
+
     if (!form.title || !form.amount || !form.date) {
-      alert("Title, amount and date are required");
+      setMessageType("error");
+      setMessage("Title, amount and date are required");
       return;
     }
 
     const payload = new FormData();
+
     payload.append("trip_uuid", tripUuid);
     payload.append("title", form.title);
     payload.append("date", form.date);
@@ -88,33 +93,63 @@ const handlePaymentSelect = (option) => {
     payload.append("desc", form.description || "");
     payload.append("comment", form.comment || "");
 
-    // ✅ correct attachment key
     form.attachments.forEach((f) => {
       payload.append("attachment", f.file);
     });
 
     const res = await ExpenseServices.create(payload);
 
-    // UI update (mirror backend fields)
     onCreate({
       expense_uuid: res.data.record?.expense_uuid,
       title: form.title,
       amount: Number(form.amount),
       currency: form.currency.code,
-      rate: Number(form.rate),
+      rate: Number(form.rate,
+      ),
       is_container_payment: form.is_container_payment,
       status: 0,
       date: form.date,
       created_at: res.data.record?.created_at,
     });
- 
-    setShowItemData(true);
-    setShowModal(false);
+
+    setMessageType("success");
+    setMessage(res.data?.message || "Expense created successfully");
+
   } catch (err) {
-    console.error("Error creating expense:", err.response?.data || err);
+
+    setMessageType("error");
+    setMessage(
+      err.response?.data?.message || "Failed to create expense"
+    );
+
   }
 };
+const handleClosePopup = () => {
+  setMessage(null);
 
+  if (messageType === "success") {
+  onCreate({
+    title: form.title
+  });
+
+  setShowModal(false);
+  setShowItemData(true);
+}
+};
+
+ if (message) {
+    return (
+      <div className="trip-card-popup">
+        <div className="trip-card-popup-container">
+          <div className="popup-content">
+            <div onClick={handleClosePopup} className="delete-box">✕</div>
+            <span>{message}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
 
   /** ---------- render ---------- */
   return (

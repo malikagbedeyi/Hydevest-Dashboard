@@ -5,11 +5,13 @@ import { EntityServices } from "../../../../services/Admin/EntityServices";
 
 
 const CreateEntity = ({ data, setData, setView, onSuccess,mode }) => {
+  const [approved, setApproved] = useState(false);
   const [loading,setLoading] = useState(false)
   const [message,setMessage] = useState(null)
   const [messageType,setMessageType] = useState("success")
   const [original, setOriginal] = useState(null);
   const [status, setStatus] = useState(data?.status ?? 0);
+
   const [form, setForm] = useState({
     firstname: "",
     lastname:"",
@@ -39,7 +41,7 @@ useEffect(() => {
 
   useEffect(() => {
     if (mode === "edit" && data) {
-      setStatus(data.status ?? 0);
+      setStatus(0);
     }
   }, [data, mode]);
   const userChanged = original
@@ -54,44 +56,73 @@ const bankChanged = original
     form.bank_account !== original.bank_account
   : false;
 /* ================= HANDLERS ================= */
-  const handleUpdate = async () => {
-    try {
-      setLoading(true);
-  
-      if (!userChanged && !bankChanged) {
-        setMessageType("error");
-        setMessage("No changes detected");
-        return;
-      }
-      if (!original) return;
 
-      if (userChanged) {
-        await EntityServices.edit({
-          user_uuid: form.user_uuid,
-          firstname: form.firstname,
-          lastname: form.lastname,
-          email: form.email,
-          phone_no: form.phone_no,
-        });
-      }
-  
-      if (bankChanged) {
-        await EntityServices.editBank({
-          user_uuid: form.user_uuid,
-          bank_name: form.bank_name,
-          bank_account: form.bank_account,
-        });
-      }
-  
-      setMessageType("success");
-      setMessage("Entity updated successfully");
-    } catch (err) {
+const handleApprovalChange = async () => {
+  try {
+    if (!form.user_uuid) return;
+
+    setLoading(true);
+
+    await EntityServices.change_approval({
+      user_uuid: form.user_uuid,
+      status: 1,
+    });
+
+    setStatus(1); // ✅ update UI state
+
+  } catch (err) {
+    setMessageType("error");
+    setMessage(err.response?.data?.message || "Approval failed");
+  } finally {
+    setLoading(false);
+  }
+};
+ const handleUpdate = async () => {
+  try {
+    setLoading(true);
+
+    if (!userChanged && !bankChanged && status === data.status) {
       setMessageType("error");
-      setMessage(err.response?.data?.message || "Update failed");
-    } finally {
-      setLoading(false);
+      setMessage("No changes detected");
+      return;
     }
-  };
+
+    if (userChanged) {
+      await EntityServices.edit({
+        user_uuid: form.user_uuid,
+        firstname: form.firstname,
+        lastname: form.lastname,
+        email: form.email,
+        phone_no: form.phone_no,
+      });
+    }
+
+    if (bankChanged) {
+      await EntityServices.editBank({
+        user_uuid: form.user_uuid,
+        bank_name: form.bank_name,
+        bank_account: form.bank_account,
+      });
+    }
+
+    // approve only when update clicked
+    if (status !== data.status) {
+      await EntityServices.change_approval({
+        user_uuid: form.user_uuid,
+        status: status,
+      });
+    }
+
+    setMessageType("success");
+    setMessage("Entity updated successfully");
+
+  } catch (err) {
+    setMessageType("error");
+    setMessage(err.response?.data?.message || "Update failed");
+  } finally {
+    setLoading(false);
+  }
+};
   
 
   const handleCreate = async() => {
@@ -164,7 +195,22 @@ const handleCancel = () => {
             <X size={18} className="close" onClick={() => setView("table")} />
           </div>
           <p>Enter the details of new Entity</p>
+          {mode === 'edit' && (
+              <div className="actions">
+{status !== 1 && (
+  <button
+    className="primary"
+    onClick={handleApprovalChange}
+  >
+    {loading ? "Approve..." : "Approve"}
+  </button>
+)}
+                  <div className="status">
+                    <span>{status === 1 ? "Approved" : "Not Approved"}</span>
+                  </div>
 
+          </div>
+)}
           <div className="account-grid">
             <div className="account-grid-content">
             <div className="grid-2">
