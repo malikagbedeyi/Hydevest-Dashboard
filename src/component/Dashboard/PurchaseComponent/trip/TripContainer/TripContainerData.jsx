@@ -26,18 +26,15 @@ const prevPage = () => {
   }
 };
 
-  //  containerData = data
- const formatMoney = (value) =>
+const formatMoney = (value) =>
   new Intl.NumberFormat("en-NG", {
-    maximumFractionDigits: 0,
-  }).format(Math.round(Number(value || 0)));
-
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0));
 
 const formatMoneyUSd = (value) =>
   new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 0,
-  }).format(Math.round(Number(value || 0)));
-
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0));
 
   const formatDate = (date) =>
     date
