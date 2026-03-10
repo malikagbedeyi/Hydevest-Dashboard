@@ -16,7 +16,23 @@ export const EntityServices = {
      },
      log: async (params)=>{
       return await  api.get('/systemuser/account/entity/logs', {params})
-     }
+     },
+       change_approval: async (payload) => {
+  const formData = new URLSearchParams();
+
+  formData.append("user_uuid", payload.user_uuid);
+  formData.append("status", payload.status);
+
+  return api.post(
+    "/systemuser/account/entity/changeaccountstatus",
+    formData,
+    {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    }
+  );
+},
      
 }
 

@@ -28,13 +28,14 @@ const prevPage = () => {
 
 const formatMoney = (value) =>
   new Intl.NumberFormat("en-NG", {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 10,
   }).format(Number(value || 0));
 
 const formatMoneyUSd = (value) =>
   new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 10,
   }).format(Number(value || 0));
+
 
   const formatDate = (date) =>
     date
@@ -60,7 +61,6 @@ const formatMoneyUSd = (value) =>
           });
           setContainerData(res.data?.record?.data || []);
           setPagination(res.data?.record || {});
-          console.log('container data ',res.data?.record)
         } catch (err) {
           console.error("Error fetching expenses:", err);
         } finally {

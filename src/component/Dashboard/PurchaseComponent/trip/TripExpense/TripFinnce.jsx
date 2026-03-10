@@ -1,10 +1,16 @@
 import React, { useRef, useState, useEffect } from 'react';
 import "../../../../../assets/Styles/dashboard/Purchase/tripFinance.scss";
-import { Paperclip, CalendarDays, ChevronRight, SendHorizontal, Eye, Trash2, Edit } from 'lucide-react';
+import { Paperclip, CalendarDays, ChevronRight, SendHorizontal, Eye, Trash2, Edit, ChevronDown } from 'lucide-react';
 import { ExpenseServices } from '../../../../../services/Trip/expense';
 import TripExpenseLog from './TripExpenseLog';
 import TripComment from './TripComment';
 import FileAttachment from "./FileAttachment";
+
+
+const PAYMENT_TYPES = [
+  { label: "Container Payment", value: 1 },
+  { label: "General Payment", value: 0 },
+];
 
 const TripFinnce = ({ setTrip, trip, goBack, onApprovalChange }) => {
 
@@ -14,16 +20,25 @@ const TripFinnce = ({ setTrip, trip, goBack, onApprovalChange }) => {
   const [approved, setApproved] = useState(false);
   const [title, setTitle] = useState(trip?.title || "No Title Set");
   const [type, setType] = useState(trip?.location || "type not set");
-  const [startDate, setStartDate] = useState(trip?.startDate || "2025-02-21");
+  const [date, setDate] = useState(trip?.created_at || "Date not set");
   const [description, setDescription] = useState(trip?.desc || "");
   const [activeTab, setActiveTab] = useState("comments");
   const [loading, setLoading] = useState(false);
+const [amount, setAmount] = useState(trip?.amount || "");
+const [rate, setRate] = useState(trip?.rate || "");
+const [isContainerPayment, setIsContainerPayment] = useState(
+  trip?.is_container_payment ?? 0
+);
 
+const [openPaymentSelect, setOpenPaymentSelect] = useState(false);
+const [editIsContainerPayment, setEditIsContainerPayment] = useState(false);
   // Individual edit states
   const [editTitle, setEditTitle] = useState(false);
   const [editDescription, setEditDescription] = useState(false);
-  const [editStartDate, setEditStartDate] = useState(false);
 
+const [editAmount, setEditAmount] = useState(false);
+const [editRate, setEditRate] = useState(false);
+const [editDate, setEditDate] = useState(false);
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -38,13 +53,13 @@ const TripFinnce = ({ setTrip, trip, goBack, onApprovalChange }) => {
       setLoading(true);
       const payload = {
         expense_uuid: trip.expense_uuid,
-        title: trip.title,
-        desc: trip.desc,
-        amount: trip.amount,
+        title: title,
+        desc: description,
+        amount: amount,
         currency: trip.currency || "NGN",
-        rate: trip.rate,
-        date: trip.startDate,
-        is_container_payment: trip.is_container_payment || 0,
+        rate: rate,
+        date: date,
+        is_container_payment: isContainerPayment,
         status: trip.status,
         approved: trip.approved,
       };
@@ -99,6 +114,12 @@ const TripFinnce = ({ setTrip, trip, goBack, onApprovalChange }) => {
     }
   };
 
+  const formatDate = (date) =>
+    date
+      ? new Date(date)
+          .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+          .replace(/ /g, "-")
+      : "-";
 
 
   return (
@@ -178,44 +199,127 @@ const TripFinnce = ({ setTrip, trip, goBack, onApprovalChange }) => {
 
         {/* Type & Amount */}
         <div className="grid-2" style={{ marginBottom: "0.7vw" }}>
-          <div className="form-group">
-            <label>Type</label>
-            <input type="text" value={type} />
-          </div>
+   <div className="form-group-select mb-5">
+  <label>Select Payment Type</label>
 
-          <div className="form-group">
-            <label>Amount</label>
-            <input type="text" value={trip?.amount} />
+  <div className="custom-select">
+
+    {/* SELECT DISPLAY */}
+    <div
+      className="custom-select-drop"
+      onClick={() => setOpenPaymentSelect(!openPaymentSelect)}
+    >
+      <div className="select-box">
+        {isContainerPayment === 1
+          ? "Container Payment"
+          : "General Payment"}
+      </div>
+
+      <ChevronDown
+        className={openPaymentSelect ? "up" : "down"}
+      />
+    </div>
+
+    {/* DROPDOWN */}
+    {openPaymentSelect && (
+      <div className="select-dropdown">
+        {PAYMENT_TYPES.map((option) => (
+          <div
+            key={option.value}
+            className="option-item"
+            onClick={() => {
+              setIsContainerPayment(option.value);
+              setOpenPaymentSelect(false);
+            }}
+          >
+            {option.label}
           </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
+          <div className="form-group ">
+  <label>Amount</label>
+
+  <div className="info-content-data">
+    {editAmount ? (
+      <input
+        type="text"
+        value={amount}
+        autoFocus
+        onChange={(e) => setAmount(e.target.value)}
+        onBlur={() => setEditAmount(false)}
+        onKeyDown={(e) => e.key === "Enter" && setEditAmount(false)}
+      />
+    ) : (
+      <span>{amount}</span>
+    )}
+
+    <Edit
+      className="edit-icon"
+      size={16}
+      onClick={() => setEditAmount(true)}
+    />
+  </div>
+</div>
         </div>
 
         {/* Date & Rate */}
         <div className="grid-2">
           <div className="form-group date">
-            <label>Date</label>
-            <div className="date-input">
-              <div className="info-content-data">
-                {editStartDate ? (
-                  <input
-                    type="date"
-                    value={startDate}
-                    autoFocus
-                    onChange={(e) => setStartDate(e.target.value)}
-                    onBlur={() => setEditStartDate(false)}
-                    onKeyDown={(e) => e.key === "Enter" && setEditStartDate(false)}
-                  />
-                ) : (
-                  <h2>{startDate}</h2>
-                )}
-                <Edit className="edit-icon" size={16} onClick={() => setEditStartDate(true)} />
-              </div>
-              <CalendarDays size={18} />
-            </div>
-          </div>
+  <label>Date</label>
+
+  <div className="date-input">
+    <div className="info-content-data">
+      {editDate ? (
+        <input
+          type="date"
+          value={formatDate(date)}
+          autoFocus
+          onChange={(e) => setDate(e.target.value)}
+          onBlur={() => setEditDate(false)}
+          onKeyDown={(e) => e.key === "Enter" && setEditDate(false)}
+        />
+      ) : (
+        <h2>{date}</h2>
+      )}
+
+      <Edit
+        className="edit-icon"
+        size={16}
+        onClick={() => setEditDate(true)}
+      />
+    </div>
+
+    <CalendarDays size={18} />
+  </div>
+</div>
           <div className="form-group">
-            <label>Rate</label>
-            <input type="text" value={trip.rate} />
-          </div>
+  <label>Rate</label>
+
+  <div className="info-content-data">
+    {editRate ? (
+      <input
+        type="text"
+        value={rate}
+        autoFocus
+        onChange={(e) => setRate(e.target.value)}
+        onBlur={() => setEditRate(false)}
+        onKeyDown={(e) => e.key === "Enter" && setEditRate(false)}
+      />
+    ) : (
+      <span>{rate}</span>
+    )}
+
+    <Edit
+      className="edit-icon"
+      size={16}
+      onClick={() => setEditRate(true)}
+    />
+  </div>
+</div>
         </div>
 
         {/* Attachments */}

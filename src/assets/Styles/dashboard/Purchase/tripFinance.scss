@@ -290,6 +290,173 @@ button{
       }
     }
   }
+   .form-group-select{
+      position: relative;
+       background:#f5f5f7;
+       padding:0.8vw;
+       border-radius:0.7vw;  
+     width: 100%;
+@include Destop{
+  padding:12px;
+  border-radius:10px; 
+      }
+     label{
+      display:block; 
+    margin-bottom:0.4vw; 
+    font-size:0.9vw; 
+    color:#444;
+@include Destop{
+  font-size:13px; 
+  margin-bottom:6px; 
+      }
+     }
+     .custom-select{
+      width: 100%;
+      .custom-select-drop{
+           width: 100%;
+        display: flex;
+        justify-content: space-between;
+        gap: 0.7vw;
+        align-items: center;
+         padding:0.6vw 0.7vw; 
+       border:0.1vw solid #ddd;
+       border-radius:0.4vw; 
+       background:#fff;
+       @include Destop{
+        gap: 10px;
+        align-items: center;
+         padding:8px 10px; 
+       border:1px solid #ddd;
+       border-radius:6px; 
+      }
+        .select-box{
+          width: 100%;
+          color: gray;
+            .placeholder{
+              width: 100%;
+              background: inherit;
+                color: #030314;
+             }
+             .selected-tags{
+              display: flex;
+              gap: 0.35vw;
+              border-radius: 0.4vw;
+               @include Destop{
+                gap: 5px;
+                border-radius: 6px;
+      }
+              .tag{
+                background: #f5f5f7;
+                padding: 0.35vw 0.7vw;
+                 @include Destop{
+                  padding: 5px 10px;
+              }
+             }
+            }
+            .custom-select{
+              // width: 100%;
+              cursor: pointer;
+              transition: .5s;
+              .up{
+                transform: rotate(180deg);
+                transition: .5s;
+              }
+              .down{
+                 transition: .5s;
+              }
+            }
+          }
+        }
+            .select-dropdown{
+              width: 90%;
+              background: #fff;
+              animation: dropdown .4s;
+               box-shadow: 0 0.4vw 1.3vw rgba(88,26,170,0.08);
+              position: absolute;
+               border-radius:0.85vw; 
+               cursor: pointer;
+              top: 6.95vw;
+              left:1.4vw;
+              padding: 0.7vw;
+              z-index: 999;  
+              @include Destop{
+                box-shadow: 0 6px 18px rgba(88,26,170,0.08);
+                 border-radius:12px; 
+                top: 100px;
+                left:20px;
+                padding: 10px;
+              }
+              .search-input{
+                width: 100%;
+                 padding:0.5vw 0.7vw 0.5vw 1.4vw; 
+                 border: none;
+                 border-bottom:0.1vw solid #581aae;
+                 border-radius:0.85vw 0.85vw 0 0; 
+                 background:#fff;
+                 outline-style: none;
+                 @include Destop{
+                  padding:8px 10px 8px 20px; 
+                  border: none;
+                  border-bottom:1px solid #581aae;
+                  border-radius:12px 12px 0 0; 
+              }
+              }
+           
+              .option-item{
+                  background: #fff;
+                  border-radius: 0 0 0 0.7vw ;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 0.7vw;
+                  padding: 5px 0 0 1vw;
+                  justify-content: center;
+                  // align-i: center;
+                   outline-style: none;
+                   cursor: pointer;
+                   position: relative;
+                    @include Destop{
+                      border-radius: 0 0 0 10px ;
+                      gap: 10px;
+                      padding: 5px 0 0 15px;
+              }
+                   &:hover{
+                    &::before{
+                      width: 20%;
+                    }
+                   }
+                   &::before{
+                    content: '';
+                    position: absolute;
+                    left: 0.7vw;
+                    bottom: 0;
+                    width: 0;
+                    height: 0.09vw;
+                    transition: .4s;
+                    background: #581aae;
+                    border-radius: 0 0 0 0.7vw ;
+                     @include Destop{
+                      left: 0.7vw;
+                      bottom: 0;
+                      width: 0;
+                      height: 1px;
+              }
+                   }
+                   span{
+                    margin: 0;
+                   }
+                  label{
+                    display: flex;
+                    gap: 1.4vw;
+                    cursor: pointer;
+                     @include Destop{
+                      gap: 20px;
+              }
+                  }
+              }
+            
+            }
+    }
+    }
 
   .grid-2 {
     display: grid;

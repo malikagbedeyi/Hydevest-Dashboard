@@ -145,13 +145,15 @@ const hasChanges = () => {
 
 const handleAddFinance = async (payload) => {
   try {
-    const res = await TripServices.createExpense(trip.trip_uuid, payload);
-    setFinanceData((prev) => [res.data, ...prev]);
-    setExpenseReloadKey((k) => k + 1); 
+    await TripServices.createExpense(trip.trip_uuid, payload);
+
+    // force table reload
+    setExpenseReloadKey((prev) => prev + 1);
+
     addLog({
       module: "Trip Expense",
       action: "Created",
-      title: res.data.title,
+      title: payload.title,
     });
 
     setShowModal(false);

@@ -5,26 +5,41 @@ import { ExpenseServices } from "../../../../../services/Trip/expense";
 const typeOptions = ["Expense"];
 
 const CURRENCIES = [
-  { country: "United States", code: "USD", symbol: "$", rate: 1550 },
-  { country: "United Kingdom", code: "GBP", symbol: "£", rate: 1950 },
-  { country: "European Union", code: "EUR", symbol: "€", rate: 1700 },
-  { country: "China", code: "CNY", symbol: "¥", rate: 215 },
-  { country: "Japan", code: "JPY", symbol: "¥", rate: 10.5 },
-  { country: "Canada", code: "CAD", symbol: "$", rate: 1150 },
-  { country: "South Africa", code: "ZAR", symbol: "R", rate: 85 },
-  { country: "Ghana", code: "GHS", symbol: "₵", rate: 130 },
-  { country: "Nigeria", code: "NGN", symbol: "₦", rate: 1 },
+  { country: "United States", code: "USD", symbol: "$",  },
+  { country: "United Kingdom", code: "GBP", symbol: "£", },
+  { country: "European Union", code: "EUR", symbol: "€",  },
+  { country: "China", code: "CNY", symbol: "¥",  },
+  { country: "Japan", code: "JPY", symbol: "¥",  },
+  { country: "Canada", code: "CAD", symbol: "$", },
+  { country: "South Africa", code: "ZAR", symbol: "R", },
+  { country: "Ghana", code: "GHS", symbol: "₵",  },
+  { country: "Nigeria", code: "NGN", symbol: "₦", },
+];
+
+  const PAYMENT_TYPES = [
+  { label: "Container Payment", value: 1 },
+  { label: "General Payment", value: 0 },
 ];
 
 const TripExpense = ({ onCreate, setShowItemData, setShowModal, tripUuid }) => {
   const [openTypeSelect, setOpenTypeSelect] = useState(false);
   const [typeSearch, setTypeSearch] = useState(false);
   const [openCurrencySelect, setOpenCurrencySelect] = useState(false);
+const [openPaymentSelect, setOpenPaymentSelect] = useState(false);
 
-  const [form, setForm] = useState({
-    title: "", description: "", type: "", date: "", amount: "",
-    checkbox: false, currency: CURRENCIES[0], rate: CURRENCIES[0].rate, amountNGN: 0, attachments: [],comment: "", 
-  });
+const [form, setForm] = useState({
+  title: "",
+  description: "",
+  type: "",
+  date: "",
+  amount: "",
+  currency: CURRENCIES[0],
+  rate: CURRENCIES[0].rate,
+  amountNGN: 0,
+  attachments: [],
+  comment: "",
+  is_container_payment: 0, // default General Payment
+});
 
   /** ---------- handlers ---------- */
   const handleChange = (e) => {
@@ -35,6 +50,15 @@ const TripExpense = ({ onCreate, setShowItemData, setShowModal, tripUuid }) => {
       return updated;
     });
   };
+
+const handlePaymentSelect = (option) => {
+  setForm((prev) => ({
+    ...prev,
+    is_container_payment: option.value,
+  }));
+
+  setOpenPaymentSelect(false);
+};
 
   const handleCurrencySelect = (currency) => {
     setForm((prev) => ({
@@ -60,7 +84,7 @@ const TripExpense = ({ onCreate, setShowItemData, setShowModal, tripUuid }) => {
     payload.append("amount", Number(form.amount));
     payload.append("currency", form.currency.code);
     payload.append("rate", Number(form.rate));
-    payload.append("is_container_payment", form.checkbox ? 1 : 0);
+    payload.append("is_container_payment", form.is_container_payment);
     payload.append("desc", form.description || "");
     payload.append("comment", form.comment || "");
 
@@ -78,12 +102,12 @@ const TripExpense = ({ onCreate, setShowItemData, setShowModal, tripUuid }) => {
       amount: Number(form.amount),
       currency: form.currency.code,
       rate: Number(form.rate),
-      is_container_payment: form.checkbox ? 1 : 0,
+      is_container_payment: form.is_container_payment,
       status: 0,
       date: form.date,
       created_at: res.data.record?.created_at,
     });
-
+ 
     setShowItemData(true);
     setShowModal(false);
   } catch (err) {
@@ -100,15 +124,15 @@ const TripExpense = ({ onCreate, setShowItemData, setShowModal, tripUuid }) => {
           <h2 style={{ fontSize: "1.4vw", color: "#581aae" }}>Create Trip Expense</h2>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <p style={{ fontSize: "1vw" }}>Enter Trip Expense details</p>
-            <div style={{ display: "flex", gap: "0.7vw", alignItems: "center" }}>
+            {/* <div style={{ display: "flex", gap: "0.7vw", alignItems: "center" }}>
               <input
                 type="checkbox"
                 checked={form.checkbox}
                 onChange={(e) => setForm((prev) => ({ ...prev, checkbox: e.target.checked }))}
               />
               <span style={{ fontSize: "1vw" }}>Container Payment</span>
-            </div>
-          </div>
+            </div> */}
+          </div> 
 
           {/* Title & Description */}
           <div className="grid-2">
@@ -120,16 +144,47 @@ const TripExpense = ({ onCreate, setShowItemData, setShowModal, tripUuid }) => {
               <label>Description</label>
               <textarea name="description" value={form.description} onChange={handleChange} />
             </div>
-          </div>
+            <div className="form-group-select"> 
+  <label>Select Payment Type</label>
 
-<div className="form-group mb-4">
+  <div className="custom-select">
+    <div
+      className="custom-select-drop"
+      onClick={() => setOpenPaymentSelect((prev) => !prev)}
+    >
+      <div className="select-box">
+        {form.is_container_payment === 1
+          ? "Container Payment"
+          : "General Payment"}
+      </div>
+
+      <ChevronDown />
+    </div>
+
+    {openPaymentSelect && (
+      <div className="select-dropdown">
+        {PAYMENT_TYPES.map((option) => (
+          <div
+            key={option.value}
+            className="option-item"
+            onClick={() => handlePaymentSelect(option)}
+          >
+            {option.label}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+          <div className="form-group mb-4">
               <label>Date</label>
               <input type="date" name="date" value={form.date} onChange={handleChange} />
+            </div> 
             </div>
           <div className="grid-4">
             <div className="form-group">
               <label>Amount</label>
-              <input type="number" name="amount" value={form.amount} onChange={handleChange} />
+              <input type="number" name="amount" placeholder="Enter Amount" value={form.amount} onChange={handleChange} />
             </div>
             <div className="form-group-select">
               <label>Currency</label>
@@ -153,7 +208,7 @@ const TripExpense = ({ onCreate, setShowItemData, setShowModal, tripUuid }) => {
             </div>
             <div className="form-group">
               <label>Rate</label>
-              <input type="text" name="rate"  value={form.rate} onChange={handleChange}  />
+              <input type="text" name="rate" placeholder="Enter Rate"  value={form.rate} onChange={handleChange}  />
             </div>
           </div>
 

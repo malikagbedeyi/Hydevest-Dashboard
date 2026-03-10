@@ -15,26 +15,21 @@ const ContainerTable = ({data,loading,page,setPage,pagination,onRowClick,}) => {
           .replace(/ /g, "-")
       : "-";
 
-  const formatMoneyUSD = (value) =>
-    "$" +
-    new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: 0,
-    }).format(Math.round(Number(value || 0)));
+const formatMoney = (value) =>
+  new Intl.NumberFormat("en-NG", {
+    maximumFractionDigits: 10,
+  }).format(Number(value || 0));
 
-  const formatMoneyNGN = (value) =>
-    value === null || value === undefined
-      ? "—"
-      : "₦" +
-        new Intl.NumberFormat("en-NG", {
-          maximumFractionDigits: 0,
-        }).format(Math.round(Number(value)));
-
+const formatMoneyUSD = (value) =>
+  new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 10,
+  }).format(Number(value || 0));
   return (
     <div className="userTable">
       <div className="table-wrap">
         <table
           className="table"
-          style={{ width: "130%", minWidth: "130%" ,maxWidth:"130%"}}
+          style={{ width: "130%", minWidth: "150%" ,maxWidth:"150%"}}
         >
           <thead>
             <tr>
@@ -46,7 +41,8 @@ const ContainerTable = ({data,loading,page,setPage,pagination,onRowClick,}) => {
               <th>Unit Price (USD)</th>
               <th>Amount (USD)</th>
               {/* <th>Amount (NGN)</th> */}
-              <th>Quoted Amount (USD)</th>
+              <th>Quoted Price (USD)</th>
+               <th>Quoted Amount (USD)</th>
               {/* <th>Quoted Amount (NGN)</th> */}
               <th>Created By</th>
               <th>Created Date</th>
@@ -84,6 +80,7 @@ const ContainerTable = ({data,loading,page,setPage,pagination,onRowClick,}) => {
                   <td>{formatMoneyUSD(item.amountUSD)}</td>
                   {/* <td>{formatMoneyNGN(item.amountNGN)}</td> */}
                   <td>{formatMoneyUSD(item.quotedUSD)}</td>
+                  <td>{formatMoneyUSD(item.quotedUSD * item.pieces)}</td>
                   {/* <td>{formatMoneyNGN(item.quotedNGN)}</td> */}
                   <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
                   <td>{formatDate(item.created_at)}</td>

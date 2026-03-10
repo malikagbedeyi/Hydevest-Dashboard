@@ -42,6 +42,7 @@ const prevPage = () => {
   
   const formatNGN = (value) =>
   new Intl.NumberFormat("en-NG", {
+    maximumFractionDigits: 10,
     style: "currency",
     currency: "NGN",
   }).format(Number(value || 0));
@@ -70,6 +71,7 @@ const fetchData = async (pageNum = page) => {
     });
     setFinanceData(res.data?.record?.data || []);
     setPagination(res.data?.record || {});
+    console.log(res.data)
   } catch (err) {
     console.error("Error fetching expenses:", err);
   } finally {
@@ -79,7 +81,7 @@ const fetchData = async (pageNum = page) => {
 
 useEffect(() => {
   fetchData(page);
-}, [page, reloadKey]);
+}, [page, reloadKey, tripUuid]);
 
 useEffect(() => {
   const timer = setTimeout(() => {
@@ -90,6 +92,8 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [search]);
 const currentData = financeData
+
+
   return (
     <div>
      <div className="userTable">
@@ -100,7 +104,6 @@ const currentData = financeData
                       <th>S/N</th>
                       <th>Title</th>
                       <th>Description</th>
-                      <th>Date</th>
                       <th>Amount</th>
                       <th>Currency</th>
                       <th>Rate</th>
@@ -108,6 +111,7 @@ const currentData = financeData
                       <th>Category</th>
                       <th>Created By</th>
                       <th>Status</th>
+                      <th>Created Date</th>
                       {/* <th>Actions</th> */}
                     </tr>
                   </thead>
@@ -124,7 +128,6 @@ const currentData = financeData
                           <td>{(pagination.from || 0) + idx}</td>
                           <td>{item.title}</td>
                           <td>{item.desc}</td> 
-                          <td>{formatDate(item.date)}</td>
                           <td>{formatCurrency(item.amount, item.currency)}</td>
                           <td>{item.currency} </td> 
                            <td>{item.rate}</td>
@@ -138,6 +141,7 @@ const currentData = financeData
     <span style={{color:"orange"}}>Pending</span>
   )}
 </td>
+<td>{formatDate(item.created_at)}</td>
 
                           {/* <td onClick={(e) => e.stopPropagation()}>
                             <button
