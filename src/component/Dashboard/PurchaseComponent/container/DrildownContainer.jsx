@@ -422,7 +422,7 @@ const handleNumberChange = (e) => {
               <div className="form-group">
             <label>Tracking Number</label>
               <input  name="trackingNumber"   value={form.trackingNumber}
-              onChange={handleNumberChange}/>
+              onChange={(e) =>  setForm({ ...form, trackingNumber: e.target.value })}/>
 
           </div>
               <div className="form-group">
