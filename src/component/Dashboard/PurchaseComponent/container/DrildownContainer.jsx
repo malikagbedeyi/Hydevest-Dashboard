@@ -354,12 +354,12 @@ const handleNumberChange = (e) => {
             <div className="form-group">
               <label htmlFor="">Average Weight</label>
               <input type="text"  value={form.averageWeight} name="averageWeight"   placeholder="Enter Average Weight "
-                onChange={handleNumberChange}/>
+              onChange={(e) =>  setForm({ ...form, averageWeight: e.target.value })}/>
               </div>
             <div className="form-group">
               <label htmlFor="">Max Weight</label>
               <input type="text" value={form.maxWeight}name="maxWeight"   placeholder="Enter Max Weight"
-              onChange={handleNumberChange}/>
+              onChange={(e) =>  setForm({ ...form, maxWeight: e.target.value })}/>
               </div>
   <div className="form-group-select">
     <label>Entity</label>
@@ -417,7 +417,7 @@ const handleNumberChange = (e) => {
               <div className="form-group">
               <label htmlFor="">Invoice Number</label>
               <input type="text" value={form.invoiceNumber} name="invoiceNumber"  placeholder="Enter Invoice Number"
-              onChange={handleNumberChange}/>
+              onChange={(e) =>  setForm({ ...form, invoiceNumber: e.target.value })}/>
               </div>
               <div className="form-group">
             <label>Tracking Number</label>
@@ -474,7 +474,7 @@ const handleNumberChange = (e) => {
               <label htmlFor="">Supplier Code</label>
               <input type="text" value={form.supplyCode} name="supplyCode" 
                placeholder="Enter Supply Code"
-               onChange={handleNumberChange}/>
+               onChange={(e) =>  setForm({ ...form, supplyCode: e.target.value })}/>
               </div>
 
               </div>
