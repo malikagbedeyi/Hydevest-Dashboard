@@ -8,7 +8,7 @@
 
   const fundingOption = ["PARTNER", "ENTITY"];
 
-  const DrildownContainer = ({container = {},goBack = () => {},onUpdate,avgContainerRate = 0,formatNumber,reloadTable,}) => {
+  const DrildownContainer = ({container = {},goBack = () => {},onUpdate,avgContainerRate = 0,formatNumber,reloadTable, totalGeneralNGN = 0,totalContainerCount = 0,}) => {
 
     const safeFormatNumber =
     typeof formatNumber === "function"
@@ -16,8 +16,8 @@
       
       : (num = 0) =>
           Number(num || 0).toLocaleString("en-US", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 6,
+            minimumFractionDigits: 3,
+            maximumFractionDigits: 3,
           });
 
   const [form, setForm] = useState({
@@ -65,14 +65,12 @@
 
 
   
-const rawAmountUsd =
-  (Number(form.unitPrice) || 0) * (Number(form.unitpieces) || 0) +
-  (Number(form.shipping_amount_usd) || 0);
+const rawAmountUsd = (Number(form.unitPrice) || 0) * (Number(form.unitpieces) || 0) + (Number(form.shipping_amount_usd) || 0);
+  const rawTotalNgnValue = rawAmountUsd * avgContainerRate + (form.funding === "PARTNER" ? Number(form.surcharge || 0) : 0);
 
-const rawTotalNgnValue =
-  rawAmountUsd * avgContainerRate +
-  (form.funding === "PARTNER" ? Number(form.surcharge || 0) : 0);
+  const generalShare = totalContainerCount > 0 ? (totalGeneralNGN / totalContainerCount) : 0;
 
+  const landingCost = generalShare + rawTotalNgnValue;
 const quotedUsd =
   (Number(form.quotedPriceUsd) || 0) +
   (Number(form.shipping_amount_usd) || 0);
@@ -292,8 +290,8 @@ const handleNumberChange = (e) => {
         <div className="drill-summary-grid">
         <div className="drill-summary">
       <div className="summary-item">
-    <p className="small"> Amount (NGN)</p>
-    <h2>₦{safeFormatNumber(rawTotalNgnValue)}</h2> 
+    <p className="small"> Landing Cost</p>
+    <h2>₦{safeFormatNumber(landingCost)}</h2>
   </div>
   <div className="summary-item">
     <p className="small">Amount (USD)</p>

@@ -99,9 +99,7 @@ const calculateContainerNGN = (item, rate) => {
 const calculateQuotedContainerUSD = (item) => {
   const isPartner = item.funding?.toLowerCase() === "partner";
   const quotedPrice = Number(item.quoted_price_usd) || 0;
-
   if (!isPartner || quotedPrice === 0) return 0;
-
   return quotedPrice + (Number(item.shipping_amount_usd) || 0);
 };
 

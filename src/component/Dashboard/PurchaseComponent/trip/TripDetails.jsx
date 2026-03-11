@@ -252,11 +252,6 @@ const formatNumber = (num) =>
     maximumFractionDigits: 3,
   }).format(Number(num || 0));
 
-    const truncateDecimals = (num, digits = 2) => {
-  if (!num) return 0;
-  const factor = 10 ** digits;
-  return Math.trunc(Number(num) * factor) / factor;
-};
    
   /* ================== Trip File  DATA ================== */
   const [tripFileData, setTripFileData] = useState(() => {
@@ -350,6 +345,10 @@ const calculateContainerNGN = (item, rate) => {
 const totalExpenseNGN = financeData.reduce((sum, item) => {
   return sum + Number(item.total_amount || 0);
 }, 0);
+
+const totalGeneralPaymentNGN = financeData.reduce((sum, item) => {
+    return Number(item.is_container_payment) === 0 ? sum + Number(item.total_amount || 0) : sum;
+  }, 0);
 
 /* ================== FINANCE SUMMARY (UPDATED) ================== */
 
@@ -521,7 +520,7 @@ onApprovalChange={(updatedExpense) => {
       goBack={() => setShowContainerDetails(false)}  onUpdate={handleUpdateContainer} 
       avgContainerRate={avgContainerRate} formatNumber={formatNumber} totalAmountUSD={totalAmountUSD} totalAmountNGN={totalContainerNGN}
       totalContainers={totalContainers} totalUnitPriceUSD={totalUnitPriceUSD}
-      reloadTable={() => setContainerReloadKey(k => k + 1)}  />;
+      reloadTable={() => setContainerReloadKey(k => k + 1)} totalGeneralNGN={totalGeneralPaymentNGN} totalContainerCount={containerData.length}  />;
   }
   if (showDocumentDril) {
     return <TripDocumentDrill
@@ -559,7 +558,7 @@ const handleCloseMessage = () => {
       <div className="drill-summary">
  <div className="summary-item">
   <p className="small">Total Amount (NGN)</p>
-  <h2>{"₦" + summaryNGN.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
+  <h2>{"₦" + formatNumber(summaryNGN) }</h2>
 </div>
 
   <div className="summary-item">
