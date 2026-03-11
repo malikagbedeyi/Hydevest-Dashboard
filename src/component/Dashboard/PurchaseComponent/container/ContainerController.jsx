@@ -9,6 +9,7 @@ import DrildownContainer from "./DrildownContainer";
 import { ContainerServices } from "../../../../services/Trip/container";
 import { TripServices } from "../../../../services/Trip/trip";
 import { useTripFinance } from "../trip/hook/useTripFinance";
+import { ExpenseServices } from "../../../../services/Trip/expense";
 
 const ContainerController = ({ breadcrumb, navigate, goBackTo }) => {
   const [view, setView] = useState("table");
@@ -24,6 +25,7 @@ const [openFieldSelect, setOpenFieldSelect] = useState(false);
 const [tripContainerCount, setTripContainerCount] = useState(0);
 const [showFilters, setShowFilters] = useState(false);
 const [openStatusSelect, setOpenStatusSelect] = useState(false);
+const [tripRates, setTripRates] = useState({});
 
 const { avgContainerRate, financeData } = useTripFinance(
   selectedContainer?.trip?.trip_uuid
@@ -74,14 +76,54 @@ useEffect(() => {
       /* =========================
          2️⃣ EXTRACT UNIQUE TRIP UUIDs
       ========================= */
-      const tripUuids = [
-        ...new Set(
-          containerData
-            .map((c) => c.trip_uuid)
-            .filter(Boolean)
-        ),
-      ];
+   console.log("📦 Containers:", containerData);
 
+const tripUuids = [
+  ...new Set(
+    containerData
+      .map((c) => c.trip?.trip_uuid)
+      .filter(Boolean)
+  ),
+];
+
+console.log("🧭 Trip UUIDs found:", tripUuids);
+
+const rateMap = {};
+
+
+for (const uuid of tripUuids) {
+  try {
+    console.log("💰 Fetching expenses for trip:", uuid);
+
+    const res = await ExpenseServices.list({ trip_uuid: uuid });
+
+    const records = res.data?.record?.data || res.data?.data || [];
+
+    console.log("📊 Expense records found:", records);
+
+    const totals = records.reduce(
+      (acc, item) => {
+        // Correct check for Container Payments
+        if (Number(item.is_container_payment) === 1) {
+          acc.ngn += Number(item.total_amount || 0);
+          acc.usd += Number(item.amount || 0); 
+        }
+        return acc;
+      },
+      { ngn: 0, usd: 0 }
+    );
+
+    const rate = totals.usd > 0 ? totals.ngn / totals.usd : 0;
+    rateMap[uuid] = rate;
+
+  } catch (err) {
+    console.error("❌ Expense fetch failed for trip:", uuid, err);
+  }
+}
+
+console.log("🗺 Final tripRates map:", rateMap);
+
+setTripRates(rateMap);
 
       /* =========================
          5️⃣ CALCULATE USD + NGN PER CONTAINER
@@ -139,69 +181,48 @@ const totalPieces = containers.reduce(
    CALCULATE DRILL SUMMARY (FIXED)
 ========================= */
 
-const getActiveRate = (itemTripUuid) => {
-  if (
-    selectedContainer?.trip?.trip_uuid === itemTripUuid &&
-    avgContainerRate > 0
-  ) {
-    return avgContainerRate;
-  }
+const getActiveRate = (tripUuid) => {
+  const rate = tripRates[tripUuid] || 0;
 
-  const storedData = localStorage.getItem(`trip_fx_rate_${itemTripUuid}`);
+  console.log("📌 Rate lookup:", {
+    tripUuid,
+    rate
+  });
 
-  if (storedData) {
-    try {
-      return JSON.parse(storedData).rate || 0;
-    } catch {
-      return 0;
-    }
-  }
-
-  return 0;
+  return rate;
 };
 
-const getStoredRate = (tripUuid) => {
-  const data = localStorage.getItem(`trip_fx_rate_${tripUuid}`);
-  if (!data) return 0;
+const fxRate = 0; // not used anymore
 
-  try {
-    return JSON.parse(data).rate || 0;
-  } catch {
-    return 0;
-  }
-  
-};
-const fxRate =
-  avgContainerRate ||
-  getStoredRate(selectedContainer?.trip_uuid);
-
-
+/* =========================
+   CALCULATE DRILL SUMMARY (FIXED AVERAGES)
+========================= */
 const summaryData = useMemo(() => {
   return containers.reduce((acc, item) => {
-    const rate = fxRate
-    
-    const amountUSD = Number(item.unit_price_usd || 0) * Number(item.pieces || 0) + 
-                      Number(item.shipping_amount_usd || 0);
-    const quotedUSD = Number(item.quoted_price_usd || 0) > 0 
-                      ? Number(item.quoted_price_usd || 0) + Number(item.shipping_amount_usd || 0) 
-                      : 0;
+    const rate = getActiveRate(item.trip?.trip_uuid || item.trip_uuid);
+  
+    const pieces = Number(item.pieces || 0);
 
-    const amountNGN = rate > 0 ? (amountUSD * rate) : 0;
+    const amountUSD = (Number(item.unit_price_usd || 0) * pieces) + 
+                      Number(item.shipping_amount_usd || 0);
+    
+    const surcharge = item.funding?.toLowerCase() === "partner" ? Number(item.surcharge_ngn || 0) : 0;
+    const amountNGN = rate > 0 ? (amountUSD * rate) + surcharge : 0;
+    const quotedUSDPerPiece = Number(item.quoted_price_usd || 0);
 
     return {
       totalNGN: acc.totalNGN + amountNGN,
       totalUSD: acc.totalUSD + amountUSD,
-      totalQuotedUSD: acc.totalQuotedUSD + quotedUSD,
       totalUnitPrice: acc.totalUnitPrice + Number(item.unit_price_usd || 0),
-      totalPieces: acc.totalPieces + Number(item.pieces || 0),
+      totalQuotedPrice: acc.totalQuotedPrice + quotedUSDPerPiece, 
+      totalPieces: acc.totalPieces + pieces,
       count: acc.count + 1
     };
-  }, { totalNGN: 0, totalUSD: 0, totalQuotedUSD: 0, totalUnitPrice: 0, totalPieces: 0, count: 0 });
-}, [containers, avgContainerRate]);
-
+  }, { totalNGN: 0, totalUSD: 0, totalUnitPrice: 0, totalQuotedPrice: 0, totalPieces: 0, count: 0 });
+}, [containers, tripRates]);
 
 const avgUnitPrice = summaryData.count > 0 ? (summaryData.totalUnitPrice / summaryData.count) : 0;
-const avgQuotedPrice = summaryData.count > 0 ? (summaryData.totalQuotedUSD / summaryData.count) : 0;
+const avgQuotedPrice = summaryData.count > 0 ? (summaryData.totalQuotedPrice / summaryData.count) : 0;
 
 const [totalGeneralNGN, setTotalGeneralNGN] = useState(0);
 
@@ -244,6 +265,17 @@ totalContainerCount={tripSpecificCount}  goBack={() => {fetchContainersWithFinan
 />
     );
   }
+
+  const formatMoney = (value) =>
+  new Intl.NumberFormat("en-NG", {
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0));
+
+const formatMoneyUSD = (value) =>
+  new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0));
+
 
   /* =========================
      UI
@@ -450,20 +482,20 @@ totalContainerCount={tripSpecificCount}  goBack={() => {fetchContainersWithFinan
   <h2>{totalContainers}</h2>
 </div>
 <div className="summary-item">
-  <p className="small">Total Amount (USD)</p>
-  <h2>{"$" + totalAmountUSD.toLocaleString()}</h2>
+  <p className="small">Total Amount (NGN)</p>
+  <h2>{"₦" + formatMoney(summaryData.totalNGN)}</h2>
 </div>
 <div className="summary-item">
   <p className="small">Total Pieces</p>
-  <h2>{totalPieces.toLocaleString()}</h2>
+  <h2>{totalPieces}</h2>
 </div>
 <div className="summary-item">
   <p className="small">Average Quoted Price </p>
-  <h2>{"$" +avgQuotedPrice.toLocaleString()}</h2>
+  <h2>{"$" +formatMoneyUSD(avgQuotedPrice)}</h2>
 </div>
 <div className="summary-item">
   <p className="small">Average Unit Price </p>
-  <h2>{"$" + avgUnitPrice.toLocaleString()}</h2>
+  <h2>{"$" + formatMoneyUSD(avgUnitPrice)}</h2>
 </div>
 
     </div>

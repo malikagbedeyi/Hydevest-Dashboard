@@ -63,7 +63,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
       <div className="table-wrap">
         <table
           className="table"
-          style={{ width: "130%", minWidth: "150%" ,maxWidth:"150%"}}
+          style={{ width: "130%", minWidth: "170%" ,maxWidth:"170%"}}
         >
           <thead>
             <tr>
@@ -75,6 +75,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
               <th>Unit Price (USD)</th>
               <th>Amount (USD)</th>
               <th>Amount (NGN)</th>
+              <th>Quoted Price (USD)</th>
                <th>Quoted Amount (USD)</th>
               <th>Quoted Amount (NGN)</th>
               <th>Created By</th>
@@ -104,6 +105,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
           <td>{formatMoneyUSD(item.unit_price_usd)}</td>
           <td>{formatMoneyUSD(calculateContainerUSD(item))}</td>
           <td>{itemRate > 0 ? formatMoney(calculateContainerNGN(item, itemRate)) : "₦0.00"}</td>
+          <td>{item.quoted_price_usd}</td>
           <td>{formatMoneyUSD(calculateQuotedContainerUSD(item))}</td>
           <td>{itemRate > 0 ? formatMoney(calculateQuotedContainerNGN(item, itemRate)) : "₦0.00"}</td>
           <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
