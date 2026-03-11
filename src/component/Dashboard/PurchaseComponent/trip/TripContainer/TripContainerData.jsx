@@ -61,7 +61,6 @@ const formatMoneyUSd = (value) =>
           });
           setContainerData(res.data?.record?.data || []);
           setPagination(res.data?.record || {});
-          console.log(res.data)
         } catch (err) {
           console.error("Error fetching expenses:", err);
         } finally {
@@ -81,7 +80,7 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [search]);
       
-  const calculateContainerUSD = (item) => {
+const calculateContainerUSD = (item) => {
   return (
     (Number(item.unit_price_usd) || 0) *
     (Number(item.pieces) || 0) +
@@ -91,6 +90,24 @@ useEffect(() => {
 
 const calculateContainerNGN = (item, rate) => {
   const usd = calculateContainerUSD(item);
+
+  const surcharge =
+    item.funding?.toLowerCase() === "partner"
+      ? Number(item.surcharge_ngn || 0)
+      : 0;
+
+  return usd * (Number(rate) || 0) + surcharge;
+};
+
+const calculateQuotedContainerUSD = (item) => {
+  return (
+    (Number(item.quoted_price_usd) || 0) +
+    (Number(item.shipping_amount_usd) || 0)
+  );
+};
+
+const calculateQuotedContainerNGN = (item, rate) => {
+  const usd = calculateQuotedContainerUSD(item);
 
   const surcharge =
     item.funding?.toLowerCase() === "partner"
@@ -145,8 +162,8 @@ const calculateContainerNGN = (item, rate) => {
                   <td>{formatMoney(Number(item.surcharge_ngn || 0))}</td>
                   <td>{formatMoneyUSd(calculateContainerUSD(item))}</td>
                   <td>{formatMoney(calculateContainerNGN(item, avgContainerRate))}</td>
-                  <td>{formatMoneyUSd(item.quoted_price_usd || "0")} </td>
-                  <td>{formatMoney((Number(item.quoted_price_usd || 0) * Number(avgContainerRate || 0)) +(item.funding === "partner" ? Number(item.surcharge_ngn || 0) : 0))}</td>
+                  <td>{formatMoneyUSd(calculateQuotedContainerUSD(item))}</td>
+                   <td>{formatMoney(calculateQuotedContainerNGN(item, avgContainerRate))}</td>
                   <td>{item?.creator_info?.firstname} {item?.creator_info?.lastname}</td>
                   <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>
                   <td>{formatDate(item.created_at)}</td>

@@ -248,9 +248,9 @@ const handleUpdateContainer = (updatedContainer) => {
   }, 0);
 
 const formatNumber = (num) =>
-  Math.round(Number(num || 0)).toLocaleString("en-NG", {
-    maximumFractionDigits: 0,
-  });
+  new Intl.NumberFormat("en-NG", {
+    maximumFractionDigits: 2,
+  }).format(Number(num || 0));
 
     
    
@@ -336,7 +336,7 @@ const calculateAverageFxRate = (expenses = []) => {
     0
   );
 
-  return total / valid.length;
+return Number((total / valid.length).toFixed(2));
 };
 const calculateContainerUSD = (item) => {
   const base =
@@ -374,28 +374,11 @@ const totalPieces = containerData.reduce(
   (sum, item) => sum + Number(item.pieces || 0),
   0
 );
-
-const totalContainerUSD = containerData.reduce((sum, item) => {
-  const base =
-    Number(item.unit_price_usd || 0) * Number(item.pieces || 0) +
-    Number(item.shipping_amount_usd || 0);
-
-  const surcharge =
-    item.funding === "partner" ? Number(item.surcharge || 0) : 0;
-
-  return sum + base + surcharge;
-}, 0);
-
 const totalContainerNGN = containerData.reduce((sum, item) => {
   return sum + calculateContainerNGN(item, avgContainerRate);
 }, 0);
-
 const avgContainerExpenseNGN =
-  totalContainers > 0 ? totalContainerNGN / totalContainers : 0;
-
-
-
-
+ totalContainers > 0 ? totalContainerNGN / totalContainers : 0;
 
 let summaryNGN = 0;
 let summaryUSD = 0;
@@ -415,8 +398,43 @@ useEffect(() => {
 }, [financeData]);
 
 
+// Total Container Payment NGN (approved only)
+const totalContainerPaymentNGN = financeData.reduce((sum, item) => {
+  if (Number(item.is_container_payment) === 1 )
+    // && Number(item.status) === 1)
+   {
+    return sum + Number(item.total_amount || 0);
+  }
+  return sum;
+}, 0);
+
+
+// Total Quoted Amount NGN (from containers)
+const totalQuotedAmountNGN = containerData.reduce((sum, item) => {
+  const usd =
+    (Number(item.quoted_price_usd) || 0) +
+    (Number(item.shipping_amount_usd) || 0);
+
+  const surcharge =
+    item.funding?.toLowerCase() === "partner"
+      ? Number(item.surcharge_ngn || 0)
+      : 0;
+
+  const ngn = usd * Number(avgContainerRate || 0) + surcharge;
+
+  return sum + ngn;
+}, 0);
+let dynamicMetricValue = 0;
+
+if (activeTab === "finance") {
+  dynamicMetricValue = totalContainerPaymentNGN;
+}
+
+if (activeTab === "container") {
+  dynamicMetricValue = totalQuotedAmountNGN;
+}
+
   /* ================== UTILITY FUNCTIONS ================== */
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   const handleRowClick = (item) => {
     setSelectedTrip(item);
@@ -437,18 +455,6 @@ useEffect(() => {
     setShowDeletePopup(true);
   };
 
-  const cancelDelete = () => {
-    setItemToDelete(null);
-    setShowDeletePopup(false);
-  };
-
-  const confirmDelete = () => {
-    if (itemToDelete) {
-      handleDeleteFinance(itemToDelete.id);
-      setItemToDelete(null);
-      setShowDeletePopup(false);
-    }
-  };
 
 const handleUpdate = async () => {
   if (!hasChanges()) {
@@ -579,8 +585,12 @@ const handleCloseMessage = () => {
 </div>
 
 <div className="summary-item">
-  <p className="small">Total Pieces</p>
-  <h2>{formatNumber(totalPieces)}</h2>
+  <p className="small">
+    {activeTab === "finance"
+      ? "Total Container Payment "
+      : "Total Quoted Amount "}
+  </p>
+<h2>{"₦" + dynamicMetricValue.toLocaleString("en-NG")}</h2>
 </div>
 
 <div className="summary-item">

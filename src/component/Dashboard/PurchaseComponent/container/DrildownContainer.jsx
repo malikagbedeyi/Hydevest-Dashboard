@@ -17,7 +17,7 @@
       : (num = 0) =>
           Number(num || 0).toLocaleString("en-US", {
             minimumFractionDigits: 0,
-            maximumFractionDigits: 2,
+            maximumFractionDigits: 10,
           });
 
   const [form, setForm] = useState({
@@ -66,7 +66,9 @@
   const amountUsd =
     (Number(form.unitPrice) || 0) * (Number(form.unitpieces) || 0) +
     Number(form.shipping_amount_usd || 0);
-
+const quotedUsd =
+  (Number(form.quotedPriceUsd) || 0) +
+  (Number(form.shipping_amount_usd) || 0);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -306,8 +308,12 @@ const handleNumberChange = (e) => {
   </div>
 
   <div className="summary-item">
-    <p className="small">Total Pieces</p>
-    <h2>{safeFormatNumber(form.unitpieces)}</h2>
+    <p className="small">Total Quoted Amount NGN</p>
+        <h2>
+    ₦{safeFormatNumber(
+     quotedUsd  * (Number(avgContainerRate) || 0) +
+      (form.funding === "PARTNER" ? Number(form.surcharge || 0) : 0)
+    )}</h2>
   </div>
   <div className="summary-item">
     <p className="small">Average Fx Rate</p>
