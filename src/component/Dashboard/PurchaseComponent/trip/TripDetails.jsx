@@ -249,7 +249,7 @@ const handleUpdateContainer = (updatedContainer) => {
 
 const formatNumber = (num) =>
   new Intl.NumberFormat("en-NG", {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 3,
   }).format(Number(num || 0));
 
     const truncateDecimals = (num, digits = 2) => {
@@ -338,10 +338,12 @@ const calculateContainerUSD = (item) => {
   return base + surcharge;
 };
 
-const calculateContainerNGN = (item, rate) =>
-  calculateContainerUSD(item) * Number(rate || 0);
+const calculateContainerNGN = (item, rate) => {
+  const usdValue = calculateContainerUSD(item); 
 
-// const avgContainerRate = calculateAverageFxRate(financeData);
+  return usdValue * Number(rate || 0); 
+};
+
 
 /* ================== FINANCE SUMMARY (CORRECT) ================== */
 
@@ -555,10 +557,10 @@ const handleCloseMessage = () => {
     <div className="trip-details-grid-content">
     <div className="drill-summary-grid">
       <div className="drill-summary">
-  <div className="summary-item">
-    <p className="small">Total Amount (NGN)</p>
-    <h2>{"₦" + summaryNGN.toLocaleString("en-NG")}</h2>
-  </div>
+ <div className="summary-item">
+  <p className="small">Total Amount (NGN)</p>
+  <h2>{"₦" + summaryNGN.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
+</div>
 
   <div className="summary-item">
     <p className="small">

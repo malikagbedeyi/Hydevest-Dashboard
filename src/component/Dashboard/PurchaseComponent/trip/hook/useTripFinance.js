@@ -23,36 +23,33 @@ export const useTripFinance = (tripUuid) => {
     fetchFinance();
   }, [tripUuid]);
 
-  /* ================== WEIGHTED AVERAGE CALCULATION ================== */
-  const avgContainerRate = useMemo(() => {
-    // 1. Filter for Container Payments in USD that have a valid rate
-    const containerPayments = financeData.filter(
-      (item) =>
-        Number(item.is_container_payment) === 1 &&
-        item.currency === "USD" &&
-        Number(item.rate) > 0
-    );
+/* ================== WEIGHTED AVERAGE CALCULATION ================== */
+const avgContainerRate = useMemo(() => {
+  const containerPayments = financeData.filter(
+    (item) =>
+      Number(item.is_container_payment) === 1 &&
+      item.currency === "USD" &&
+      Number(item.rate) > 0
+  );
 
-    if (!containerPayments.length) return 0;
+  if (!containerPayments.length) return 0;
 
-    // 2. Calculate Total USD spent and Total NGN equivalent spent
-    let totalUsdAmount = 0;
-    let totalNgnEquivalent = 0;
+  // Use reduce for cleaner, more precise accumulation
+  const totals = containerPayments.reduce((acc, item) => {
+    const usd = Number(item.amount) || 0;
+    const rate = Number(item.rate) || 0;
+    
+    return {
+      usd: acc.usd + usd,
+      ngn: acc.ngn + (usd * rate)
+    };
+  }, { usd: 0, ngn: 0 });
 
-    containerPayments.forEach((item) => {
-      const usd = Number(item.amount) || 0;
-      const rate = Number(item.rate) || 0;
-      
-      totalUsdAmount += usd;
-      totalNgnEquivalent += (usd * rate);
-    });
+  if (totals.usd === 0) return 0;
 
-    // 3. Avoid division by zero and calculate: Total NGN / Total USD
-    if (totalUsdAmount === 0) return 0;
 
-    return totalNgnEquivalent / totalUsdAmount;
-  }, [financeData]);
-  
+  return totals.ngn / totals.usd; 
+}, [financeData]);
   return {
     financeData,
     setFinanceData,

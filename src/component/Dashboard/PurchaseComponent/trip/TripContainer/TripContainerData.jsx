@@ -28,12 +28,12 @@ const prevPage = () => {
 
 const formatMoney = (value) =>
   new Intl.NumberFormat("en-NG", {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 3,
   }).format(Number(value || 0));
 
 const formatMoneyUSd = (value) =>
   new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 3,
   }).format(Number(value || 0));
 
 
