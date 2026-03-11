@@ -28,12 +28,12 @@ const prevPage = () => {
 
 const formatMoney = (value) =>
   new Intl.NumberFormat("en-NG", {
-    maximumFractionDigits: 10,
+    maximumFractionDigits: 2,
   }).format(Number(value || 0));
 
 const formatMoneyUSd = (value) =>
   new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 10,
+    maximumFractionDigits: 2,
   }).format(Number(value || 0));
 
 
@@ -98,22 +98,20 @@ const calculateContainerNGN = (item, rate) => {
 
   return usd * (Number(rate) || 0) + surcharge;
 };
-
 const calculateQuotedContainerUSD = (item) => {
-  return (
-    (Number(item.quoted_price_usd) || 0) +
-    (Number(item.shipping_amount_usd) || 0)
-  );
+  const isPartner = item.funding?.toLowerCase() === "partner";
+  const quotedPrice = Number(item.quoted_price_usd) || 0;
+
+  if (!isPartner || quotedPrice === 0) return 0;
+
+  return quotedPrice + (Number(item.shipping_amount_usd) || 0);
 };
 
 const calculateQuotedContainerNGN = (item, rate) => {
   const usd = calculateQuotedContainerUSD(item);
+  if (usd === 0) return 0;
 
-  const surcharge =
-    item.funding?.toLowerCase() === "partner"
-      ? Number(item.surcharge_ngn || 0)
-      : 0;
-
+  const surcharge = Number(item.surcharge_ngn || 0);
   return usd * (Number(rate) || 0) + surcharge;
 };
   return (

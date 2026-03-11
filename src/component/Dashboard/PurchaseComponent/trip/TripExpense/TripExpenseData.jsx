@@ -42,7 +42,7 @@ const prevPage = () => {
   
   const formatNGN = (value) =>
   new Intl.NumberFormat("en-NG", {
-    maximumFractionDigits: 10,
+    maximumFractionDigits: 2,
     style: "currency",
     currency: "NGN",
   }).format(Number(value || 0));

@@ -357,20 +357,19 @@ const totalExpenseUSD = financeData.reduce((sum, item) => {
 }, 0);
 
 const totalContainers = containerData.length;
-const totalTrip = financeData.length;
 
-const totalPieces = containerData.reduce(
-  (sum, item) => sum + Number(item.pieces || 0),
-  0
-);
 const totalContainerNGN = containerData.reduce((sum, item) => {
   return sum + calculateContainerNGN(item, avgContainerRate);
 }, 0);
-const avgContainerExpenseNGN =
- totalContainers > 0 ? totalContainerNGN / totalContainers : 0;
 
 let summaryNGN = 0;
 let summaryUSD = 0;
+
+const totalContainerUSDVal = containerData.reduce((sum, item) => {
+  const amountUSD = (Number(item.unit_price_usd || 0) * Number(item.pieces || 0)) + 
+                    Number(item.shipping_amount_usd || 0);
+  return sum + amountUSD;
+}, 0);
 
 if (activeTab === "finance") {
   summaryNGN = totalExpenseNGN;
@@ -379,8 +378,9 @@ if (activeTab === "finance") {
 
 if (activeTab === "container") {
   summaryNGN = totalContainerNGN;     
-  summaryUSD = avgContainerExpenseNGN; 
+  summaryUSD = totalContainerUSDVal; 
 }
+
 
 
 useEffect(() => {
@@ -398,19 +398,18 @@ const totalContainerPaymentNGN = financeData.reduce((sum, item) => {
 }, 0);
 
 
-// Total Quoted Amount NGN (from containers)
+// Total Quoted Amount NGN
 const totalQuotedAmountNGN = containerData.reduce((sum, item) => {
+  const quotedPrice = Number(item.quoted_price_usd) || 0;
+  const isPartner = item.funding?.toLowerCase() === "partner";
 
-  if (item.funding?.toLowerCase() !== "partner") {
+  // Rule: If not partner OR quoted price is 0, total quoted amount is 0
+  if (!isPartner || quotedPrice === 0) {
     return sum + 0;
   }
 
-  const usd =
-    (Number(item.quoted_price_usd) || 0) +
-    (Number(item.shipping_amount_usd) || 0);
-
+  const usd = quotedPrice + (Number(item.shipping_amount_usd) || 0);
   const surcharge = Number(item.surcharge_ngn || 0);
-
   const ngn = usd * Number(avgContainerRate || 0) + surcharge;
 
   return sum + ngn;
@@ -551,46 +550,38 @@ const handleCloseMessage = () => {
     <div className="trip-details-grid-content">
     <div className="drill-summary-grid">
       <div className="drill-summary">
+  <div className="summary-item">
+    <p className="small">Total Amount (NGN)</p>
+    <h2>{"₦" + summaryNGN.toLocaleString("en-NG")}</h2>
+  </div>
 
-<div className="summary-item">
-  <p className="small">Total Amount (NGN)</p>
-  <h2>{"₦" + summaryNGN.toLocaleString("en-NG")}</h2>
-</div>
+  <div className="summary-item">
+    <p className="small">
+      {activeTab === "container"
+        ? "Total Amount (USD)" // Changed from Average Expense
+        : "Total Amount (USD)"}
+    </p>
+    <h2>{formatNumber(summaryUSD)}</h2>
+  </div>
+      {activeTab === "container" && (
+  <div className="summary-item">
+    <p className="small">Total Container</p>
+    <h2>{totalContainers}</h2>
+  </div>
+  )}
 
-<div className="summary-item">
-  <p className="small">
-    {activeTab === "container"
-      ? "Average Expense (NGN)"
-      : "Total Amount (USD)"}
-  </p>
-  <h2>{formatNumber(summaryUSD)}</h2>
-</div>
+  <div className="summary-item">
+    <p className="small">
+      {activeTab === "finance" ? "Total Container Payment" : "Total Quoted Amount"}
+    </p>
+    <h2>{"₦" + dynamicMetricValue.toLocaleString("en-NG")}</h2>
+  </div>
 
-<div className="summary-item">
-<p className="small">
-    {activeTab === "container"
-      ? "Total Container"
-      : "Total Trip Expense"}
-  </p>
-  <h2>{  activeTab === "container" ? totalContainers : totalTrip}</h2>
-</div>
-
-<div className="summary-item">
-  <p className="small">
-    {activeTab === "finance"
-      ? "Total Container Payment "
-      : "Total Quoted Amount "}
-  </p>
-<h2>{"₦" + dynamicMetricValue.toLocaleString("en-NG")}</h2>
-</div>
-
-<div className="summary-item">
-  <p className="small">Average Fx Rate</p>
-  <h2>{truncateDecimals(avgContainerRate, 2)}</h2>
-</div>
-
-
+    <div className="summary-item">
+      <p className="small">Average Fx Rate</p>
+      <h2>{truncateDecimals(avgContainerRate, 2)}</h2>
     </div>
+</div>
     </div>
       <div className="trip-details-container" ref={scrollRef}>
         <div className="top-trip-content">
