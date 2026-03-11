@@ -3,13 +3,13 @@ import { ChevronDown, Filter, Search } from "lucide-react";
 import "../../../../assets/Styles/dashboard/controller.scss";
 
 import ContainerTable from "./ContainerTable";
-import ContainerLogs from "./ContainerLogs";
 import DrildownContainer from "./DrildownContainer";
 
 import { ContainerServices } from "../../../../services/Trip/container";
 import { TripServices } from "../../../../services/Trip/trip";
 import { useTripFinance } from "../trip/hook/useTripFinance";
 import { ExpenseServices } from "../../../../services/Trip/expense";
+import ContainerLog from "./ContainerLog";
 
 const ContainerController = ({ breadcrumb, navigate, goBackTo }) => {
   const [view, setView] = useState("table");
@@ -76,7 +76,6 @@ useEffect(() => {
       /* =========================
          2️⃣ EXTRACT UNIQUE TRIP UUIDs
       ========================= */
-   console.log("📦 Containers:", containerData);
 
 const tripUuids = [
   ...new Set(
@@ -86,20 +85,16 @@ const tripUuids = [
   ),
 ];
 
-console.log("🧭 Trip UUIDs found:", tripUuids);
-
 const rateMap = {};
 
 
 for (const uuid of tripUuids) {
   try {
-    console.log("💰 Fetching expenses for trip:", uuid);
 
     const res = await ExpenseServices.list({ trip_uuid: uuid });
 
     const records = res.data?.record?.data || res.data?.data || [];
 
-    console.log("📊 Expense records found:", records);
 
     const totals = records.reduce(
       (acc, item) => {
@@ -121,7 +116,6 @@ for (const uuid of tripUuids) {
   }
 }
 
-console.log("🗺 Final tripRates map:", rateMap);
 
 setTripRates(rateMap);
 
@@ -182,12 +176,7 @@ const totalPieces = containers.reduce(
 ========================= */
 
 const getActiveRate = (tripUuid) => {
-  const rate = tripRates[tripUuid] || 0;
-
-  console.log("📌 Rate lookup:", {
-    tripUuid,
-    rate
-  });
+  const rate = tripRates[tripUuid] || 0
 
   return rate;
 };
@@ -510,12 +499,12 @@ const formatMoneyUSD = (value) =>
                   >
                     Container Table
                   </li>
-                  <li
+                  {/* <li
                     className={activeTab === "logs" ? "active" : ""}
                     onClick={() => setActiveTab("logs")}
                   >
                     Activity Log
-                  </li>
+                  </li> */}
                 </ul>
               </div>
             </div>
@@ -539,9 +528,8 @@ const formatMoneyUSD = (value) =>
               />
             )}
 
-            {activeTab === "logs" && selectedContainer && (
-              <ContainerLogs
-                containerUuid={selectedContainer.container_uuid}
+            {activeTab === "logs"  && (
+              <ContainerLog container_uuid={containers.container_uuid}
               />
             )}
           </div>

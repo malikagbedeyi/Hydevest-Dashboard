@@ -9,7 +9,6 @@ const ContainerLog = ({ container_uuid }) => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Normalize what_changed into array of changes
   const normalizeWhatChanged = (changes) => {
     if (!changes || typeof changes !== "object") return [];
     return Object.keys(changes).map((field) => ({
@@ -19,7 +18,6 @@ const ContainerLog = ({ container_uuid }) => {
     }));
   };
 
-  // Fetch logs from API
   const fetchLogs = async () => {
     if (!container_uuid) return;
 
@@ -27,12 +25,12 @@ const ContainerLog = ({ container_uuid }) => {
       setLoading(true);
       const res = await ContainerServices.log({ container_uuid, page });
 
-      // Extract logs from res.data.record.data
       const logsArray = Array.isArray(res.data?.record?.data)
         ? res.data.record.data
         : [];
 
       setLogs(logsArray);
+      console.log(res.data)
       setTotalPages(res.data?.record?.last_page || 1);
     } catch (err) {
       console.error("Error fetching logs:", err);
@@ -50,7 +48,7 @@ const ContainerLog = ({ container_uuid }) => {
   return (
     <div className="userTable">
       <div className="table-wrap">
-        <table className="table" style={{width:"100%" , maxWidth:"100%",minWidth:"100%"}}>
+        <table className="table" style={{width:"130%" , maxWidth:"130%",minWidth:"130%"}}>
           <thead>
             <tr>
               <th>#</th>
