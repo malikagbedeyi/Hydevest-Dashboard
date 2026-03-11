@@ -249,7 +249,7 @@ const handleUpdateContainer = (updatedContainer) => {
 
 const formatNumber = (num) =>
   new Intl.NumberFormat("en-NG", {
-    maximumFractionDigits: 3,
+    maximumFractionDigits: 2,
   }).format(Number(num || 0));
 
    

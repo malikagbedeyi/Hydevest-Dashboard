@@ -93,7 +93,6 @@ useEffect(() => {
           Number(item.shipping_amount_usd || 0);
 
         const quotedUSD = Number(item.quoted_price_usd || 0);
-        // const fxRate = fxMap[item.trip_uuid];
 
 return {
   ...item,
@@ -174,6 +173,31 @@ useEffect(() => {
      DRILLDOWN VIEW
   ========================= */
 
+  const getRateFromStorage = (tripUuid) => {
+  const data = localStorage.getItem(`trip_fx_rate_${tripUuid}`);
+  if (!data) return 0;
+  try {
+    return JSON.parse(data).rate || 0;
+  } catch {
+    return 0;
+  }
+};
+
+const getActiveRate = (itemTripUuid) => {
+    if (selectedContainer?.trip?.trip_uuid === itemTripUuid && avgContainerRate > 0) {
+        return avgContainerRate;
+    }
+    const storedData = localStorage.getItem(`trip_fx_rate_${itemTripUuid}`);
+    if (storedData) {
+        try {
+            return JSON.parse(storedData).rate || 0;
+        } catch {
+            return 0;
+        }
+    }
+    return 0;
+};
+
   const getStoredRate = (tripUuid) => {
   const data = localStorage.getItem(`trip_fx_rate_${tripUuid}`);
   if (!data) return 0;
@@ -187,8 +211,6 @@ useEffect(() => {
 const fxRate =
   avgContainerRate ||
   getStoredRate(selectedContainer?.trip_uuid);
-
-
 
 
 
@@ -465,6 +487,8 @@ totalContainerCount={tripSpecificCount}  goBack={() => {fetchContainersWithFinan
               <ContainerTable
                 data={containers}
                 loading={loading}
+                totalGeneralNGN={totalGeneralNGN} 
+                getRate={getActiveRate}
                 page={page}
                 setPage={setPage}
                 pagination={pagination}
