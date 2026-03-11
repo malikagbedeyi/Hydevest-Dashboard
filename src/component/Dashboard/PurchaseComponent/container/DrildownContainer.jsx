@@ -17,7 +17,7 @@
       : (num = 0) =>
           Number(num || 0).toLocaleString("en-US", {
             minimumFractionDigits: 0,
-            maximumFractionDigits: 2,
+            maximumFractionDigits: 6,
           });
 
   const [form, setForm] = useState({
@@ -63,9 +63,16 @@
     if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const amountUsd =
-    (Number(form.unitPrice) || 0) * (Number(form.unitpieces) || 0) +
-    Number(form.shipping_amount_usd || 0);
+
+  
+const rawAmountUsd =
+  (Number(form.unitPrice) || 0) * (Number(form.unitpieces) || 0) +
+  (Number(form.shipping_amount_usd) || 0);
+
+const rawTotalNgnValue =
+  rawAmountUsd * avgContainerRate +
+  (form.funding === "PARTNER" ? Number(form.surcharge || 0) : 0);
+
 const quotedUsd =
   (Number(form.quotedPriceUsd) || 0) +
   (Number(form.shipping_amount_usd) || 0);
@@ -73,10 +80,6 @@ const quotedUsd =
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-    const [attachments] = useState([
-      { id: 1, name: "File A", size: "120KB" },
-      { id: 2, name: "File B", size: "80KB" },
-    ]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -288,23 +291,17 @@ const handleNumberChange = (e) => {
         </div>  
         <div className="drill-summary-grid">
         <div className="drill-summary">
-        <div className="summary-item">
+      <div className="summary-item">
     <p className="small"> Amount (NGN)</p>
-    <h2>
-    ₦{safeFormatNumber(
-      amountUsd * (Number(avgContainerRate) || 0) +
-      (form.funding === "PARTNER" ? Number(form.surcharge || 0) : 0)
-    )}
-  </h2>
-
+    <h2>₦{safeFormatNumber(rawTotalNgnValue)}</h2> 
   </div>
   <div className="summary-item">
-    <p className="small">Unit Price (USD)</p>
-    <h2>{safeFormatNumber(form.unitPrice)}</h2>
+    <p className="small">Amount (USD)</p>
+    <h2>{safeFormatNumber(rawAmountUsd)}</h2>
   </div>
   <div className="summary-item">
-    <p className="small">Average  Weight(KG)</p>
-    <h2>{safeFormatNumber(form.averageWeight)}</h2>
+    <p className="small">Pieces</p>
+    <h2>{safeFormatNumber(form.unitpieces)}</h2>
   </div>
 
   <div className="summary-item">

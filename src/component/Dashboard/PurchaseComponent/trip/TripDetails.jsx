@@ -349,12 +349,17 @@ const totalExpenseNGN = financeData.reduce((sum, item) => {
   return sum + Number(item.total_amount || 0);
 }, 0);
 
-const totalExpenseUSD = financeData.reduce((sum, item) => {
-  if (item.currency === "USD") {
+/* ================== FINANCE SUMMARY (UPDATED) ================== */
+
+
+const totalContainerPaymentUSD = financeData.reduce((sum, item) => {
+
+  if (item.currency === "USD" && Number(item.is_container_payment) === 1) {
     return sum + Number(item.amount || 0);
   }
   return sum;
 }, 0);
+
 
 const totalContainers = containerData.length;
 
@@ -372,8 +377,8 @@ const totalContainerUSDVal = containerData.reduce((sum, item) => {
 }, 0);
 
 if (activeTab === "finance") {
-  summaryNGN = totalExpenseNGN;
-  summaryUSD = totalExpenseUSD;
+  summaryNGN = totalExpenseNGN; 
+  summaryUSD = totalContainerPaymentUSD; 
 }
 
 if (activeTab === "container") {
@@ -578,9 +583,9 @@ const handleCloseMessage = () => {
   </div>
 
     <div className="summary-item">
-      <p className="small">Average Fx Rate</p>
-      <h2>{truncateDecimals(avgContainerRate, 2)}</h2>
-    </div>
+  <p className="small">Average Fx Rate</p>
+  <h2>{Number(avgContainerRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
+</div>
 </div>
     </div>
       <div className="trip-details-container" ref={scrollRef}>

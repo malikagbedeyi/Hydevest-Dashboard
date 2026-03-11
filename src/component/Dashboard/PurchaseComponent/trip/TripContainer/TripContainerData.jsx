@@ -90,14 +90,12 @@ const calculateContainerUSD = (item) => {
 
 const calculateContainerNGN = (item, rate) => {
   const usd = calculateContainerUSD(item);
-
-  const surcharge =
-    item.funding?.toLowerCase() === "partner"
-      ? Number(item.surcharge_ngn || 0)
-      : 0;
-
-  return usd * (Number(rate) || 0) + surcharge;
+  const surcharge = item.funding?.toLowerCase() === "partner" ? Number(item.surcharge_ngn || 0) : 0;
+  
+  // Math happens with full decimals
+  return (usd * Number(rate)) + surcharge; 
 };
+
 const calculateQuotedContainerUSD = (item) => {
   const isPartner = item.funding?.toLowerCase() === "partner";
   const quotedPrice = Number(item.quoted_price_usd) || 0;
