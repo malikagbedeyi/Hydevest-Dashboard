@@ -12,7 +12,7 @@ const PAYMENT_TYPES = [
   { label: "General Payment", value: 0 },
 ];
 
-const TripFinnce = ({ setTrip, trip, goBack, onApprovalChange }) => {
+const TripFinnce = ({ setTrip, trip,previous, goBack, onApprovalChange }) => {
 
   const scrollRef = useRef(null);
 
@@ -129,11 +129,7 @@ const formatInputDate = (date) => {
     <div className="finance-wrapper" ref={scrollRef}>
       {/* Header */}
       <div className="finance-header">
-        <div className="breadcrumb">
-          <strong>Trip</strong>
-          <ChevronRight size={16} />
-          <span>Expense</span>
-        </div>
+        <div className=""></div>
         <div className="actions">
 <button
   className={approved ? "d-none" : "primary"}

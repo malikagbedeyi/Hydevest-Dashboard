@@ -1068,10 +1068,14 @@ input,textarea{
         }
   
         .recent-files {
-          background: inherit;
-          padding: 10px;
-          border-radius: 8px;
-        }
+    margin-top: 1.1vw;
+    max-height: 30vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    @include Destop {
+      margin-top: 15px;
+    }
+  }
   
         .file-row {
           display: flex;
@@ -1188,7 +1192,6 @@ input,textarea{
           display: flex;
           align-items: center;
           gap: 0.7vw;
-      
           @include Destop {
             gap: 10px;
           }
@@ -1197,10 +1200,10 @@ input,textarea{
             flex: 1;
             padding: 0.7vw;
             border-radius: 0.4vw;
-            height: 15vh;
+            height: 10vh;
             font-size: 0.9vw;
             border: none;
-      
+
             @include Destop {
               padding: 10px;
               border-radius: 6px;

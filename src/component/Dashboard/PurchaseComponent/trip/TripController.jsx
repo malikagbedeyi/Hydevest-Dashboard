@@ -7,9 +7,7 @@ import TripDetails from "./TripDetails";
 import { TripServices } from "../../../../services/Trip/trip";
 import TripLogs from "./TripLogs";
 
-const STORAGE_KEY = "trip_data";
-
-const TripController = () => {
+const TripController = ({ breadcrumb, navigate, goBackTo }) => {
   // Load trips from storage
   const [view, setView] = useState("table");
    const [trip, setTrip] = useState([])
@@ -24,15 +22,23 @@ const [openFieldSelect, setOpenFieldSelect] = useState(false);
 const [showFilters, setShowFilters] = useState(false);
 const [openStatusSelect, setOpenStatusSelect] = useState(false);
 const [openProgressSelect, setOpenProgressSelect] = useState(false);
- const [filters, setFilters] = useState({
-  status: "",
-  progress: "",
-  title: "",
-  location: "",
-  date_created: "",
-  from_date: "",
-  to_date: ""
-});
+const [filters, setFilters] = useState({status: "",progress: "",title: "",location: "",date_created: "",from_date: "",to_date: ""});
+
+useEffect(() => {
+  const last = breadcrumb[breadcrumb.length - 1];
+
+  if (!last) return;
+
+  if (last.view === "controller") {
+    setView("table");
+  }
+
+  if (last.view === "details") {
+    setView("details");
+    setSelectedTrip(last.trip);
+  }
+}, [breadcrumb]);
+
   /* ================= FETCH TRIPS ================= */
  const feacthTrip = async (pageNum = page) => {
   try {
@@ -309,10 +315,7 @@ useEffect(() => {
                 page={page}
                 setPage={setPage}
                 pagination={pagination} 
-                  onRowClick={(trip) => {
-                  setSelectedTrip(trip);
-                  setView("details");
-                }}/>
+                  onRowClick={(trip) => { setSelectedTrip(trip);navigate("Trip Details", "details", { trip });setView("details");}}/>
       )}
 
             {(view === "table" || view === "empty") && activeTab === "logs" && (
@@ -329,13 +332,16 @@ useEffect(() => {
       )}
 
 {view === "details" && selectedTrip && (
-  <TripDetails
-    trip={selectedTrip}
-    goBack={() => {
-      feacthTrip(page); 
-      setView("table");
-    }}
-  />
+ <TripDetails
+  trip={selectedTrip}
+  navigate={navigate}
+  breadcrumb={breadcrumb}
+  goBackTo={goBackTo}
+  goBack={() => {
+    feacthTrip(page);
+    setView("table");
+  }}
+/>
 )}
 
 

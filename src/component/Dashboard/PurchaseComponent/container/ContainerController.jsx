@@ -8,8 +8,9 @@ import DrildownContainer from "./DrildownContainer";
 
 import { ContainerServices } from "../../../../services/Trip/container";
 import { TripServices } from "../../../../services/Trip/trip";
+import { useTripFinance } from "../trip/hook/useTripFinance";
 
-const ContainerController = () => {
+const ContainerController = ({ breadcrumb, navigate, goBackTo }) => {
   const [view, setView] = useState("table");
   const [containers, setContainers] = useState([]);
   const [search, setSearch] = useState("");
@@ -20,10 +21,16 @@ const ContainerController = () => {
   const [selectedContainer, setSelectedContainer] = useState(null);
 const [searchField, setSearchField] = useState("all");
 const [openFieldSelect, setOpenFieldSelect] = useState(false);
-
+const [tripContainerCount, setTripContainerCount] = useState(0);
 const [showFilters, setShowFilters] = useState(false);
 const [openStatusSelect, setOpenStatusSelect] = useState(false);
 
+const { avgContainerRate, financeData } = useTripFinance(
+  selectedContainer?.trip?.trip_uuid
+);
+
+useEffect(() => {
+}, [avgContainerRate, financeData, selectedContainer]);
 const [filters, setFilters] = useState({
   status: "",
   title: "",
@@ -32,6 +39,23 @@ const [filters, setFilters] = useState({
   from_date: "",
   to_date: ""
 });
+
+useEffect(() => {
+  const last = breadcrumb[breadcrumb.length - 1];
+
+  if (!last) return;
+
+  if (last.view === "controller") {
+    setView("table");
+  }
+
+  if (last.view === "details") {
+    setView("details");
+    setSelectedContainer(last.trip);
+  }
+}, [breadcrumb]);
+
+
   const fetchContainersWithFinance = async (pageNum = page) => {
     try {
       setLoading(true);
@@ -121,26 +145,71 @@ const totalUnitPriceUSD = containers.reduce(
   (sum, item) => sum + (Number(item.unit_price_usd || 0) || 0),
   0
 );
+const [totalGeneralNGN, setTotalGeneralNGN] = useState(0);
+
+useEffect(() => {
+  if (!financeData?.length) return;
+
+  const total = financeData.reduce((sum, item) => {
+    if (Number(item.is_container_payment) === 0) {
+      return sum + Number(item.total_amount || 0);
+    }
+    return sum;
+  }, 0);
+
+  setTotalGeneralNGN(total);
+}, [financeData]);
+
+useEffect(() => {
+
+  const general = financeData.reduce((sum, item) => {
+    if (Number(item.is_container_payment) === 0) {
+      return sum + Number(item.total_amount || 0);
+    }
+    return sum;
+  }, 0);
+
+}, [financeData]);
   /* =========================
      DRILLDOWN VIEW
   ========================= */
+
+  const getStoredRate = (tripUuid) => {
+  const data = localStorage.getItem(`trip_fx_rate_${tripUuid}`);
+  if (!data) return 0;
+
+  try {
+    return JSON.parse(data).rate || 0;
+  } catch {
+    return 0;
+  }
+};
+const fxRate =
+  avgContainerRate ||
+  getStoredRate(selectedContainer?.trip_uuid);
+
+
+
+
+
+
+
+
+
+
   if (view === "details" && selectedContainer) {
+    const siblingContainers = containers.filter(
+    (c) => c.trip_id === selectedContainer.trip_id
+  );
+
+  const tripSpecificCount = siblingContainers.length > 0 ? siblingContainers.length : 0;
+
     return (
-     <DrildownContainer
-  container={selectedContainer}
-  goBack={() => {
-    fetchContainersWithFinance(page);
-    setView("table");
-  }}
+     <DrildownContainer container={selectedContainer} navigate={navigate} breadcrumb={breadcrumb}
+  avgContainerRate={fxRate} totalGeneralNGN={totalGeneralNGN} goBackTo={goBackTo}
+totalContainerCount={tripSpecificCount}  goBack={() => {fetchContainersWithFinance(page);setView("table");}}
   reloadTable={() => fetchContainersWithFinance(page)}
-  onUpdate={(updated) => {
-    setContainers((prev) =>
-      prev.map((c) =>
-        c.container_uuid === updated.container_uuid
-          ? updated
-          : c
-      )
-    );
+  onUpdate={(updated) => {setContainers((prev) =>prev.map((c) => c.container_uuid === updated.container_uuid? updated: c));
   }}
 />
     );

@@ -1,8 +1,22 @@
-import React from 'react'
+import React, { useState } from 'react'
 import '../../../../assets/Styles/dashboard/Purchase/trip.scss'
 import profile from '../../../../assets/Images/profile-img.png'
 import TripController from '../../PurchaseComponent/trip/TripController'
+
 const Trip = () => {
+
+  const [breadcrumb, setBreadcrumb] = useState([
+  { label :"Trip", view: "controller" }
+]);
+
+const navigate = (label, view, extra = {}) => {
+  setBreadcrumb(prev => [...prev, { label, view, ...extra }]);
+};
+
+const goBackTo = (index) => {
+  setBreadcrumb(breadcrumb.slice(0, index + 1));
+  window.dispatchEvent(new CustomEvent('breadcrumbNav', { detail: { index } }));
+};
   return (
     <div className='trip'>
         <div className="headerContainer row">
@@ -10,8 +24,27 @@ const Trip = () => {
           <div className="headerChild">
             <div className="topWrapper">
               <div className="leftTopWrapper">
-                <h1>Trip</h1>
-              </div>
+
+  {/* FIRST ITEM */}
+  <h1
+    style={{ cursor: "pointer" }}
+    onClick={() => goBackTo(0)}
+  >
+    {breadcrumb[0]?.label}
+  </h1>
+
+  {/* REST */}
+  {breadcrumb.slice(1).map((item, index) => (
+    <span
+      key={index}
+      style={{ cursor: "pointer", marginLeft: "6px" }}
+      onClick={() => goBackTo(index + 1)}
+    >
+      {" > "} {item.label}
+    </span>
+  ))}
+
+</div>
               <div className="rightTopWrapper">
                 <div className="menuicon">
                 {/* <HelpOutlineIcon  className='topicons' /> */}
@@ -31,7 +64,7 @@ const Trip = () => {
         </div>
         </div>
         <div className="trip-component">
-          <TripController />
+          <TripController breadcrumb={breadcrumb} navigate={navigate} goBackTo={goBackTo}/>
         </div>
     </div>
   )

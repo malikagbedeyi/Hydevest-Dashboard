@@ -43,7 +43,7 @@ const mapUIToProgress = (ui) => {
 
 
 
-const TripDetails = ({ trip, goBack }) => {
+const TripDetails = ({ trip, goBack, navigate, breadcrumb, goBackTo }) => {
   /* ================== STORAGE KEYS ================== */
   const TRIP_FILE_KEY = `trip-${trip.id}-tripFile`;
 
@@ -431,14 +431,33 @@ if (activeTab === "container") {
 }
 
   /* ================== UTILITY FUNCTIONS ================== */
+  useEffect(() => {
+    const handleBreadcrumbNav = (event) => {
+      if (event.detail.index === 1) {
+        setShowTripDetails(false);
+        setShowContainerDetails(false);
+      }
+    };
 
-  const handleRowClick = (item) => {
-    setSelectedTrip(item);
-    setShowTripDetails(true);
+    window.addEventListener('breadcrumbNav', handleBreadcrumbNav);
+    return () => window.removeEventListener('breadcrumbNav', handleBreadcrumbNav);
+  }, []);
+
+  const handleInternalBack = () => {
+    setShowTripDetails(false);
+    setShowContainerDetails(false);
+
   };
 
-  const handleContainerRowClick = (container) => {
+const handleRowClick = (item) => {
+  setSelectedTrip(item);
+  navigate("Expense", "expense", { expense: item }); // ✅ works
+  setShowTripDetails(true);
+};
+
+const handleContainerRowClick = (container) => {
   setSelectedContainerDrill(container);
+  navigate("Container", "container", { container }); // ✅ works
   setShowContainerDetails(true);
 };
   const handleDocumentRowClick = (item) => {
@@ -490,9 +509,13 @@ await TripServices.edit(payload);
 };
 
   /* ================== DRILLDOWN ================== */
-  if (showTripDetails) {
-    return <TripFinnce trip={selectedTrip} 
-     goBack={() => setShowTripDetails(false)}
+  const currentBreadcrumb = breadcrumb[breadcrumb.length - 1];
+
+if (currentBreadcrumb?.view === "expense") {
+    return <TripFinnce trip={selectedTrip}
+    navigate={navigate}
+    goBack={() => goBackTo(1)}
+     previous={() => {setShowTripDetails(false);}}
       setTrip={setSelectedTrip} 
 onApprovalChange={(updatedExpense) => {
   setFinanceData((prev) =>
@@ -515,9 +538,10 @@ onApprovalChange={(updatedExpense) => {
 
   }
 
-  if (showContainerDetails) {
-    return <DrildownContainer  container={selectedContainerDrill}
-      goBack={() => setShowContainerDetails(false)}  onUpdate={handleUpdateContainer} 
+if (currentBreadcrumb?.view === "container") {
+    return <DrildownContainer  container={selectedContainerDrill} 
+    navigate={navigate}
+    goBack={() => goBack(1)}
       avgContainerRate={avgContainerRate} formatNumber={formatNumber} totalAmountUSD={totalAmountUSD} totalAmountNGN={totalContainerNGN}
       totalContainers={totalContainers} totalUnitPriceUSD={totalUnitPriceUSD}
       reloadTable={() => setContainerReloadKey(k => k + 1)} totalGeneralNGN={totalGeneralPaymentNGN} totalContainerCount={containerData.length}  />;

@@ -294,8 +294,8 @@ const handleNumberChange = (e) => {
     <h2>₦{safeFormatNumber(landingCost)}</h2>
   </div>
   <div className="summary-item">
-    <p className="small">Amount (NGN)</p>
-    <h2>{safeFormatNumber(rawTotalNgnValue)}</h2>
+    <p className="small">Amount (USD)</p>
+    <h2>{safeFormatNumber(rawAmountUsd)}</h2>
   </div>
   <div className="summary-item">
     <p className="small">Pieces</p>

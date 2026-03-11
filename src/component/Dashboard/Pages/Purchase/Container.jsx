@@ -1,18 +1,50 @@
-import React from 'react'
+import React, { useState } from 'react'
 import '../../../../assets/Styles/dashboard/Purchase/container.scss'
 import profile from '../../../../assets/Images/profile-img.png'
 import ContainerController from '../../PurchaseComponent/container/ContainerController'
 
 const Container = () => {
+    const [breadcrumb, setBreadcrumb] = useState([
+    { label :"Container", view: "controller" }
+  ]);
+  
+  const navigate = (label, view, extra = {}) => {
+    setBreadcrumb(prev => [...prev, { label, view, ...extra }]);
+  };
+  
+  const goBackTo = (index) => {
+    setBreadcrumb(breadcrumb.slice(0, index + 1));
+    window.dispatchEvent(new CustomEvent('breadcrumbNav', { detail: { index } }));
+  };
+
   return (
     <div className='container'>
       <div className="headerContainer row">
               <div className="headerParent col-lg-12">
                 <div className="headerChild">
                   <div className="topWrapper">
-                    <div className="leftTopWrapper">
-                      <h1>Container</h1>
-                    </div>
+                       <div className="leftTopWrapper">
+
+  {/* FIRST ITEM */}
+  <h1
+    style={{ cursor: "pointer" }}
+    onClick={() => goBackTo(0)}
+  >
+    {breadcrumb[0]?.label}
+  </h1>
+
+  {/* REST */}
+  {breadcrumb.slice(1).map((item, index) => (
+    <span
+      key={index}
+      style={{ cursor: "pointer", marginLeft: "6px" }}
+      onClick={() => goBackTo(index + 1)}
+    >
+      {" > "} {item.label}
+    </span>
+  ))}
+
+</div>
                     <div className="rightTopWrapper">
                       <div className="menuicon">
                       {/* <HelpOutlineIcon  className='topicons' /> */}
@@ -32,7 +64,7 @@ const Container = () => {
               </div>
               </div>
                 <div className="trip-component">
-                  <ContainerController />
+                  <ContainerController breadcrumb={breadcrumb} navigate={navigate} goBackTo={goBackTo} />
         </div>
     </div>
   )

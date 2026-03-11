@@ -545,7 +545,7 @@ button{
 
   .recent-files {
     margin-top: 1.1vw;
-    height: 20vh;
+    max-height: 30vh;
     overflow-y: auto;
     scrollbar-width: none;
     @include Destop {

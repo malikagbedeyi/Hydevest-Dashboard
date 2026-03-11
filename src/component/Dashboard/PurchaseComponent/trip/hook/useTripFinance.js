@@ -22,8 +22,7 @@ export const useTripFinance = (tripUuid) => {
 
     fetchFinance();
   }, [tripUuid]);
-
-/* ================== WEIGHTED AVERAGE CALCULATION ================== */
+  
 const avgContainerRate = useMemo(() => {
   const containerPayments = financeData.filter(
     (item) =>
@@ -50,10 +49,14 @@ const avgContainerRate = useMemo(() => {
 
   return totals.ngn / totals.usd; 
 }, [financeData]);
+
+
   return {
     financeData,
     setFinanceData,
     avgContainerRate,
     loading,
   };
+
+  
 };
