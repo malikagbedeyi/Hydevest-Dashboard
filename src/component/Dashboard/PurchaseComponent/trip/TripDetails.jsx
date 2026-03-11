@@ -252,7 +252,11 @@ const formatNumber = (num) =>
     maximumFractionDigits: 2,
   }).format(Number(num || 0));
 
-    
+    const truncateDecimals = (num, digits = 2) => {
+  if (!num) return 0;
+  const factor = 10 ** digits;
+  return Math.trunc(Number(num) * factor) / factor;
+};
    
   /* ================== Trip File  DATA ================== */
   const [tripFileData, setTripFileData] = useState(() => {
@@ -322,22 +326,7 @@ const addLog = ({ module, action, title }) => {
     : "-";
 /* ================== CALCULATIONS ================== */
 
-const calculateAverageFxRate = (expenses = []) => {
-  const valid = expenses.filter(
-    (item) =>
-      Number(item.is_container_payment) === 1 &&
-      Number(item.rate) > 0
-  );
 
-  if (!valid.length) return 0;
-
-  const total = valid.reduce(
-    (sum, item) => sum + Number(item.rate),
-    0
-  );
-
-return Number((total / valid.length).toFixed(2));
-};
 const calculateContainerUSD = (item) => {
   const base =
     Number(item.unit_price_usd || 0) * Number(item.pieces || 0) +
@@ -411,14 +400,16 @@ const totalContainerPaymentNGN = financeData.reduce((sum, item) => {
 
 // Total Quoted Amount NGN (from containers)
 const totalQuotedAmountNGN = containerData.reduce((sum, item) => {
+
+  if (item.funding?.toLowerCase() !== "partner") {
+    return sum + 0;
+  }
+
   const usd =
     (Number(item.quoted_price_usd) || 0) +
     (Number(item.shipping_amount_usd) || 0);
 
-  const surcharge =
-    item.funding?.toLowerCase() === "partner"
-      ? Number(item.surcharge_ngn || 0)
-      : 0;
+  const surcharge = Number(item.surcharge_ngn || 0);
 
   const ngn = usd * Number(avgContainerRate || 0) + surcharge;
 
@@ -595,9 +586,8 @@ const handleCloseMessage = () => {
 
 <div className="summary-item">
   <p className="small">Average Fx Rate</p>
-  <h2>{formatNumber(avgContainerRate)}</h2>
+  <h2>{truncateDecimals(avgContainerRate, 2)}</h2>
 </div>
-
 
 
     </div>

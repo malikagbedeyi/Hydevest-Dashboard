@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { ExpenseServices } from "../../../../../services/Trip/expense";
 
-
 export const useTripFinance = (tripUuid) => {
   const [financeData, setFinanceData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -24,19 +23,34 @@ export const useTripFinance = (tripUuid) => {
     fetchFinance();
   }, [tripUuid]);
 
-
+  /* ================== WEIGHTED AVERAGE CALCULATION ================== */
   const avgContainerRate = useMemo(() => {
-    const valid = financeData.filter(
+    // 1. Filter for Container Payments in USD that have a valid rate
+    const containerPayments = financeData.filter(
       (item) =>
         Number(item.is_container_payment) === 1 &&
+        item.currency === "USD" &&
         Number(item.rate) > 0
     );
 
-    if (!valid.length) return 0;
+    if (!containerPayments.length) return 0;
 
-    return (
-      valid.reduce((sum, i) => sum + Number(i.rate), 0) / valid.length
-    );
+    // 2. Calculate Total USD spent and Total NGN equivalent spent
+    let totalUsdAmount = 0;
+    let totalNgnEquivalent = 0;
+
+    containerPayments.forEach((item) => {
+      const usd = Number(item.amount) || 0;
+      const rate = Number(item.rate) || 0;
+      
+      totalUsdAmount += usd;
+      totalNgnEquivalent += (usd * rate);
+    });
+
+    // 3. Avoid division by zero and calculate: Total NGN / Total USD
+    if (totalUsdAmount === 0) return 0;
+
+    return totalNgnEquivalent / totalUsdAmount;
   }, [financeData]);
   
   return {

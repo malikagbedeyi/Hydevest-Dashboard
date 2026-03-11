@@ -17,7 +17,7 @@
       : (num = 0) =>
           Number(num || 0).toLocaleString("en-US", {
             minimumFractionDigits: 0,
-            maximumFractionDigits: 10,
+            maximumFractionDigits: 2,
           });
 
   const [form, setForm] = useState({
@@ -308,13 +308,15 @@ const handleNumberChange = (e) => {
   </div>
 
   <div className="summary-item">
-    <p className="small">Total Quoted Amount NGN</p>
-        <h2>
-    ₦{safeFormatNumber(
-     quotedUsd  * (Number(avgContainerRate) || 0) +
-      (form.funding === "PARTNER" ? Number(form.surcharge || 0) : 0)
-    )}</h2>
-  </div>
+  <p className="small">Total Quoted Amount NGN</p>
+  <h2>
+    ₦{form.funding === "PARTNER" 
+      ? safeFormatNumber(
+          quotedUsd * (Number(avgContainerRate) || 0) + (Number(form.surcharge) || 0)
+        )
+      : "0"}
+  </h2>
+</div>
   <div className="summary-item">
     <p className="small">Average Fx Rate</p>
     <h2>{safeFormatNumber(avgContainerRate)}</h2>
