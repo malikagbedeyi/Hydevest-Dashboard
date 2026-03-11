@@ -47,8 +47,8 @@ ul{
     .sidelogo{
         position: sticky;
         top: 0;
-        background: #fff;
-        z-index: 999;
+        background: inherit;
+        z-index: 1;
       padding: 3vw 0 1.4vw;
       gap: 1.25vw;
       opacity: 1;
@@ -85,7 +85,7 @@ ul{
         overflow: hidden;
         cursor: pointer;
          transition: .6s;
-         z-index: 9999;
+          z-index: 1;
          @include Destop{
             height: 50px;
             width: 50px;
@@ -99,7 +99,7 @@ ul{
         overflow-y: auto;
     scrollbar-width: none;
         padding:0 .7vw 1.4vw;
-
+        z-index: 0;
         ul{
             padding: 0;
             margin: 1.4vw 0 0;

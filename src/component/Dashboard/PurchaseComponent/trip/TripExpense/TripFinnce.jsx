@@ -145,7 +145,7 @@ const formatInputDate = (date) => {
       </div>
 
       <div className="finance-card">
-        {/* Title */}
+        <div className="grid-2">
         <div className="form-group">
           <label>Title <span>*</span></label>
           <div className="info-content-data">
@@ -164,8 +164,6 @@ const formatInputDate = (date) => {
             <Edit className="edit-icon" size={16} onClick={() => setEditTitle(true)} />
           </div>
         </div>
-
-        {/* Description */}
         <div className="form-group">
           <div className="trip-description">
             <div className="desc-header">
@@ -195,10 +193,10 @@ const formatInputDate = (date) => {
             </div>
           </div>
         </div>
-
+</div>
         {/* Type & Amount */}
         <div className="grid-2" style={{ marginBottom: "0.7vw" }}>
-   <div className="form-group-select mb-5">
+   <div className="form-group-select ">
   <label>Select Payment Type</label>
 
   <div className="custom-select">

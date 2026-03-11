@@ -5,10 +5,13 @@
   import Attachment from "./Attachment";
   import Comment from "./Comment";
   import ContainerLog from "./ContainerLog";
+import { usePopup } from "../../../../context/PopupContext";
 
   const fundingOption = ["PARTNER", "ENTITY"];
 
-  const DrildownContainer = ({container = {},previous= () => {} ,goBack = () => {},onUpdate,avgContainerRate = 0,formatNumber,reloadTable, totalGeneralNGN = 0,totalContainerCount = 0,}) => {
+  const DrildownContainer = ({container = {},previous= () => {} ,goBack ,onUpdate,avgContainerRate = 0,formatNumber,reloadTable, totalGeneralNGN = 0,totalContainerCount = 0,}) => {
+
+    const { showMessage } = usePopup();
 
     const safeFormatNumber =
     typeof formatNumber === "function"
@@ -110,12 +113,12 @@ const quotedUsd =
 
       const fundingValue = (form.funding || "").trim().toUpperCase();
       if (!["PARTNER", "ENTITY"].includes(fundingValue)) {
-        alert("Funding must be either PARTNER or ENTITY");
+        showMessage("Funding must be either PARTNER or ENTITY");
         return;
       }
   const entityValue = form.entity || null;
       if (fundingValue === "ENTITY" && !entityValue) {
-        alert("You must select a valid Entity for ENTITY funding");
+        showMessage("You must select a valid Entity for ENTITY funding");
         return;
       }
 
@@ -145,8 +148,8 @@ const quotedUsd =
   };
       
 
-  const res = await ContainerServices.edit(payload);
-
+      await ContainerServices.edit(payload);
+  showMessage("Container updated successfully", "success");
       const updated = {
         ...container,
         ...payload,
@@ -156,11 +159,11 @@ const quotedUsd =
       onUpdate(updated);
       // reloadTable();
       handleApprovalChange()
-      goBack();
+      goBack(true);
     } catch (err) {
       console.error("Container update failed:", err.response?.data || err);
-      alert(
-        "Update failed. Check the console for details or verify the data you're sending."
+      showMessage(
+        "Update failed."
       );
     }
   };
@@ -595,7 +598,7 @@ const handleNumberChange = (e) => {
                   </div>
         {/* FOOTER */}
         <div className="footer-btns">
-          <button className="preview" onClick={goBack}>Previous</button>
+          <button className="preview" onClick={() => goBack(true)}>Previous</button>
     <button className="create" onClick={handleUpdate}>Update</button>
 
 

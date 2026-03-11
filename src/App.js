@@ -1,7 +1,7 @@
 import { HashRouter, Routes, Route } from "react-router-dom";
 import SignUp from "./component/Authentication/SignUp";
+import { PopupProvider } from "./context/PopupContext";
 import DashboardPage from "./component/Dashboard/DashboardPage";
-
 // Purchase
 import Trip from "./component/Dashboard/Pages/Purchase/Trip";
 import Container from "./component/Dashboard/Pages/Purchase/Container";
@@ -44,8 +44,11 @@ import PartnerPayment from "./component/Dashboard/Pages/Expensify/PartnerPayment
 import Inbox from "./component/Dashboard/Pages/Inbox/Requestbox";
 import Requestbox from "./component/Dashboard/Pages/Inbox/Requestbox";
 
+
+
 function App() {
   return (
+    <PopupProvider>
     <HashRouter>
       <Routes>
         <Route path="/login" element={<SignUp />} />
@@ -106,6 +109,7 @@ function App() {
         </Route>
       </Routes>
     </HashRouter>
+    </PopupProvider>
   );
 }
 

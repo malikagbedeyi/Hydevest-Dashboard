@@ -60,7 +60,7 @@
       display:flex;
        justify-content:center; 
       align-items:center;
-       z-index:10001;
+       z-index:999;
       background: rgba(54,53,86,0.42);
     }
     .popup-content {
@@ -395,6 +395,7 @@
                 .option{
                   background: #fff;
                    border-radius:0 0 0.85vw 0.85vw;
+                   font-size: 1vw;
                   display: flex;
                   flex-direction: column;
                   gap: 0.7vw;
@@ -498,6 +499,7 @@
                     background: #fff;
                     border-radius: 0 0 0 0.7vw ;
                     display: flex;
+                    font-size: 1vw;
                     flex-direction: column;
                     gap: 0.7vw;
                     padding: 5px 0 0 1vw;
@@ -1097,6 +1099,7 @@
                   border-radius: 0 0 0 0.7vw ;
                   display: flex;
                   flex-direction: column;
+                  font-size: 1vw;
                   gap: 0.7vw;
                   padding: 5px 0 0 1vw;
                   justify-content: center;

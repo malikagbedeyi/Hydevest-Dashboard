@@ -539,12 +539,30 @@ onApprovalChange={(updatedExpense) => {
   }
 
 if (currentBreadcrumb?.view === "container") {
-    return <DrildownContainer  container={selectedContainerDrill} 
-    navigate={navigate}
-    goBack={() => goBack(1)}
-      avgContainerRate={avgContainerRate} formatNumber={formatNumber} totalAmountUSD={totalAmountUSD} totalAmountNGN={totalContainerNGN}
-      totalContainers={totalContainers} totalUnitPriceUSD={totalUnitPriceUSD}
-      reloadTable={() => setContainerReloadKey(k => k + 1)} totalGeneralNGN={totalGeneralPaymentNGN} totalContainerCount={containerData.length}  />;
+    return <DrildownContainer
+  container={selectedContainerDrill}
+  navigate={navigate}
+goBack={() => goBackTo(1)}
+  previous={() => {setShowContainerDetails(false);}}
+  avgContainerRate={avgContainerRate}
+  formatNumber={formatNumber}
+  totalAmountUSD={totalAmountUSD}
+  totalAmountNGN={totalContainerNGN}
+  totalContainers={totalContainers}
+  totalUnitPriceUSD={totalUnitPriceUSD}
+  reloadTable={() => setContainerReloadKey(k => k + 1)}
+  totalGeneralNGN={totalGeneralPaymentNGN}
+  totalContainerCount={containerData.length}
+  onUpdate={(updated) => {
+    setContainerData((prev) =>
+      prev.map((c) =>
+        c.container_uuid === updated.container_uuid
+          ? updated
+          : c
+      )
+    );
+  }}
+/>
   }
   if (showDocumentDril) {
     return <TripDocumentDrill
@@ -619,18 +637,6 @@ const handleCloseMessage = () => {
         <div className="trip-header">
           <div className="title-content">
             <div className="title-header">
-              <h4>Trip Title :</h4>
-              {editTitle ? (   <input  value={title} autoFocus  onChange={(e) => setTitle(e.target.value)}
-                  onBlur={() => setEditTitle(false)}
-                />
-              ) : (
-                <div className="title-header-content">
-                  <p>{title}</p>
-                  <Edit size={14} onClick={() => setEditTitle(true)} />
-                </div>
-              )}
-            </div>
-            <div className="title-header">
               <h4>Trip ID :</h4>
               <p>{trip?.trip_unique_id}</p>
             </div>
@@ -687,7 +693,32 @@ const handleCloseMessage = () => {
 
           </div>
         </div>
-        {/* DESCRIPTION */}
+        <div className="grid-2 mt-4">
+              <div className="trip-description">
+  <div className="desc-header">
+    <h4>Title</h4>
+    {!editTitle && (
+      <Edit size={16} onClick={() => setEditTitle(true)} />
+    )}
+  </div>
+  <div className="desc-body">
+    {editTitle ? (
+      <textarea
+        className="desc-textarea"
+        value={title}
+        autoFocus
+        onChange={(e) => setTitle(e.target.value)}
+        onBlur={() => setEditTitle(false)}
+      />
+    ) : (
+      <textarea
+        className="desc-textarea"
+        value={title}
+        readOnly
+      />
+    )}
+  </div>
+</div>
         <div className="trip-description">
   <div className="desc-header">
     <h4>Description</h4>
@@ -695,7 +726,6 @@ const handleCloseMessage = () => {
       <Edit size={16} onClick={() => setEditDescription(true)} />
     )}
   </div>
-
   <div className="desc-body">
     {editDescription ? (
       <textarea
@@ -714,8 +744,9 @@ const handleCloseMessage = () => {
     )}
   </div>
 </div>
+</div>
 
-        <div className="grid-3 mt-4">
+        <div className="grid-3 ">
          <div className="form-group">
   <label>Location</label>
   {!editLocation && (
@@ -774,7 +805,7 @@ const handleCloseMessage = () => {
         </div>
        
         {/* TABS */}
-        <div className="tabs">
+        <div className="tabs mt-5">
           <div className="tab-wrapper">
             <div className="tab-content">
               <span

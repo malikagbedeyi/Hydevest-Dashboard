@@ -159,14 +159,6 @@ const handleClosePopup = () => {
           <h2 style={{ fontSize: "1.4vw", color: "#581aae" }}>Create Trip Expense</h2>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <p style={{ fontSize: "1vw" }}>Enter Trip Expense details</p>
-            {/* <div style={{ display: "flex", gap: "0.7vw", alignItems: "center" }}>
-              <input
-                type="checkbox"
-                checked={form.checkbox}
-                onChange={(e) => setForm((prev) => ({ ...prev, checkbox: e.target.checked }))}
-              />
-              <span style={{ fontSize: "1vw" }}>Container Payment</span>
-            </div> */}
           </div> 
 
           {/* Title & Description */}
@@ -320,24 +312,3 @@ const handleClosePopup = () => {
 };
 
 export default TripExpense;
-
-
-  // {showDeletePopup && (
-  //             <div className="trip-card-popup">
-  //               <div className="trip-card-popup-container">
-  //                 <div className="popup-content">
-  //                   <div className="popup-proceeed-wrapper">
-  //                     <p>Are you sure you want to delete this Expense record?</p>
-  //                     <div className="btn-row-delete">
-  //                       <button className="cancel" onClick={cancelDelete}>
-  //                         Cancel
-  //                       </button>
-  //                       <button className="create" onClick={confirmDelete}>
-  //                         Delete
-  //                       </button>
-  //                     </div>
-  //                   </div>
-  //                 </div>
-  //               </div>
-  //             </div>
-  //           )}
