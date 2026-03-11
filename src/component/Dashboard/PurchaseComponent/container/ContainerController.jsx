@@ -135,35 +135,32 @@ const totalPieces = containers.reduce(
   0
 );
 
-const totalQuotedUSD = containers.reduce(
-  (sum, item) => sum + (Number(item.quotedUSD) || 0),
-  0
-);
-
-const totalUnitPriceUSD = containers.reduce(
-  (sum, item) => sum + (Number(item.unit_price_usd || 0) || 0),
-  0
-);
 /* =========================
    CALCULATE DRILL SUMMARY (FIXED)
 ========================= */
 
 const getActiveRate = (itemTripUuid) => {
-    if (selectedContainer?.trip?.trip_uuid === itemTripUuid && avgContainerRate > 0) {
-        return avgContainerRate;
+  if (
+    selectedContainer?.trip?.trip_uuid === itemTripUuid &&
+    avgContainerRate > 0
+  ) {
+    return avgContainerRate;
+  }
+
+  const storedData = localStorage.getItem(`trip_fx_rate_${itemTripUuid}`);
+
+  if (storedData) {
+    try {
+      return JSON.parse(storedData).rate || 0;
+    } catch {
+      return 0;
     }
-    const storedData = localStorage.getItem(`trip_fx_rate_${itemTripUuid}`);
-    if (storedData) {
-        try {
-            return JSON.parse(storedData).rate || 0;
-        } catch {
-            return 0;
-        }
-    }
-    return 0;
+  }
+
+  return 0;
 };
 
-  const getStoredRate = (tripUuid) => {
+const getStoredRate = (tripUuid) => {
   const data = localStorage.getItem(`trip_fx_rate_${tripUuid}`);
   if (!data) return 0;
 
@@ -172,39 +169,24 @@ const getActiveRate = (itemTripUuid) => {
   } catch {
     return 0;
   }
+  
 };
 const fxRate =
   avgContainerRate ||
   getStoredRate(selectedContainer?.trip_uuid);
 
 
-
-/* =========================
-   UNIFIED DATA SUMMARY (FIXED)
-========================= */
-
-const totals = useMemo(() => {
-  const generalNGN = financeData.reduce((sum, item) => {
-    return Number(item.is_container_payment) === 0 ? sum + Number(item.total_amount || 0) : sum;
-  }, 0);
-
-  const stats = containers.reduce((acc, item) => {
-    const rate = getActiveRate(item.trip?.trip_uuid || item.trip_uuid);
+const summaryData = useMemo(() => {
+  return containers.reduce((acc, item) => {
+    const rate = fxRate
     
-    // 1. Calculate USD (Pieces * Price + Shipping)
-    const amountUSD = (Number(item.unit_price_usd || 0) * Number(item.pieces || 0)) + 
+    const amountUSD = Number(item.unit_price_usd || 0) * Number(item.pieces || 0) + 
                       Number(item.shipping_amount_usd || 0);
-    
-    // 2. Calculate Surcharge (Only for partners)
-    const surcharge = item.funding?.toLowerCase() === "partner" ? Number(item.surcharge_ngn || 0) : 0;
-
-    // 3. Calculate NGN (USD * Rate + Surcharge) - MATCHES TABLE LOGIC
-    const amountNGN = rate > 0 ? (amountUSD * rate) + surcharge : 0;
-
-    // 4. Quoted Logic (Matches table)
     const quotedUSD = Number(item.quoted_price_usd || 0) > 0 
                       ? Number(item.quoted_price_usd || 0) + Number(item.shipping_amount_usd || 0) 
                       : 0;
+
+    const amountNGN = rate > 0 ? (amountUSD * rate) : 0;
 
     return {
       totalNGN: acc.totalNGN + amountNGN,
@@ -212,20 +194,33 @@ const totals = useMemo(() => {
       totalQuotedUSD: acc.totalQuotedUSD + quotedUSD,
       totalUnitPrice: acc.totalUnitPrice + Number(item.unit_price_usd || 0),
       totalPieces: acc.totalPieces + Number(item.pieces || 0),
+      count: acc.count + 1
     };
-  }, { totalNGN: 0, totalUSD: 0, totalQuotedUSD: 0, totalUnitPrice: 0, totalPieces: 0 });
+  }, { totalNGN: 0, totalUSD: 0, totalQuotedUSD: 0, totalUnitPrice: 0, totalPieces: 0, count: 0 });
+}, [containers, avgContainerRate]);
 
-  return { ...stats, generalNGN, count: containers.length };
-}, [containers, financeData, avgContainerRate]);
-// Helpers for the UI
-const avgUnitPrice = totals.count > 0 ? (totals.totalUnitPrice / totals.count) : 0;
-const avgQuotedPrice = totals.count > 0 ? (totals.totalQuotedUSD / totals.count) : 0;
+
+const avgUnitPrice = summaryData.count > 0 ? (summaryData.totalUnitPrice / summaryData.count) : 0;
+const avgQuotedPrice = summaryData.count > 0 ? (summaryData.totalQuotedUSD / summaryData.count) : 0;
+
+const [totalGeneralNGN, setTotalGeneralNGN] = useState(0);
+
+useEffect(() => {
+  if (!financeData?.length) return;
+
+  const total = financeData.reduce((sum, item) => {
+    if (Number(item.is_container_payment) === 0) {
+      return sum + Number(item.total_amount || 0);
+    }
+    return sum;
+  }, 0);
+
+  setTotalGeneralNGN(total);
+}, [financeData]);
 
   /* =========================
      DRILLDOWN VIEW
   ========================= */
-
-
 
 
 
@@ -241,7 +236,7 @@ const avgQuotedPrice = totals.count > 0 ? (totals.totalQuotedUSD / totals.count)
 
     return (
      <DrildownContainer container={selectedContainer} navigate={navigate} breadcrumb={breadcrumb}
-  avgContainerRate={fxRate} totalGeneralNGN={totals.generalNGN} goBackTo={goBackTo}
+  avgContainerRate={fxRate} totalGeneralNGN={totalGeneralNGN} goBackTo={goBackTo}
 totalContainerCount={tripSpecificCount}  goBack={() => {fetchContainersWithFinance(page);setView("table");}}
   reloadTable={() => fetchContainersWithFinance(page)}
   onUpdate={(updated) => {setContainers((prev) =>prev.map((c) => c.container_uuid === updated.container_uuid? updated: c));
@@ -448,37 +443,31 @@ totalContainerCount={tripSpecificCount}  goBack={() => {fetchContainersWithFinan
     </div>
   </div>
 )}
-     <div className="drill-summary-grid mt-5">
-  <div className="drill-summary">
-    <div className="summary-item">
-      <p className="small">Total Containers</p>
-      <h2>{totals.count}</h2>
-    </div>
-    
-    {/* Corrected: Total Amount in NGN */}
-    <div className="summary-item">
-      <p className="small">Total Amount (NGN)</p>
-      <h2>{"₦" + totals.totalNGN.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
-    </div>
-    
-    <div className="summary-item">
-      <p className="small">Total Pieces</p>
-      <h2>{totals.totalPieces.toLocaleString()}</h2>
-    </div>
-    
-    {/* Corrected: Average Quoted Price per container */}
-    <div className="summary-item">
-      <p className="small">Average Quoted Price </p>
-      <h2>{"$" + avgQuotedPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
-    </div>
-    
-    {/* Corrected: Average Unit Price per container */}
-    <div className="summary-item">
-      <p className="small">Average Unit Price </p>
-      <h2>{"$" + avgUnitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
-    </div>
-  </div>
+      <div className="drill-summary-grid mt-5">
+      <div className="drill-summary">
+<div className="summary-item">
+  <p className="small">Total Container</p>
+  <h2>{totalContainers}</h2>
 </div>
+<div className="summary-item">
+  <p className="small">Total Amount (USD)</p>
+  <h2>{"$" + totalAmountUSD.toLocaleString()}</h2>
+</div>
+<div className="summary-item">
+  <p className="small">Total Pieces</p>
+  <h2>{totalPieces.toLocaleString()}</h2>
+</div>
+<div className="summary-item">
+  <p className="small">Average Quoted Price </p>
+  <h2>{"$" +avgQuotedPrice.toLocaleString()}</h2>
+</div>
+<div className="summary-item">
+  <p className="small">Average Unit Price </p>
+  <h2>{"$" + avgUnitPrice.toLocaleString()}</h2>
+</div>
+
+    </div>
+    </div>
             {/* ===== TABS ===== */}
             <div className="log-tab-section">
               <div className="tab-content">
@@ -506,7 +495,7 @@ totalContainerCount={tripSpecificCount}  goBack={() => {fetchContainersWithFinan
               <ContainerTable
                 data={containers}
                 loading={loading}
-                totalGeneralNGN={totals.generalNGN}
+                totalGeneralNGN={totalGeneralNGN} 
                 getRate={getActiveRate}
                 page={page}
                 setPage={setPage}
