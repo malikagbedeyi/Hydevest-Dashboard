@@ -61,6 +61,7 @@ const formatMoneyUSd = (value) =>
           });
           setContainerData(res.data?.record?.data || []);
           setPagination(res.data?.record || {});
+          console.log(res.data)
         } catch (err) {
           console.error("Error fetching expenses:", err);
         } finally {
@@ -80,21 +81,24 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [search]);
       
-      const calculateContainerUSD = (item) => {
-  const base =
-    (Number(item.unit_price_usd) || 0) * (Number(item.pieces) || 0) +
-    (Number(item.shipping_amount_usd) || 0);
-
-  const surcharge =
-    item.funding === "partner" ? Number(item.surcharge || 0) : 0;
-
-  return base + surcharge;
+  const calculateContainerUSD = (item) => {
+  return (
+    (Number(item.unit_price_usd) || 0) *
+    (Number(item.pieces) || 0) +
+    (Number(item.shipping_amount_usd) || 0)
+  );
 };
 
-const calculateContainerNGN = (item, rate) =>
-  calculateContainerUSD(item) * (Number(rate) || 0);
+const calculateContainerNGN = (item, rate) => {
+  const usd = calculateContainerUSD(item);
 
+  const surcharge =
+    item.funding?.toLowerCase() === "partner"
+      ? Number(item.surcharge_ngn || 0)
+      : 0;
 
+  return usd * (Number(rate) || 0) + surcharge;
+};
   return (
     <div>
       <div className="userTable">
@@ -108,13 +112,15 @@ const calculateContainerNGN = (item, rate) =>
                <th>Container Number</th>
                <th>Pieces</th>
                <th>Unit Price (USD)</th>
+               <th>Shipping Amount (USD)</th>
+               <th>Surcharge NGN</th>
                <th>Amount (USD)</th>
                <th>Amount (NGN)</th>
                <th>Quoted Amount (USD)</th>
                <th>Quoted Amount (NGN)</th>
                <th>Created By</th>
-              {/* <th>Created Date</th> */}
               <th>Status</th>
+              <th>Created Date</th>
               {/* <th>Actions</th> */}
             </tr>
           </thead>
@@ -134,14 +140,16 @@ const calculateContainerNGN = (item, rate) =>
                   <td>{item.desc || "-"}</td>
                   <td>TRN {item.tracking_number || "-"}</td>
                   <td>{formatMoney(item.pieces || 0)}</td>
-                  <td>{formatMoney(item.unit_price_usd || 0)}</td>
-                  <td>{formatMoneyUSd(((item.unit_price_usd || 0) * (item.pieces || 0)) +Number(item.shipping_amount_usd || 0))}</td>
-                  <td>{formatMoney(item.amountNGN)}</td>
+                  <td>{formatMoneyUSd(item.unit_price_usd || 0)}</td>
+                  <td>{formatMoneyUSd(Number(item.shipping_amount_usd) || 0)}</td>
+                  <td>{formatMoney(Number(item.surcharge_ngn || 0))}</td>
+                  <td>{formatMoneyUSd(calculateContainerUSD(item))}</td>
+                  <td>{formatMoney(calculateContainerNGN(item, avgContainerRate))}</td>
                   <td>{formatMoneyUSd(item.quoted_price_usd || "0")} </td>
-                  <td>{formatMoney(item.quotedNGN)}</td>
-                  {/* <td>{item.creator_info.firstname} {item.creator_info.lastname}</td> */}
-                  <td>{formatDate(item.created_at)}</td>
+                  <td>{formatMoney((Number(item.quoted_price_usd || 0) * Number(avgContainerRate || 0)) +(item.funding === "partner" ? Number(item.surcharge_ngn || 0) : 0))}</td>
+                  <td>{item?.creator_info?.firstname} {item?.creator_info?.lastname}</td>
                   <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>
+                  <td>{formatDate(item.created_at)}</td>
                 </tr>
               ))
             )}

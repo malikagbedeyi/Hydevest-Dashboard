@@ -182,12 +182,16 @@ const handleAddContainer = (container) => {
     (Number(container.unit_price_usd || 0) * Number(container.pieces || 0)) +
     Number(container.shipping_amount_usd || 0);
 
-  const amountNGN = amountUSD * Number(avgContainerRate || 0);
+  const amountNGN = amountUSD * Number(avgContainerRate || 0)  +
+    (container.funding === "partner" ? Number(container.surcharge || 0): 0);
 
   const quotedUSD = Number(container.quoted_price_usd || 0);
   const quotedNGN =
     quotedUSD * Number(avgContainerRate || 0) +
-    (container.funding === "partner" ? Number(container.surcharge || 0) * Number(avgContainerRate || 0) : 0);
+    (container.funding === "partner" ? Number(container.surcharge || 0): 0);
+    // const quotedNGN =
+    // quotedUSD * Number(avgContainerRate || 0) +
+    // (container.funding === "partner" ? Number(container.surcharge || 0) * Number(avgContainerRate || 0) : 0);
 
   setContainerData((prev) => [
     ...prev,
@@ -569,7 +573,7 @@ const handleCloseMessage = () => {
 <p className="small">
     {activeTab === "container"
       ? "Total Container"
-      : "Total Trip"}
+      : "Total Trip Expense"}
   </p>
   <h2>{  activeTab === "container" ? totalContainers : totalTrip}</h2>
 </div>
