@@ -119,7 +119,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
             <tr>
               <th>S/N</th>
               <th>Title</th>
-              <th>Description</th>
+              {/* <th>Description</th> */}
                <th>Container Number</th>
                <th>Pieces</th>
                <th>Status</th>
@@ -148,7 +148,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
                 style={{ cursor: "pointer" }}>
                   <td>{(pagination.from || 0) + idx}</td>
                   <td>{item.title}</td>
-                  <td>{item.desc || "-"}</td>
+                  {/* <td>{item.desc || "-"}</td> */}
                   <td>TRN-{item.tracking_number || "-"}</td>
                   <td>{formatMoney(item.pieces || 0)}</td>
                   <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>

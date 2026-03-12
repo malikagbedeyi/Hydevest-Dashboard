@@ -102,14 +102,14 @@ const currentData = financeData
                     <tr>
                       <th>S/N</th>
                       <th>Title</th>
-                      <th>Description</th>
+                      {/* <th>Description</th> */}
+                      <th>Status</th>
                       <th>Amount</th>
                       <th>Currency</th>
                       <th>Rate</th>
                       <th>Amount (₦)</th>
                       <th>Category</th>
                       <th>Created By</th>
-                      <th>Status</th>
                       <th>Created Date</th>
                       {/* <th>Actions</th> */}
                     </tr>
@@ -126,20 +126,21 @@ const currentData = financeData
                         <tr key={item.id} onClick={() => handleRowClick(item)}>
                           <td>{(pagination.from || 0) + idx}</td>
                           <td>{item.title}</td>
-                          <td>{item.desc}</td> 
-                          <td>{formatCurrency(item.amount, item.currency)}</td>
-                          <td>{item.currency} </td> 
-                           <td>{item.rate}</td>
-                           <td>{formatNGN(item.total_amount)}</td>
-                            <td>{item.is_container_payment === 1? "Container Payment": "General"}</td>
-                           <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
-                            <td>
+                          {/* <td>{item.desc}</td>  */}
+                                                    <td>
   {item.status === 1 ? (
     <span style={{color:"green"}}>Approved</span>
   ) : (
     <span style={{color:"orange"}}>Pending</span>
   )}
 </td>
+                          <td>{formatCurrency(item.amount, item.currency)}</td>
+                          <td>{item.currency} </td> 
+                           <td>{item.rate}</td>
+                           <td>{formatNGN(item.total_amount)}</td>
+                            <td>{item.is_container_payment === 1? "Container Payment": "General"}</td>
+                           <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
+  
 <td>{formatDate(item.created_at)}</td>
 
                           {/* <td onClick={(e) => e.stopPropagation()}>

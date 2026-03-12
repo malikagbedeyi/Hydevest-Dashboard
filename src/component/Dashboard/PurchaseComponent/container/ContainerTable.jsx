@@ -69,7 +69,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
             <tr>
               <th>S/N</th>
               <th>Title</th>
-              <th>Description</th>
+              {/* <th>Description</th> */}
               <th>Container Number</th>
               <th>Pieces</th>
               <th>Status</th>
@@ -100,7 +100,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
         <tr key={item.container_uuid} onClick={() => onRowClick(item)} style={{ cursor: "pointer" }}>
           <td>{String(idx + 1).padStart(2, "0")}</td>
           <td>{item.title}</td>
-          <td>{item.desc || "-"}</td>
+          {/* <td>{item.desc || "-"}</td> */}
           <td>TRN-{item.tracking_number || "-"}</td>
           <td>{Number(item.pieces || 0).toLocaleString()}</td>
           <td>{item.status === 1 ? (<span style={{ color: "green" }}>Approved</span>) : (<span style={{ color: "orange" }}>Pending</span>)}</td>
