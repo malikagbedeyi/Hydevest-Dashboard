@@ -1,0 +1,185 @@
+// Variables to match your theme
+$primary-color: #581aae; // Purple from your logs
+$text-main: #333;
+$text-muted: #828282;
+$white: #ffffff;
+$danger: #ff4d4d;
+$shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+
+.profile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5); // Dim the background
+  display: flex;
+  justify-content: flex-end; // Slide in from the right
+  align-items: flex-start;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.3s ease-out;
+
+  .profile-card {
+    width: 380px;
+    height: 100vh;
+    background: $white;
+    box-shadow: $shadow;
+    display: flex;
+    flex-direction: column;
+    animation: slideInRight 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+
+    .profile-header {
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f0f0f0;
+
+      h3 {
+        font-size: 1.2rem;
+        color: $primary-color;
+        margin: 0;
+      }
+
+      .close-icon {
+        cursor: pointer;
+        color: $text-muted;
+        transition: color 0.2s;
+        &:hover { color: $text-main; }
+      }
+    }
+
+    .profile-body {
+      flex: 1;
+      padding: 30px 20px;
+      overflow-y: auto;
+
+      .profile-avatar-section {
+        text-align: center;
+        margin-bottom: 30px;
+
+        img {
+          width: 100px;
+          height: 100px;
+          border-radius: 50%;
+          border: 3px solid #f0e6ff;
+          object-fit: cover;
+          margin-bottom: 15px;
+        }
+
+        h4 {
+          font-size: 1.4rem;
+          margin: 0;
+          color: $text-main;
+        }
+
+        .badge {
+          display: inline-block;
+          margin-top: 8px;
+          padding: 4px 12px;
+          background: #f0e6ff;
+          color: $primary-color;
+          border-radius: 20px;
+          font-size: 0.8rem;
+          font-weight: 600;
+        }
+      }
+
+      .info-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+
+        .info-item {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          padding: 12px;
+          border-radius: 8px;
+          transition: background 0.2s;
+
+          &:hover { background: #f9f9f9; }
+
+          svg { color: $primary-color; }
+
+          .label {
+            font-size: 0.75rem;
+            color: $text-muted;
+            margin: 0;
+          }
+
+          .value {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: $text-main;
+            margin: 0;
+          }
+        }
+      }
+    }
+
+    .profile-footer {
+      padding: 20px;
+      border-top: 1px solid #f0f0f0;
+
+      .logout-btn {
+        width: 100%;
+        padding: 12px;
+        background: transparent;
+        border: 1px solid $primary-color;
+        color: $primary-color;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &:hover {
+          background: $primary-color;
+          color: $white;
+        }
+      }
+    }
+  }
+  .status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &.active {
+    background: #e6ffed;
+    color: #28a745;
+  }
+
+  &.inactive {
+    background: #fff0f0;
+    color: #dc3545;
+  }
+  
+  svg {
+    // This makes the dot pulse slightly if you want extra flair
+    animation: pulse 2s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}

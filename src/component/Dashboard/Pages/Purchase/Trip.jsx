@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import '../../../../assets/Styles/dashboard/Purchase/trip.scss'
-import profile from '../../../../assets/Images/profile-img.png'
+import profile from '../../../../assets/Images/profileImg.png'
 import TripController from '../../PurchaseComponent/trip/TripController'
+import { useOutletContext } from 'react-router-dom'
 
 const Trip = () => {
 
@@ -17,6 +18,7 @@ const goBackTo = (index) => {
   setBreadcrumb(breadcrumb.slice(0, index + 1));
   window.dispatchEvent(new CustomEvent('breadcrumbNav', { detail: { index } }));
 };
+const { setShowProfile } = useOutletContext();
   return (
     <div className='trip'>
         <div className="headerContainer row">
@@ -53,11 +55,11 @@ const goBackTo = (index) => {
                 <div className="notificationtext">2</div>
                 </div>
               </div>
-              <div className="menuProfile">
-                <div className="profileImg">
-                    <img src={profile} alt="" />
-                </div>
-              </div>
+              <div className="menuProfile" onClick={() => setShowProfile(true)}>
+        <div className="profileImg">
+          <img src={profile} alt="Profile" />
+        </div>
+      </div>
               </div>
             </div>
           </div>

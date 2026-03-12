@@ -29,7 +29,6 @@
           display: flex;
           flex-wrap: wrap;
            margin: 0;
-        //   padding: 0 0 1.4vw;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         padding: 0 1.4vw;
         height: 6vw;
@@ -138,6 +137,7 @@
                         .menuProfile{
                             display: flex;
                             gap: 1.4vw;
+                            cursor: pointer;
                             .profileImg{
                                 img{ 
                                     width: 3vw;

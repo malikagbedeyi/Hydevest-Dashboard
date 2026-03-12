@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import '../../../../assets/Styles/dashboard/Purchase/container.scss'
-import profile from '../../../../assets/Images/profile-img.png'
+import profile from '../../../../assets/Images/profileImg.png'
 import ContainerController from '../../PurchaseComponent/container/ContainerController'
-
+import { useOutletContext } from 'react-router-dom'
 const Container = () => {
     const [breadcrumb, setBreadcrumb] = useState([
     { label :"Container", view: "controller" }
@@ -16,7 +16,7 @@ const Container = () => {
     setBreadcrumb(breadcrumb.slice(0, index + 1));
     window.dispatchEvent(new CustomEvent('breadcrumbNav', { detail: { index } }));
   };
-
+const { setShowProfile } = useOutletContext();
   return (
     <div className='container'>
       <div className="headerContainer row">
@@ -53,11 +53,11 @@ const Container = () => {
                       <div className="notificationtext">2</div>
                       </div>
                     </div>
-                    <div className="menuProfile">
-                      <div className="profileImg">
-                          <img src={profile} alt="" />
-                      </div>
-                    </div>
+                        <div className="menuProfile" onClick={() => setShowProfile(true)}>
+                                  <div className="profileImg">
+                                    <img src={profile} alt="Profile" />
+                                  </div>
+                                </div>
                     </div>
                   </div>
                 </div>
