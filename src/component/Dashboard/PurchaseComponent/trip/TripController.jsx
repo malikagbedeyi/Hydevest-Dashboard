@@ -6,9 +6,11 @@ import "../../../../assets/Styles/dashboard/controller.scss";
 import TripDetails from "./TripDetails";
 import { TripServices } from "../../../../services/Trip/trip";
 import TripLogs from "./TripLogs";
+import { SystemUserService } from '../../../../services/Account/systemUser.service';
 
 const TripController = ({ breadcrumb, navigate, goBackTo }) => {
-  // Load trips from storage
+  const [systemUsers, setSystemUsers] = useState([]);
+  const [openUserSelect, setOpenUserSelect] = useState(false)
   const [view, setView] = useState("table");
    const [trip, setTrip] = useState([])
     const [search , setSearch ] = useState('')
@@ -22,7 +24,16 @@ const [openFieldSelect, setOpenFieldSelect] = useState(false);
 const [showFilters, setShowFilters] = useState(false);
 const [openStatusSelect, setOpenStatusSelect] = useState(false);
 const [openProgressSelect, setOpenProgressSelect] = useState(false);
-const [filters, setFilters] = useState({status: "",progress: "",title: "",location: "",date_created: "",from_date: "",to_date: ""});
+  const logFields = ["all", "All Field", "Performed By"];
+const tripFields = ["all", "title", "location", "progress"];
+const activeFields = activeTab === "table" ? tripFields : logFields;
+  const [filters, setFilters] = useState({
+    progress: "",
+    title: "",
+    location: "", 
+    from_date: "",
+    to_date: ""
+  });
 
 useEffect(() => {
   const last = breadcrumb[breadcrumb.length - 1];
@@ -38,6 +49,18 @@ useEffect(() => {
     setSelectedTrip(last.trip);
   }
 }, [breadcrumb]);
+
+useEffect(() => {
+    const fetchSystemUsers = async () => {
+      try {
+        const res = await SystemUserService.list({ is_system_user: 1 });
+        setSystemUsers(res.data?.record?.data || []);
+      } catch (err) {
+        console.error("Failed to fetch users for filter", err);
+      }
+    };
+    if (activeTab === "logs") fetchSystemUsers();
+  }, [activeTab]);
 
   /* ================= FETCH TRIPS ================= */
  const feacthTrip = async (pageNum = page) => {
@@ -79,32 +102,27 @@ useEffect(() => {
                 <div className="right-wrapper">
                   <div className="right-wrapper-input">
                     <Search className="input-icon" />
-                   <input
-  placeholder="Search"
-  value={search}
-  onChange={(e) => {
-  const value = e.target.value;
-  setSearch(value);
-
-  setFilters((prev) => {
-    const updated = {
-      ...prev,
-      title: "",
-      location: "",
-      status: "",
-    };
-
-    if (searchField === "all") {
-      updated.title = value;
-      updated.location = value;
-    } else {
-      updated[searchField] = value;
-    }
-
-    return updated;
-  });
-  }}
-/>
+ <input
+                      placeholder={`Search by ${searchField === 'all' ? 'All Fields' : searchField}...`}
+                      value={search}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSearch(value);
+                        setFilters((prev) => {
+                          const updated = { ...prev };
+                          if (activeTab === "table") {
+                            updated.title = (searchField === "all" || searchField === "title") ? value : "";
+                            updated.location = (searchField === "all" || searchField === "location") ? value : "";
+                          } else {
+                            // Map logs logic
+                            updated.entity_id = (searchField === "all" || searchField === "Trip ID") ? value : "";
+                            updated.field_name = (searchField === "all" || searchField === "Field") ? value : "";
+                            updated.user_name = (searchField === "all" || searchField === "Performed By") ? value : "";
+                          }
+                          return updated;
+                        });
+                      }}
+                    />
                   </div>
 
 <div className="select-input">
@@ -119,33 +137,34 @@ useEffect(() => {
       onClick={() => setOpenFieldSelect(!openFieldSelect)}
     >
       <div className="select-box">
-        <span>{searchField === "all"  ? "All Field" : searchField.charAt(0).toUpperCase() + searchField.slice(1)}  </span></div>
+        <span>{searchField === "all" ? "Select Field" : searchField.charAt(0).toUpperCase() + searchField.slice(1)}</span>
+        </div>
      
       <div className="custom-select">
       <ChevronDown className={openFieldSelect ? "up" : "down"} />
       </div>
     </div>
 
-    {openFieldSelect && (
-      <div className="custom-select-dropdown">
-        {["all", "title", "location", "status", "progress"].map((field) => (
-          <div
-            key={field}
-            className="option-item"
-            onClick={() => {
-              setSearchField(field);
-              setOpenFieldSelect(false);
-            }}
-          >
-            {field === "all"
-              ? "All Field"
-              : field.charAt(0).toUpperCase() + field.slice(1)}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-</div>
+  {openFieldSelect && (
+                        <div className="custom-select-dropdown">
+                          {activeFields.map((field) => (
+                            <div
+                              key={field}
+                              className="option-item"
+                              onClick={() => {
+                                setSearchField(field);
+                                setOpenFieldSelect(false);
+                              }}
+                            >
+                              {field === "all"
+                                ? ""
+                                : field.charAt(0).toUpperCase() + field.slice(1)}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                   <div className="import-input">
                     <p>Import</p>
@@ -164,62 +183,17 @@ useEffect(() => {
                 </div>
               </div>
                 {showFilters && (
-  <div className="filters-panel">
-    {/* STATUS */}
-    <div className="filter-item">
-      <div
-        className="custom-select-drop"
-        onClick={() => setOpenStatusSelect(!openStatusSelect)}
-      >
-        <div className="select-box">
-          <span>
-            {filters.status === ""
-              ? "All Status"
-              : filters.status === "1"
-              ? "Active"
-              : "Pending"}
-          </span>
-        </div>
-
-        <ChevronDown className={openStatusSelect ? "up" : "down"} />
-      </div>
-
-      {openStatusSelect && (
-        <div className="custom-select-dropdown">
-          <div
-            className="option-item"
-            onClick={() => {
-              setFilters((prev) => ({ ...prev, status: "" }));
-              setOpenStatusSelect(false);
-            }}
-          >
-            All Status
-          </div>
-
-          <div
-            className="option-item"
-            onClick={() => {
-              setFilters((prev) => ({ ...prev, status: "1" }));
-              setOpenStatusSelect(false);
-            }}
-          >
-            Active
-          </div>
-
-          <div
-            className="option-item"
-            onClick={() => {
-              setFilters((prev) => ({ ...prev, status: "0" }));
-              setOpenStatusSelect(false);
-            }}
-          >
-            Pending
-          </div>
-        </div>
-      )}
-    </div>
-
-    {/* PROGRESS */}
+                <div className="filters-panel">
+{activeTab !== "logs" && (
+  <>
+                  <div className="filter-item">
+                    <input 
+                      type="text" 
+                      placeholder="Filter by Location"
+                      value={filters.location}
+                      onChange={(e) => setFilters(prev => ({...prev, location: e.target.value}))}
+                    />
+                  </div>
     <div className="filter-item">
       <div
         className="custom-select-drop"
@@ -252,8 +226,43 @@ useEffect(() => {
         </div>
       )}
     </div>
+    </>)}
+{activeTab === "logs" && (
+            <div className="filter-item">
+              <div className="custom-select-drop" onClick={() => setOpenUserSelect(!openUserSelect)}>
+                <div className="select-box">
+                  <span>
+                    {filters.user_uuid 
+                      ? systemUsers.find(u => u.user_uuid === filters.user_uuid)?.firstname + " " + systemUsers.find(u => u.user_uuid === filters.user_uuid)?.lastname
+                      : "All Personnel"}
+                  </span>
+                </div>
+                <ChevronDown className={openUserSelect ? "up" : "down"} />
+              </div>
 
-    {/* FROM DATE */}
+              {openUserSelect && (
+                <div className="custom-select-dropdown">
+                  <div className="option-item" onClick={() => { setFilters(prev => ({...prev, user_uuid: ""})); setOpenUserSelect(false); }}>
+                    All Personnel
+                  </div>
+                  {systemUsers.map((user) => (
+                    <div
+                      key={user.user_uuid}
+                      className="option-item"
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, user_uuid: user.user_uuid }));
+                        setOpenUserSelect(false);
+                      }}
+                    >
+                      {user.firstname} {user.lastname}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+{/* {activeTab !== "logs" && ( */}
+  <>
     <div className="filter-item">
       <input
         type="date"
@@ -266,8 +275,6 @@ useEffect(() => {
         }
       />
     </div>
-
-    {/* TO DATE */}
     <div className="filter-item">
       <input
         type="date"
@@ -280,7 +287,8 @@ useEffect(() => {
         }
       />
     </div>
-
+    </>
+{/* )} */}
   </div>
 )}
                 <div className="log-tab-section">
@@ -319,7 +327,7 @@ useEffect(() => {
       )}
 
             {(view === "table" || view === "empty") && activeTab === "logs" && (
-              <TripLogs />
+              <TripLogs filters={filters} search={search} />
             )}
   {view === "create" && (
         <CreateTrip

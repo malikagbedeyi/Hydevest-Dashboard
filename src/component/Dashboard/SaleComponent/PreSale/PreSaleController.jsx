@@ -42,6 +42,16 @@ const [filters, setFilters] = useState({
   from_date: "",
   to_date: ""
 });
+
+const logFields = ["all", "Pre-sale ID", "Performed By"];
+const preSaleFields = ["all", "pre_sale_unique_id", "sale_option", "date_created"]; 
+const activeFields = activeTab === "table" ? preSaleFields : logFields;
+
+useEffect(() => {
+  setSearchField("all");
+  setSearch("");
+}, [activeTab]);
+
  /* ================= FETCH SALE CONTAINERS ================= */
 useEffect(() => {
   const fetchContainers = async () => {
@@ -142,27 +152,21 @@ useEffect(() => {
               <div className="right-wrapper">
                 <div className="right-wrapper-input">
                   <Search className="input-icon" />
-                  <input
-  placeholder="Search"
+    <input
+  placeholder={`Search by ${searchField === 'all' ? 'All Fields' : searchField}...`}
   value={search}
   onChange={(e) => {
     const value = e.target.value;
     setSearch(value);
-
     setFilters((prev) => {
-      const updated = {
-        ...prev,
-        pre_sale_unique_id: "",
-        sale_option: "",
-        date_created: ""
-      };
-
-      if (searchField === "all") {
-        updated.pre_sale_unique_id = value;
+      const updated = { ...prev };
+      if (activeTab === "table") {
+        updated.pre_sale_unique_id = (searchField === "all" || searchField === "pre_sale_unique_id") ? value : "";
       } else {
-        updated[searchField] = value;
+        // LOG MAPPING
+        updated.entity_id = (searchField === "all" || searchField === "Pre-sale ID") ? value : "";
+        updated.user_name = (searchField === "all" || searchField === "Performed By") ? value : "";
       }
-
       return updated;
     });
   }}
@@ -194,29 +198,15 @@ useEffect(() => {
       <ChevronDown className={openFieldSelect ? "up" : "down"} />
     </div>
 
-    {openFieldSelect && (
-      <div className="custom-select-dropdown">
-        {[
-          "all",
-          "pre_sale_unique_id",
-          "sale_option",
-          "date_created"
-        ].map((field) => (
-          <div
-            key={field}
-            className="option-item"
-            onClick={() => {
-              setSearchField(field);
-              setOpenFieldSelect(false);
-            }}
-          >
-            {field === "all"
-              ? "All Field"
-              : field.replace("_", " ")}
-          </div>
-        ))}
+   {openFieldSelect && (
+  <div className="custom-select-dropdown">
+    {activeFields.map((field) => (
+      <div key={field} className="option-item" onClick={() => { setSearchField(field); setOpenFieldSelect(false); }}>
+        {field === "all" ? "All Fields" : field.replace("_", " ").toUpperCase()}
       </div>
-    )}
+    ))}
+  </div>
+)}
 
   </div>
 </div>
@@ -409,8 +399,8 @@ useEffect(() => {
             )}
 
             {activeTab === "logs" && (
-              <PresaleLog  preSaleUuid={editingSale?.pre_sale_uuid}/>
-            )}
+  <PresaleLog filters={filters} search={search} />
+)}
           </div>
 
         </div>
