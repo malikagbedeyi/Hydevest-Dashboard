@@ -72,6 +72,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
               <th>Description</th>
               <th>Container Number</th>
               <th>Pieces</th>
+              <th>Status</th>
               <th>Unit Price (USD)</th>
               <th>Amount (USD)</th>
               <th>Amount (NGN)</th>
@@ -80,7 +81,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
               <th>Quoted Amount (NGN)</th>
               <th>Created By</th>
               <th>Created Date</th>
-              <th>Status</th>
+              
               {/* <th>Actions</th> */}
             </tr>
           </thead>
@@ -100,23 +101,17 @@ const calculateQuotedContainerNGN = (item, rate) => {
           <td>{String(idx + 1).padStart(2, "0")}</td>
           <td>{item.title}</td>
           <td>{item.desc || "-"}</td>
-          <td>TRN {item.tracking_number || "-"}</td>
+          <td>TRN-{item.tracking_number || "-"}</td>
           <td>{Number(item.pieces || 0).toLocaleString()}</td>
+          <td>{item.status === 1 ? (<span style={{ color: "green" }}>Approved</span>) : (<span style={{ color: "orange" }}>Pending</span>)}</td>
           <td>{formatMoneyUSD(item.unit_price_usd)}</td>
           <td>{formatMoneyUSD(calculateContainerUSD(item))}</td>
-          <td>{itemRate > 0 ? formatMoney(calculateContainerNGN(item, itemRate)) : "₦0.00"}</td>
+          <td>₦{itemRate > 0 ? formatMoney(calculateContainerNGN(item, itemRate)) : "₦0.00"}</td>
           <td>{item.quoted_price_usd}</td>
           <td>{formatMoneyUSD(calculateQuotedContainerUSD(item))}</td>
-          <td>{itemRate > 0 ? formatMoney(calculateQuotedContainerNGN(item, itemRate)) : "₦0.00"}</td>
+          <td>₦{itemRate > 0 ? formatMoney(calculateQuotedContainerNGN(item, itemRate)) : "₦0.00"}</td>
           <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
           <td>{formatDate(item.created_at)}</td>
-          <td>
-            {item.status === 1 ? (
-              <span style={{ color: "green" }}>Approved</span>
-            ) : (
-              <span style={{ color: "orange" }}>Pending</span>
-            )}
-          </td>
         </tr>
       );
     })
