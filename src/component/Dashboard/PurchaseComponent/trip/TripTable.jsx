@@ -38,16 +38,7 @@ import "../../../../assets/Styles/dashboard/table.scss";
                     <td>{trip.start_date}</td>
                     <td>{trip.end_date}</td>
                     <td>{trip?.creator_info.firstname} {trip?.creator_info.lastname}</td>
-                  <td><span className={`status ${trip.status === 1 ? "active" : "pending"}`}
-                   style={{color:trip.status === 1 ? "green":"red"}}>
-                    {trip.status === 1 ? "Active" : "Pending"}</span></td>
-                    {/* <td onClick={(e) => e.stopPropagation()}>
-                      <Trash2
-                        size={16}
-                        color="red"
-                        onClick={() => onDelete(trip.id)}
-                      />
-                    </td> */}
+                  <td> <span style={{ color:  trip.progress === "NOT STARTED"  ? "red"  : trip.progress === "COMPLETED" ? "green": "orange"}}>{trip.progress}</span></td>
                   </tr>
                 ))
               )}

@@ -820,8 +820,8 @@ const handleCloseMessage = () => {
               <span className={activeTab === "tripFile" ? "active" : ""}
                 onClick={() => setActiveTab("tripFile")} >Trip Document</span>
 
-              <span className={activeTab === "log" ? "active" : ""}
-              onClick={() => setActiveTab("log")}>Activity Log</span>
+              {/* <span className={activeTab === "log" ? "active" : ""}
+              onClick={() => setActiveTab("log")}>Activity Log</span> */}
             </div>
             
             <div className="tab-content">
