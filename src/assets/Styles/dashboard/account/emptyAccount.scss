@@ -63,19 +63,22 @@
                      gap: 10px;
             justify-content:center;
              align-items: center;
-             .right-wrapper-input{
+               .right-wrapper-input{
                 width: 15vw;
-                 height: 3vw;
+                 height: 2.5vw;
                 border: 1px solid #B9B7B7;
-                 border-radius: 6px;
-                padding: 12px;
+                 border-radius: 0.4vw;
+                padding: 0.9vw;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 8px;
+                gap: 0.5vw;
                 @include Destop{
                     height: 45px;
                     width: 200px;
+                    border-radius: 6px;
+                    padding: 12px;
+
                 }
                 input{
                   border: none;
@@ -95,8 +98,8 @@
                     }
             }
                 .input-icon{
-                            width: 1.3vw;
-                            height: 1.3vw;
+                            width: 1.2vw;
+                            height: 1.2vw;
                             @include Destop{
                                 width:17px ;
                                 height:17px;
@@ -105,12 +108,13 @@
                  }
               .select-input{
                             .select-input-field{
+                              position: relative;
                                 z-index: 999;
                                 cursor: pointer;
                                 align-items: center;
-                                padding: 0 12px;
-                                width: 12vw;
-                                height: 3vw;
+                                padding: 0 0.8vw;
+                                width: 10vw;
+                                height: 2.8vw;
                                 display: flex;
                                 justify-content: space-between;
                                 gap: 8px;
@@ -119,6 +123,7 @@
                                 @include Destop{
                                 height: 45px;
                                 width: 158px;
+                                 padding: 0 12px;
                             }
                                 span{
                                     margin: auto 0;
@@ -126,10 +131,11 @@
                                     font-family: "Roboto" sans-serif;
                                     font-weight: 500;
                                     font-size: 1.1vw;
-                                    line-height: 19.36px;
+                                    line-height: 2.8vw;
                                     letter-spacing: 0%;      
                                     @include Destop{
                                     font-size: 16px;
+                                    line-height: 19.36px;
                                      }                              
                                 }
                                 
@@ -138,17 +144,20 @@
                             z-index: 999;                
                                 cursor: pointer;
                                 align-items: center;
-                                padding: 0 12px;
+                                padding: 0 0.8vw;
                                 width: 10vw;
-                                height: 3vw;
+                                height: 2.5vw;
                                 display: flex;
                                 justify-content: space-between;
-                                gap: 8px;
+                                gap: 0.55vw;
                                 border: 1px solid #263238;
-                                border-radius: 6px;
+                                border-radius: 0.4vw;
                                 @include Destop{
                                 height: 45px;
                                 width: 148px;
+                                padding: 0 12px;
+                                border-radius: 6px;
+                                gap: 8px;
                             }
                                 span{
                                     margin: auto 0;
@@ -156,17 +165,18 @@
                                     font-family: "Roboto" sans-serif;
                                     font-weight: 500;
                                     font-size: 1.1vw;
-                                    line-height: 19.36px;
+                                    line-height: 2.8vw;
                                     letter-spacing: 0%;      
                                     @include Destop{
                                     font-size: 16px;
+                                       line-height: 19.36px;
                                      }                              
                                 }
                              }
                             .select-dropdown{
                                 position: absolute;
                                 z-index: 1000!important;
-                                margin-top: 10px;
+                                margin-top: 0.7vw;
                                  width: 12vw;
                                  height: 32vh;
                                  overflow-y: auto;
@@ -175,23 +185,28 @@
                                  border-radius: 8px;
                                  scrollbar-width: none;
                                  animation: dropdown .35s ease-in-out;
-                                 @include Destop{
-                                    width: 188px;
-                                }
+                                //  @include Destop{
+                                //     width: 188px;
+                                //      margin-top: 10px;
+                                // }
                                 ul{
-                                    padding: 20px 0 5px;
+                                    padding: 1.4vw 0 0.35vw;
                                     display: flex;
                                     flex-direction: column;
-                                    gap: 15px;
+                                    gap: 1vw;
                                     overflow: hidden;
                                         @include Destop{
-                                            gap: 10px;
+                                          gap: 15px;
+
                                     }
                                     li{
                                         display: flex;
                                         justify-content: space-between;
-                                        padding: 0 10px;
+                                        padding: 0 0.7vw;
                                         align-items: center;
+                                        @include Destop{
+                                          padding: 0 10px;
+                                        }
                                         &:hover{
                                             background: #F1F1F1;
                                             span{
@@ -203,14 +218,13 @@
                                             font-family: "Poppins" sans-serif;
                                             font-weight: 400;
                                             font-size: 1vw;
-                                            line-height: 18px;
+                                            line-height: 1.3vw;
                                             letter-spacing: 0px;
                                             font-weight: 400;
-                                            line-height: 18px;
-                                            letter-spacing: 0px;   
                                             color: #263238;    
                                               @include Destop{
                                                  font-size: 13px;
+                                                 line-height: 18px;
                                      }                                                                                 
                                         }
                                         .check{
@@ -226,13 +240,140 @@
                                     }
                                 }
                             }
+                            .custom-select-drop{
+             width: 100%;
+          display: flex;
+          justify-content: space-between;
+          gap: 0.7vw;
+          align-items: center;
+          .select-box{
+            width: 100%;
+            color: gray;
+              .placeholder{
+                width: 100%;
+                background: inherit;
+                  color: #030314;
+               }
+               .selected-tags{
+                display: flex;
+                gap: 0.35vw;
+                border-radius: 0.4vw;
+                 @include Destop{
+                  gap: 5px;
+                  border-radius: 6px;
+        }
+                .tag{
+                  background: #f5f5f7;
+                  padding: 0.35vw 0.7vw;
+                   @include Destop{
+                    padding: 5px 10px;
+                }
+               }
+              }
+              .custom-select{
+                width: 10%;
+                cursor: pointer;
+                transition: .5s;
+                .up{
+                  transform: rotate(180deg);
+                  transition: .5s;
+                }
+                .down{
+                   transition: .5s;
+                }
+              }
+            }
+              
+          }
+          .custom-select-dropdown{
+                width: 100%;
+                background: #fff;
+                animation: dropdown .4s;
+                 box-shadow: 0 0.4vw 1.3vw rgba(88,26,170,0.08);
+                position: absolute;
+                 border-radius:0.85 vw; 
+                 cursor: pointer;
+                top: 3.95vw;
+                left:0vw;
+                padding: 0.7vw;
+                z-index: 999;  
+                .search-input{
+                  width: 100%;
+                   padding:0.5vw 0.7vw 0.5vw 1.4vw; 
+                   border: none;
+                   border-bottom:0.1vw solid #581aae;
+                   border-radius:0.85vw 0.85vw 0 0; 
+                   background:#fff;
+                   outline-style: none;
+                   @include Destop{
+                    padding:8px 10px 8px 20px; 
+                    border: none;
+                    border-bottom:1px solid #581aae;
+                    border-radius:12px 12px 0 0; 
+                }
+                }
+
+                .option-item{
+                    background: #fff;
+                    border-radius: 0 0 0 0.7vw ;
+                    display: flex;
+                     font-size: 1vw;
+                    flex-direction: column;
+                    gap: 0.7vw;
+                    padding: 5px 0 0 1vw;
+                    justify-content: center;
+                    // align-i: center;
+                     outline-style: none;
+                     cursor: pointer;
+                     position: relative;
+                      @include Destop{
+                        border-radius: 0 0 0 10px ;
+                        gap: 10px;
+                        padding: 5px 0 0 15px;
+                }
+                     &:hover{
+                      &::before{
+                        width: 20%;
+                      }
+                     }
+                     &::before{
+                      content: '';
+                      position: absolute;
+                      left: 0.7vw;
+                      bottom: 0;
+                      width: 0;
+                      height: 0.09vw;
+                      transition: .4s;
+                      background: #581aae;
+                      border-radius: 0 0 0 0.7vw ;
+                       @include Destop{
+                        left: 0.7vw;
+                        bottom: 0;
+                        width: 0;
+                        height: 1px;
+                }
+                     }
+                     span{
+                      margin: 0;
+                     }
+                    label{
+                      display: flex;
+                      gap: 1.4vw;
+                      cursor: pointer;
+                       @include Destop{
+                        gap: 20px;
+                }
+                    }
+                }
+
+              }
                         }
                           .import-input{
                             cursor: pointer;
                             width: 8vw;
-                            height: 3vw;
+                            height: 2.5vw;
                             align-items: center;
-                            padding: 0 12px;
+                          padding: 0 0.8vw;
                             display: flex;
                             justify-content: space-between;
                             gap: 8px;
@@ -241,17 +382,19 @@
                               @include Destop{
                                 width: 124px;
                                height: 45px;
+                               padding: 0 12px;
                                  }
                             p{
                                 margin: auto 0;
                                 font-family: "Roboto" sans-serif;
                                 font-weight: 400;
                                 font-size: 1.1vw;
-                                line-height: 24px;
+                                line-height: 1.6vw;
                                 letter-spacing: 0%;   
                                 color: #1B212C; 
                                 @include Destop{
                                     font-size: 16px;
+                                    line-height: 24px;
                                      }                            
                             }
                             .input-icon{
@@ -269,12 +412,86 @@
                  button{
                   background: #581aae;
                 color: #fff;
-                padding: 10px 30px ;
+                padding: .7vw 2.1vw !important;
                 border: none;
-                border-radius: 8px;
+                border-radius: 0.55vw;
+                font-size: 1vw;
+                @include Destop {
+                  padding: 10px 30px ;
+                  border-radius: 8px;
+                  font-size: 15px;
+                }
             }
                 }
               }
+               .filters-panel {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  margin-top: 1.4vw;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+
+.filter-item {
+  position: relative;
+  min-width: 170px;
+}
+
+.filter-item input {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #e3e6ea;
+  border-radius: 6px;
+  font-size: 13px;
+  width: 100%;
+  outline: none;
+  background: #fff;
+}
+
+.filter-item input:focus {
+  border-color: #4a90e2;
+}
+
+.custom-select-drop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #e3e6ea;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.select-box span {
+  font-size: 13px;
+  color: #333;
+}
+
+.custom-select-dropdown {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e3e6ea;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  z-index: 20;
+}
+
+.option-item {
+  padding: 10px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.option-item:hover {
+  background: #f5f7fa;
+}
+                }
               .top-content-account{
                 .top-content-account-wrappper{
                   display: grid;

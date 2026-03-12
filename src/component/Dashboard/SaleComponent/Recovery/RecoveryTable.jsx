@@ -127,22 +127,15 @@ const totalRecoveryAmount = tableData.reduce(
               ) : (
                 tableData.map((rec, idx) => (
                   <tr key={rec.id} onClick={() => handleRowClick?.(rec)}>
-                    <td>
-                      {(pagination.page - 1) * pagination.limit + idx + 1}
-                    </td>
-
+                    <td>{(pagination.page - 1) * pagination.limit + idx + 1} </td>
                     <td>{rec.sale?.sale_unique_id}</td>
                     <td>{rec.customerName}</td>
                     <td>{rec.customerPhone}</td>
 
                     <td>{formatMoney(rec.amountPaid)}</td>
-                    {/* <td>{formatMoney(rec.balance)}</td> */}
                     <td>{rec.creator_info.firstname} {rec.creator_info.lastname}</td>
                     <td style={{color:rec?.sale?.payment_status=== "Full Payment" ? "green":"orange"}}> {rec?.sale?.payment_status}</td>
                     <td>{formatDate(rec.createdAt)}</td>
-                    {/* <td><span className={`status ${rec.status === 1 ? "Approve" : "In-transit"}`}
-                   style={{color:rec.status === 1 ? "green":"red"}}>
-                    {rec.status === 1 ? "Approve" : "In-transit"}</span></td> */}
                     
                     <td onClick={(e) => e.stopPropagation()}>
                       <button
