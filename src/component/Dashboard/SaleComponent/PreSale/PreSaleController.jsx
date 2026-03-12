@@ -221,7 +221,8 @@ useEffect(() => {
             {showFilters && (
   <div className="filters-panel">
 
-    {/* STATUS */}
+{activeTab !== "logs" && (
+  <>
     <div className="filter-item">
       <div
         className="custom-select-drop"
@@ -323,7 +324,8 @@ useEffect(() => {
         </div>
       )}
     </div>
-
+    </>
+)}
     {/* FROM DATE */}
     <div className="filter-item">
       <input

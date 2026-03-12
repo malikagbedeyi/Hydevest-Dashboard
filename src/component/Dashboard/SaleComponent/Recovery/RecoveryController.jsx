@@ -10,51 +10,139 @@ import RecoveryLog from "./RecoveryLog";
 const API_URL = "/api/recoveries";
 
 const RecoveryController = ({}) => {
-
   const [data, setData] = useState([]);
   const [sales, setSales] = useState([]);
   const [view, setView] = useState("empty");
-    const [selectedRecovery, setSelectedRecovery] = useState(null);
-    const [activeTab, setActiveTab] = useState("table");
-const [page, setPage] = useState(1);
-const [pagination, setPagination] = useState({
-  page: 1,
-  limit: 10,
-  totalPages: 1,
-  total: 0
-});
+  const [selectedRecovery, setSelectedRecovery] = useState(null);
+  const [activeTab, setActiveTab] = useState("table");
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false); // Added loading state
+
+  // --- SEARCH & FILTER STATES ---
+  const [search, setSearch] = useState("");
+  const [searchField, setSearchField] = useState("all");
+  const [openFieldSelect, setOpenFieldSelect] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [openPaymentStatusSelect, setOpenPaymentStatusSelect] = useState(false);
+
+  const [filters, setFilters] = useState({
+    sale_unique_id: "",
+    customer_name: "",
+    payment_status: "",
+    from_date: "",
+    to_date: "",
+    // log specific
+    recovery_unique_id: "",
+    user_name: ""
+  });
+
+  const [pagination, setPagination] = useState({
+    page: 1, limit: 10, totalPages: 1, total: 0
+  });
+
+  // Define Fields based on Tab
+  const logFields = ["all", "Recovery ID", "Sale ID", "Performed By"];
+  const tableFields = ["all", "sale iD", "customer", ];
+  const activeFields = activeTab === "table" ? tableFields : logFields;
+
+  // 1. Reset search on tab change
+  useEffect(() => {
+    setSearchField("all");
+    setSearch("");
+    setFilters(prev => ({ ...prev, sale_unique_id: "", customer_name: "", payment_status: "" }));
+  }, [activeTab]);
 
  
-
 const fetchRecoveries = async (pageNum = page) => {
-  try {
-    const result = await RecoveryServices.list({
-      page: pageNum
-    });
+    try {
+      setLoading(true);
+      const result = await RecoveryServices.list({
+        page: pageNum,
+        ...filters // ✅ THIS SENDS YOUR FILTERS TO THE BACKEND
+      });
 
-    const records = Array.isArray(result.data?.record?.data) 
-      ? result.data.record.data 
-      : [];
+      const records = result.data?.record?.data || [];
+      setData(records);
+      setPagination({
+        page: result.data.record?.current_page || 1,
+        limit: result.data.record?.per_page || 10,
+        totalPages: result.data.record?.last_page || 1,
+        total: result.data.record?.total || 0
+      });
 
-    setData(records);
-    setPagination({
-  page: result.data.record?.current_page || 1,
-  limit: result.data.record?.per_page || 10,
-  totalPages: result.data.record?.last_page || 1,
-  total: result.data.record?.total || 0
-});
+      setView(records.length === 0 && search === "" ? "empty" : "table");
+    } catch (err) {
+      console.error("Fetch error", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setView(records.length === 0 ? "empty" : "table");
-  } catch (err) {
-    console.error("Failed to fetch recoveries", err);
-    setData([]);
-    setView("empty");
-  }
-};
-
+ 
   useEffect(() => {
-    fetchRecoveries(1);
-  }, []);
+    const timer = setTimeout(() => {
+      fetchRecoveries(page);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [page, filters]);
+
+  const handleSearchChange = (e) => {
+  const value = e.target.value;
+  setSearch(value);
+
+  setFilters((prev) => {
+    const updated = { ...prev };
+
+    updated.sale_unique_id = "";
+    updated.customer_name = "";
+    updated.recovery_unique_id = "";
+    updated.user_name = "";
+
+    if (activeTab === "table") {
+      if (searchField === "all") {
+        updated.sale_unique_id = value; 
+      } else {
+        updated[searchField] = value;
+      }
+    } else {
+      // LOG MAPPING
+      if (searchField === "all") {
+        updated.recovery_unique_id = value;
+      } else if (searchField === "Recovery ID") {
+        updated.recovery_unique_id = value;
+      } else if (searchField === "Sale ID") {
+        updated.sale_unique_id = value;
+      } else if (searchField === "Performed By") {
+        updated.user_name = value;
+      }
+    }
+    return updated;
+  });
+};
+const enrichedRecoveries = Array.isArray(data)
+  ? data
+      .map((rec, idx) => ({
+        ...rec,
+        sn: (pagination.page - 1) * pagination.limit + idx + 1,
+        saleUniqueId: rec?.sale?.sale_unique_id || "",
+        customerName: `${rec.customer?.firstname || ""} ${rec.customer?.lastname || ""}`,
+        customerPhone: rec.customer?.phone_no || "",
+        amountPaid: Number(rec.amount) || 0,
+        createdAt: rec.created_at,
+        status: Number(rec.status),
+      }))
+      .filter((item) => {
+        if (!search) return true;
+        const s = search.toLowerCase();
+
+        return (
+          item.saleUniqueId.toLowerCase().includes(s) ||
+          item.customerName.toLowerCase().includes(s) ||
+          item.customerPhone.toLowerCase().includes(s) ||
+          (item.recovery_unique_id && item.recovery_unique_id.toLowerCase().includes(s))
+        );
+      })
+  : [];
   const handlePageChange = (page) => {
     fetchRecoveries(page);
   };
@@ -81,35 +169,8 @@ const handleAddData = () => {
     );
   };
 
-const enrichedRecoveries = Array.isArray(data)
-  ? data.map((rec, idx) => ({
-      ...rec,
-      sn: (pagination.page - 1) * pagination.limit + idx + 1,
 
-      saleId: rec.sale_id,
-      saleUniqueId: rec?.sale?.sale_unique_id,
-
-      customerName: `${rec.customer?.firstname || ""} ${rec.customer?.lastname || ""}`,
-      customerPhone: rec.customer?.phone_no || "",
-
-      comment: rec?.comment || "",
-      attachment: rec?.attachment || "",
-
-      amountPaid: Number(rec.amount) || 0,
-      paymentStatus: rec?.sale?.payment_status,
-      paymentDate: rec?.payment_date,
-
-      totalSaleAmount: Number(rec?.sale?.total_sale_amount) || 0,
-
-      balance:
-        (Number(rec?.sale?.total_sale_amount) || 0) -
-        (Number(rec?.amount) || 0),
-
-      createdAt: rec.created_at,
-      status: Number(rec.status),
-    }))
-  : [];
-
+  
    const handleRowClick = (rec) => {
   setSelectedRecovery(rec);
   setView("drilldown");
@@ -125,58 +186,96 @@ const enrichedRecoveries = Array.isArray(data)
               <div className="top-content-wrapper">
                 <div className="left-wrapper" />
                 <div className="right-wrapper">
+              {/* SEARCH INPUT */}
                   <div className="right-wrapper-input">
                     <Search className="input-icon" />
-                    <input type="text" placeholder="Search" />
+                    <input 
+                      type="text" 
+                      placeholder={`Search by ${searchField.replace("_", " ")}...`} 
+                      value={search}
+                      onChange={handleSearchChange} 
+                    />
                   </div>
 
+                  {/* ADD FILTER BUTTON */}
                   <div className="select-input">
-                    <div className="filter">
+                    <div className="filter" onClick={() => setShowFilters(!showFilters)}>
                       <span>Add Filter</span>
                       <Filter />
                     </div>
                   </div>
 
+                  {/* FIELD SELECT */}
                   <div className="select-input">
                     <div className="select-input-field">
-                      <span>All Field</span>
-                      <ChevronDown />
+                      <div className="custom-select-drop" onClick={() => setOpenFieldSelect(!openFieldSelect)}>
+                        <div className="select-box">
+                          <span>{searchField === "all" ? "All Fields" : searchField.replace("_", " ").toUpperCase()}</span>
+                        </div>
+                        <ChevronDown className={openFieldSelect ? "up" : "down"} />
+                      </div>. 
+                      {openFieldSelect && (
+                        <div className="custom-select-dropdown">
+                          {activeFields.map(field => (
+                            <div key={field} className="option-item" onClick={() => { setSearchField(field); setOpenFieldSelect(false); }}>
+                              {field.replace("_", " ").toUpperCase()}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  <div className="import-input">
-                    <p>Import</p>
-                  </div>
-
-                  <div className="import-input">
-                    <p>Export</p>
-                  </div>
-
                   <button onClick={() => setView("create")}>
                     Create Record
                   </button>
 
                 </div>
               </div>
-              <div className="log-tab-section">
-  <div className="tab-content">
-    <ul>
-      <li
-        className={activeTab === "table" ? "active" : ""}
-        onClick={() => setActiveTab("table")}
-      >
-        Recovery Table
-      </li>
-
-      <li
-        className={activeTab === "logs" ? "active" : ""}
-        onClick={() => setActiveTab("logs")}
-      >
-        Activity Log
-      </li>
-    </ul>
+           {showFilters && (
+                <div className="filters-panel">
+                 
+{/* <div className="filter-item">
+  <div className="custom-select-drop" onClick={() => setOpenPaymentStatusSelect(!openPaymentStatusSelect)}>
+    <div className="select-box">
+      <span>{filters.payment_status || "All Payment Status"}</span>
+    </div>
+    <ChevronDown className={openPaymentStatusSelect ? "up" : "down"} />
   </div>
-</div>
+  {openPaymentStatusSelect && (
+    <div className="custom-select-dropdown">
+      {["", "Part Payment", "Full Payment"].map(status => (
+        <div 
+          key={status} 
+          className="option-item" 
+          onClick={() => { 
+             setFilters(prev => ({ ...prev, payment_status: status }));setPage(1);
+            setOpenPaymentStatusSelect(false); 
+          }}
+        >
+          {status === "" ? "All Payment Status" : status}
+        </div>
+      ))}
+    </div>
+  )}
+</div> */}
+                  <div className="filter-item">
+                    <input type="date" value={filters.from_date} onChange={(e) => setFilters(prev => ({ ...prev, from_date: e.target.value }))} />
+                  </div>
+                  <div className="filter-item">
+                    <input type="date" value={filters.to_date} onChange={(e) => setFilters(prev => ({ ...prev, to_date: e.target.value }))} />
+                  </div>
+                </div>
+              )}
+
+              {/* TABS */}
+              <div className="log-tab-section">
+                <div className="tab-content">
+                  <ul>
+                    <li className={activeTab === "table" ? "active" : ""} onClick={() => setActiveTab("table")}>Recovery Table</li>
+                    <li className={activeTab === "logs" ? "active" : ""} onClick={() => setActiveTab("logs")}>Activity Log</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           )}
 
@@ -205,9 +304,8 @@ const enrichedRecoveries = Array.isArray(data)
   />
 )}
 {(view === "table" || view === "empty") && activeTab === "logs" && (
-  <RecoveryLog
-  />
-)}
+        <RecoveryLog filters={filters} search={search} />
+      )}
             {view === "create" && (
               <CreateRecovery
                 SalesData={sales}

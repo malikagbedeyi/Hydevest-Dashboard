@@ -16,6 +16,7 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
  const [containerPreSales, setContainerPreSales] = useState([]);
 const [page, setPage] = useState(1);
 
+
 const [pagination, setPagination] = useState({
   currentPage: 1,
   lastPage: 1,
@@ -39,6 +40,16 @@ const [filters, setFilters] = useState({
   from_date: "",
   to_date: ""
 });
+const logFields = ["all", "Sale ID", "Entity", "Performed By"];
+const saleFields = ["all", "Sale ID", "Tracking Number", "Payment Status"];
+const activeFields = activeTab === "table" ? saleFields : logFields;
+
+// 2. Reset search when tab changes
+useEffect(() => {
+  setSearchField("all");
+  setSearch("");
+}, [activeTab]);
+
   /* ===================== FETCH SALES ===================== */
 const fetchSales = async (pageNum = page) => {
   setLoading(true);
@@ -258,6 +269,36 @@ const container = saleMaster.container?.title || "—"
   }
 };
 
+const handleSearchChange = (e) => {
+  const value = e.target.value;
+  setSearch(value);
+
+  setFilters((prev) => {
+    const updated = { ...prev };
+
+    if (activeTab === "table") {
+      updated.sale_unique_id = "";
+      updated.container_uuid = "";
+      updated.payment_status = "";
+
+      if (searchField === "all") {
+        updated.sale_unique_id = value;
+      } else if (searchField === "tracking_number") {
+        const match = containerPreSales.find(c => 
+          c.tracking_number?.toLowerCase().includes(value.toLowerCase())
+        );
+        updated.container_uuid = match ? match.container_uuid : value;
+      } else {
+        updated[searchField] = value;
+      }
+    } else {
+      updated.entity_id = (searchField === "all" || searchField === "Sale ID") ? value : "";
+      updated.user_name = (searchField === "all" || searchField === "Performed By") ? value : "";
+    }
+    return updated;
+  });
+};
+
   /* ===================== DRILLDOWN ===================== */
 const handleRowClick = (sale) => {
   if (!sale?.sale_uuid) return;
@@ -277,31 +318,10 @@ const handleRowClick = (sale) => {
                 <div className="right-wrapper">
                   <div className="right-wrapper-input">
                     <Search className="input-icon" />
-                    <input
-  placeholder="Search"
+      <input
+  placeholder={`Search by ${searchField === 'all' ? 'All Fields' : searchField.replace("_", " ")}...`}
   value={search}
-  onChange={(e) => {
-    const value = e.target.value;
-
-    setSearch(value);
-
-    setFilters((prev) => {
-      const updated = {
-        ...prev,
-        sale_unique_id: "",
-        container_uuid: "",
-        customer_uuid: ""
-      };
-
-      if (searchField === "all") {
-        updated.sale_unique_id = value;
-      } else {
-        updated[searchField] = value;
-      }
-
-      return updated;
-    });
-  }}
+  onChange={handleSearchChange}
 />
                   </div>
 
@@ -330,32 +350,22 @@ const handleRowClick = (sale) => {
       <ChevronDown className={openFieldSelect ? "up" : "down"} />
     </div>
 
-    {openFieldSelect && (
-      <div className="custom-select-dropdown">
-
-        {[
-          "all",
-          "sale ID",
-          // "container_uuid",
-          // "customer_uuid",
-          "payment_status"
-        ].map((field) => (
-          <div
-            key={field}
-            className="option-item"
-            onClick={() => {
-              setSearchField(field);
-              setOpenFieldSelect(false);
-            }}
-          >
-            {field === "all"
-              ? "All Field"
-              : field.replace("_", " ")}
-          </div>
-        ))}
-
+   {openFieldSelect && (
+  <div className="custom-select-dropdown">
+    {activeFields.map((field) => (
+      <div
+        key={field}
+        className="option-item"
+        onClick={() => {
+          setSearchField(field);
+          setOpenFieldSelect(false);
+        }}
+      >
+        {field === "all" ? "All Field" : field.replace("_", " ").toUpperCase()}
       </div>
-    )}
+    ))}
+  </div>
+)}
 
   </div>
 </div>
@@ -369,12 +379,9 @@ const handleRowClick = (sale) => {
               </div>
               {showFilters && (
   <div className="filters-panel">
-
-    {/* PAYMENT STATUS */}
+{activeTab !== "logs" && (
     <div className="filter-item">
-
-      <div
-        className="custom-select-drop"
+      <div   className="custom-select-drop"
         onClick={() =>
           setOpenPaymentStatusSelect(!openPaymentStatusSelect)
         }
@@ -420,6 +427,7 @@ const handleRowClick = (sale) => {
       )}
 
     </div>
+    )}
 
     {/* FROM DATE */}
     <div className="filter-item">
@@ -493,9 +501,9 @@ const handleRowClick = (sale) => {
   handleRowClick={handleRowClick}
 />
             )}
-                   {view === "table" && !loading && activeTab === "logs" && (
-                    <SaleLog />
-                   )}
+{activeTab === "logs" && (
+  <SaleLog filters={filters} search={search} />
+)}
             {view === "create" && (
              <CreateSale
              setView={setView}
