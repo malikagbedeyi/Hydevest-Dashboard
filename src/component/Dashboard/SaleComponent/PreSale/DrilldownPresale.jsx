@@ -358,7 +358,7 @@ useEffect(() => {
                 onChange={handleChange}
                 type="number"
               />
-                      {editableData?.sale_option === "SPLIT SALE" && (
+                   {editableData?.sale_option === "SPLIT SALE" && (
               <EditableField  style={{display:"grid", gridTemplateColumns:"1fr"}}
                 label="Total No of Pallets"
                 field="total_no_of_pallets"
@@ -370,7 +370,7 @@ useEffect(() => {
               />
               )}
             </div>
-        {editableData?.sale_option === "MIXED SALE" && "MIXED SALE" && (
+        {editableData?.sale_option === "SPLIT SALE" && "MIXED SALE" && (
   <section>
     <div className="section-head">
       <h2>Pallet Distribution</h2>

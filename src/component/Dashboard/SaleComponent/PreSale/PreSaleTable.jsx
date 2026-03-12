@@ -188,16 +188,8 @@ const currentData = preSales;
                   <td><span className={`status ${sale.status === 1 ? "active" : "pending"}`}
                    style={{color:sale.status === 1 ? "green":"red"}}>
                     {sale.status === 1 ? "Active" : "Pending"}</span></td>
-                     <td>{sale.creator_info.firstname} {sale.creator_info.lastname}</td>
+                    <td>{sale?.creator_info?.firstname} {sale?.creator_info?.lastname}</td>
                     <td>{new Date(sale.created_at).toLocaleDateString()}</td>
-                    {/* <td onClick={(e) => e.stopPropagation()}>
-                      <button
-                        className="delete-btn"
-                        onClick={(e) => openDeletePopup(e, sale)}
-                      >
-                        <Trash2 size={16} />
-                      </button> 
-                     </td> */}
                   </tr>
                 ))
               )}

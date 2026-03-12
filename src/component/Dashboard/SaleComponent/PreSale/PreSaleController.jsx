@@ -120,10 +120,10 @@ useEffect(() => {
     return (
       <CreatePreSale
         containersData={containers}
-        users={datas}
-        setUsers={setDatas}
         setView={setView}
-        openSubmenu={openSubmenu}
+        datas={datas} // Current list
+      setDatas={setDatas}
+        refreshTable={() => fetchPreSales(1)}
       />
     );
   }
@@ -400,6 +400,7 @@ useEffect(() => {
   page={pagination.currentPage}
   lastPage={pagination.lastPage}
   setPage={setPage}
+  loading={loadingTable}
   onEdit={(sale) => {
     setEditingSale(sale);
     setView("edit");

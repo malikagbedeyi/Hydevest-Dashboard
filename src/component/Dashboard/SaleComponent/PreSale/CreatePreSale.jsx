@@ -9,7 +9,7 @@ export const saleType = [
   { id: 3, saleName: "Mixed Sale" },
 ];
 
-const CreatePreSale = ({ users, setUsers, setView, containersData, setContainers  }) => {
+const CreatePreSale = ({ setDatas, setView, containersData, refreshTable }) => { 
   const [form, setForm] = useState({
     saleOption: "",containerOption: "",wcAverageWeight: "", wcPieces: "",
     pricePerKg: "",pricePerPic: "",noOfPallets: "",pallets: [{ pieces: "", count: "" }],
@@ -294,12 +294,13 @@ const handleCreate = async () => {
     /* -----------------------
        SUCCESS HANDLING
     ------------------------ */
-    if (response?.data?.success) {
-      setUsers(prev => [response.data.record || payload, ...prev]);
-      setPopupMessage("✅ Pre-sale successfully created");
-      setPopupType("success");
-
-   } else {
+   if (response?.data?.success) {
+    
+  if (refreshTable) refreshTable(); 
+  setPopupMessage("✅ Pre-sale successfully created");
+  setPopupType("success");
+}
+   else {
   setPopupMessage(`❌ ${response?.data?.message || "Failed to create pre-sale"}`);
   setPopupType("error");
   return;
@@ -480,7 +481,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
 
         {isExpanded && (
           <ul>
-            <li>Container ID: {container.id}</li> 
+            <li>Container ID: {container.container_unique_id}</li> 
             <li>Description: {container.desc}</li>
             <li>Tracking Number: TN {container.tracking_number}</li>
             <li>Unit Pieces: {container.pieces ?? "-"}</li>
