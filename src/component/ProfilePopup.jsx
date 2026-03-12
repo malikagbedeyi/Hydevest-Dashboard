@@ -11,7 +11,6 @@ const ProfilePopup = ({ onClose, logout }) => {
       const savedUser = localStorage.getItem("user");
       if (savedUser) {
         const parsedUser = JSON.parse(savedUser);
-        console.log("👤 Profile Debug:", parsedUser);
         setUserInfo(parsedUser);
       }
     } catch (error) {

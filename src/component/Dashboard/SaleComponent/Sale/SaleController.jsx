@@ -50,7 +50,7 @@ const fetchSales = async (pageNum = page) => {
 });
 
     const record = res?.data?.record;
-    console.log(res.data)
+
     const records = record?.data || [];
 
     setSales(records);

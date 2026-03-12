@@ -43,7 +43,6 @@ const data = tableDataContainer
   };
   const exportPDF = () => {
     const doc = new jsPDF();
-    console.log(doc.autoTable);
     doc.text("Exported Data", 10, 10);
     doc.autoTable({
       head: [["ID",

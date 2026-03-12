@@ -26,7 +26,6 @@ const TripLogs = () => {
         page: pageValue,
         date_created: "",
       });
-      console.log(res.data)
       setLogs(res.data?.record.data);
       setTotalPages(res.data?.record.meta.last_page || 1);
     } catch (err) {

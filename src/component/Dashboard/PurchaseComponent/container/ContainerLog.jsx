@@ -30,7 +30,6 @@ const ContainerLog = ({ container_uuid }) => {
         : [];
 
       setLogs(logsArray);
-      console.log(res.data)
       setTotalPages(res.data?.record?.last_page || 1);
     } catch (err) {
       console.error("Error fetching logs:", err);
