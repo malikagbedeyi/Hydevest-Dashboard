@@ -106,7 +106,7 @@ const currentData = financeData
                       <th>Amount</th>
                       <th>Currency</th>
                       <th>Rate</th>
-                      <th>Amount (NGN)</th>
+                      <th>Amount (₦)</th>
                       <th>Category</th>
                       <th>Created By</th>
                       <th>Status</th>

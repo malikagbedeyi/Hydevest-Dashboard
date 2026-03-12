@@ -599,15 +599,15 @@ const handleCloseMessage = () => {
     <div className="drill-summary-grid">
       <div className="drill-summary">
  <div className="summary-item">
-  <p className="small">Total Amount (NGN)</p>
+  <p className="small">Total Amount (₦)</p>
   <h2>{"₦" + formatNumber(summaryNGN) }</h2>
 </div>
 
   <div className="summary-item">
     <p className="small">
       {activeTab === "container"
-        ? "Total Amount (USD)" // Changed from Average Expense
-        : "Total Amount (USD)"}
+        ? "Total Amount ($)" // Changed from Average Expense
+        : "Total Amount ($)"}
     </p>
     <h2>{formatNumber(summaryUSD)}</h2>
   </div>

@@ -123,13 +123,13 @@ const calculateQuotedContainerNGN = (item, rate) => {
                <th>Container Number</th>
                <th>Pieces</th>
                <th>Status</th>
-               <th>Unit Price (USD)</th>
-               <th>Shipping Amount (USD)</th>
-               <th>Surcharge NGN</th>
-               <th>Amount (USD)</th>
-               <th>Amount (NGN)</th>
-               <th>Quoted Amount (USD)</th>
-               <th>Quoted Amount (NGN)</th>
+               <th>Unit Price ($)</th>
+               <th>Shipping Amount ($)</th>
+               <th>Surcharge (₦)</th>
+               <th>Amount ($)</th>
+               <th>Amount (₦)</th>
+               <th>Quoted Amount ($)</th>
+               <th>Quoted Amount (₦)</th>
                <th>Created By</th>
               <th>Created Date</th>
               {/* <th>Actions</th> */}
@@ -152,12 +152,12 @@ const calculateQuotedContainerNGN = (item, rate) => {
                   <td>TRN-{item.tracking_number || "-"}</td>
                   <td>{formatMoney(item.pieces || 0)}</td>
                   <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>
-                  <td>{formatMoneyUSd(item.unit_price_usd || 0)}</td>
-                  <td>{formatMoneyUSd(Number(item.shipping_amount_usd) || 0)}</td>
+                  <td>${formatMoneyUSd(item.unit_price_usd || 0)}</td>
+                  <td>${formatMoneyUSd(Number(item.shipping_amount_usd) || 0)}</td>
                   <td>₦{formatMoney(Number(item.surcharge_ngn || 0))}</td>
-                  <td>{formatMoneyUSd(calculateContainerUSD(item))}</td>
+                  <td>${formatMoneyUSd(calculateContainerUSD(item))}</td>
                   <td>₦{formatMoney(calculateContainerNGN(item, avgContainerRate))}</td>
-                  <td>{formatMoneyUSd(calculateQuotedContainerUSD(item))}</td>
+                  <td>${formatMoneyUSd(calculateQuotedContainerUSD(item))}</td>
                    <td>₦{formatMoney(calculateQuotedContainerNGN(item, avgContainerRate))}</td>
                   <td>{item?.creator_info?.firstname} {item?.creator_info?.lastname}</td>
                   <td>{formatDate(item.created_at)}</td>

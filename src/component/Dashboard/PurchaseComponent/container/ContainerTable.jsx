@@ -73,12 +73,12 @@ const calculateQuotedContainerNGN = (item, rate) => {
               <th>Container Number</th>
               <th>Pieces</th>
               <th>Status</th>
-              <th>Unit Price (USD)</th>
-              <th>Amount (USD)</th>
-              <th>Amount (NGN)</th>
-              <th>Quoted Price (USD)</th>
-               <th>Quoted Amount (USD)</th>
-              <th>Quoted Amount (NGN)</th>
+              <th>Unit Price ($)</th>
+              <th>Amount ($)</th>
+              <th>Amount (₦)</th>
+              <th>Quoted Price ($)</th>
+               <th>Quoted Amount ($)</th>
+              <th>Quoted Amount (₦)</th>
               <th>Created By</th>
               <th>Created Date</th>
               
@@ -104,12 +104,12 @@ const calculateQuotedContainerNGN = (item, rate) => {
           <td>TRN-{item.tracking_number || "-"}</td>
           <td>{Number(item.pieces || 0).toLocaleString()}</td>
           <td>{item.status === 1 ? (<span style={{ color: "green" }}>Approved</span>) : (<span style={{ color: "orange" }}>Pending</span>)}</td>
-          <td>{formatMoneyUSD(item.unit_price_usd)}</td>
-          <td>{formatMoneyUSD(calculateContainerUSD(item))}</td>
+          <td>${formatMoneyUSD(item.unit_price_usd)}</td>
+          <td>${formatMoneyUSD(calculateContainerUSD(item))}</td>
           <td>₦{itemRate > 0 ? formatMoney(calculateContainerNGN(item, itemRate)) : "₦0.00"}</td>
-          <td>{item.quoted_price_usd}</td>
-          <td>{formatMoneyUSD(calculateQuotedContainerUSD(item))}</td>
-          <td>₦{itemRate > 0 ? formatMoney(calculateQuotedContainerNGN(item, itemRate)) : "₦0.00"}</td>
+          <td>${item.quoted_price_usd || 0}</td>  
+          <td>${formatMoneyUSD(calculateQuotedContainerUSD(item))}</td>
+          <td>₦{itemRate > 0 ? formatMoney(calculateQuotedContainerNGN(item, itemRate)) : "0.00"}</td>
           <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
           <td>{formatDate(item.created_at)}</td>
         </tr>

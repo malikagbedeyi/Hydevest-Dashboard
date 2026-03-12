@@ -233,10 +233,6 @@ useEffect(() => {
   ========================= */
 
 
-
-
-
-
   if (view === "details" && selectedContainer) {
     const siblingContainers = containers.filter(
     (c) => c.trip_id === selectedContainer.trip_id
@@ -471,7 +467,7 @@ const formatMoneyUSD = (value) =>
   <h2>{totalContainers}</h2>
 </div>
 <div className="summary-item">
-  <p className="small">Total Amount (NGN)</p>
+  <p className="small">Total Amount ₦ </p>
   <h2>{"₦" + formatMoney(summaryData.totalNGN)}</h2>
 </div>
 <div className="summary-item">
