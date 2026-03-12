@@ -46,6 +46,7 @@ const TripLogs = () => {
  <thead>
   <tr>
     <th>#</th>
+    <th>Trip ID</th>
     <th>Action</th>
     <th>Entity</th>
     <th>Field</th>
@@ -74,22 +75,14 @@ const TripLogs = () => {
       return changes.length > 0 ? (
         changes.map((c, index) => (
           <tr key={`${l.log_uuid}-${index}`}>
-            {/* Show index only once per log */}
             <td>{index === 0 ? (page - 1) * 10 + i + 1 : ""}</td>
-
+            <td>{index === 0 ? `Trip 0${l.entity_id}` : ""}</td>
             <td className={`log-action ${l.action}`}>
               {index === 0 ? l.action : ""}
             </td>
-
             <td>{index === 0 ? l.entity : ""}</td>
-
-            {/* FIELD */}
             <td><strong>{c.field}</strong></td>
-
-            {/* FROM */}
             <td>{String(c.from)}</td>
-
-            {/* TO */}
             <td>{String(c.to)}</td>
 
             <td>
@@ -110,6 +103,7 @@ const TripLogs = () => {
       ) : (
         <tr key={l.log_uuid}>
           <td>{(page - 1) * 10 + i + 1}</td>
+          <td>{ "Trip" + l.entity_id}</td>
           <td>{l.action}</td>
           <td>{l.entity}</td>
           <td colSpan="3">No field changes</td>
