@@ -299,7 +299,7 @@ if (type === "success") {
 
   return (
 
-    <div className="trip-modal">
+    <div className="trip-modal fade-in">
 
        {popup.open && (
       <div className="trip-card-popup">

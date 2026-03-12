@@ -6,6 +6,7 @@ import RecoveryTable from "./RecoveryTable";
 import { RecoveryServices } from "../../../../services/Sale/recovery";
 import DrillDownRecovery from "./DrillDownRecovery";
 import RecoveryLog from "./RecoveryLog";
+import { useOutletContext } from "react-router-dom";
 
 const API_URL = "/api/recoveries";
 
@@ -25,6 +26,16 @@ const RecoveryController = ({}) => {
   const [showFilters, setShowFilters] = useState(false);
   const [openPaymentStatusSelect, setOpenPaymentStatusSelect] = useState(false);
 
+
+  const { autoOpenCreate, setAutoOpenCreate } = useOutletContext();
+
+    useEffect(() => {
+    if (autoOpenCreate) {
+      setView("create");
+      setAutoOpenCreate(false); // Reset
+    }
+  }, [autoOpenCreate]);
+  
   const [filters, setFilters] = useState({
     sale_unique_id: "",
     customer_name: "",
@@ -70,7 +81,10 @@ const fetchRecoveries = async (pageNum = page) => {
         total: result.data.record?.total || 0
       });
 
-      setView(records.length === 0 && search === "" ? "empty" : "table");
+setView((prevView) => {
+      if (prevView === "create") return "create"; 
+      return records.length ? "table" : "empty";
+    });
     } catch (err) {
       console.error("Fetch error", err);
     } finally {

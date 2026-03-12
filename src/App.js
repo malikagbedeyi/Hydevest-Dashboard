@@ -43,6 +43,7 @@ import Permission from "./component/Dashboard/Pages/Admin/Permission";
 import PartnerPayment from "./component/Dashboard/Pages/Expensify/PartnerPayment";
 import Inbox from "./component/Dashboard/Pages/Inbox/Requestbox";
 import Requestbox from "./component/Dashboard/Pages/Inbox/Requestbox";
+import Overview from "./component/Dashboard/Pages/Overview/Overview";
 
 
 
@@ -60,7 +61,8 @@ function App() {
     <ProtectedRoute>
       <DashboardPage />
     </ProtectedRoute>}>
-
+          {/* OverView */}
+          <Route path="overview" element = {<Overview />} />
           {/* Purchase */}
           <Route path="trip" element={<Trip />} />
           <Route path="container" element={<Container />} />

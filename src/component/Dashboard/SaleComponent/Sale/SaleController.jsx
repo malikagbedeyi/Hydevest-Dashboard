@@ -6,8 +6,9 @@ import SaleTable from "./SaleTable";
 import DrilldownSale from "./DrildownSale";
 import { SaleServices } from "../../../../services/Sale/sale";
 import SaleLog from "./SaleLog";
+import { useOutletContext } from "react-router-dom";
 
-const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
+const SaleController = () => {
   const [sales, setSales] = useState([]);
   const [selectedSale, setSelectedSale] = useState(null);
   const [view, setView] = useState("empty");
@@ -15,7 +16,14 @@ const SaleController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
    const [activeTab, setActiveTab] = useState("table");
  const [containerPreSales, setContainerPreSales] = useState([]);
 const [page, setPage] = useState(1);
+const { autoOpenCreate, setAutoOpenCreate } = useOutletContext();
 
+useEffect(() => {
+    if (autoOpenCreate) {
+      setView("create");
+      setAutoOpenCreate(false); 
+    }
+  }, [autoOpenCreate])
 
 const [pagination, setPagination] = useState({
   currentPage: 1,
@@ -72,7 +80,10 @@ const fetchSales = async (pageNum = page) => {
       total: record?.total ?? 0
     });
 
-    setView(records.length ? "table" : "empty");
+setView((prevView) => {
+      if (prevView === "create") return "create"; 
+      return records.length ? "table" : "empty";
+    });
 
   } catch (err) {
     console.error("Failed to load sales", err);

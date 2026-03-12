@@ -54,19 +54,12 @@ const SignUp = () => {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data));
   
-        // ✅ show success popup first
         setShowSuccessPopup(true);
-  
-        // setTimeout(() => {
-        //   navigate("/dashboard/trip", { replace: true });
-        // }, 1800);
         
         if(res.data.is_system_user === 1){
-          navigate("/dashboard/trip", { replace: true })
+          navigate("/dashboard/overview", { replace: true })
         }
-        // if(res.data.account_type === "PARTNER"){
-        //   navigate("")
-        // }
+
       } else {
         setError(res.data.message || "Invalid email or password");
       }
@@ -146,16 +139,6 @@ const SignUp = () => {
 
                       </div>
                     </div>
-                    {/* <div className="robotHoman">
-                      <div className="iconvarify">
-                        <div style={{
-                          border:"1px solid #000"
-                        }} className={varify ? 'd-none' : "clickIcons"} onClick={handleVarify}></div>
-                        <div className={varify ? "unClickIcons" : "d-none"} onClick={handleVarify}> <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M10.5725 0.570312L4.28683 6.85603L1.42969 3.99888" stroke="#999999" stroke-linecap="round" stroke-linejoin="round"/> </svg>  </div>
-                      </div>
-                      <p> varify that you are not a Robot.</p>
-                    </div> */}
-                    
 
                     <button type="submit" disabled={loading}>
                       {loading ? "Logging in..." : "Login"}
@@ -187,14 +170,14 @@ const SignUp = () => {
        {showResetModal && ( <ResetPasswordModal
     onClose={() => setShowResetModal(false)}/>)}
     </div>
-    {showSuccessPopup && (
+    {/* {showSuccessPopup && (
   <div className="resetPasswordModel">
     <div className="popup-card">
       <h2>Login Successful 🎉</h2>
       <p>Redirecting to your dashboard...</p>
     </div>
   </div>
-)}
+)} */}
 
 
 

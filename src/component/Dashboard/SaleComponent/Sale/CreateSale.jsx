@@ -399,7 +399,7 @@ useEffect(() => {
 
     return (
 
-  <div className="trip-modal">
+  <div className="trip-modal slide-up">
     <div className="create-container-modal">
       <div className="create-container-card">
         <div className="header">
