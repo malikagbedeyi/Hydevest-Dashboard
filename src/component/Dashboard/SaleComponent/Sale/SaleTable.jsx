@@ -95,7 +95,7 @@ const totalBalance= currentData.reduce(
               <h2>{formatCurrency(totalRecoveryAmount)}</h2>
             </div>
             <div className="summary-item">
-              <p className="small">Total Balance (NGN)</p>
+              <p className="small">Outstanding Balance (NGN)</p>
               <h2>{formatCurrency(totalBalance)}</h2>
             </div>
 
@@ -116,10 +116,9 @@ const totalBalance= currentData.reduce(
                 <th>Total Sale Amount</th>
                 <th>Total Amount Paid</th>
                  <th>Balance</th>
-                 <th>Payment Status</th>
                  <th>Created By</th>
                 <th>Date Created</th>
-                <th>Status</th>
+                 <th>Payment Status</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -145,12 +144,9 @@ const totalBalance= currentData.reduce(
   {sale.total_sale_amount - sale.amount_paid <= 0 ? (
     <span style={{ color: "green" }}>Fully Paid</span>
     ) : (formatCurrency(sale.total_sale_amount - sale.amount_paid))}</td>
-                    <td style={{color:sale?.payment_status === "Full Payment" ? "green":"orange"}}>{sale?.sale_payments?.[0]?.payment_status}</td>
                      <td>{sale.creator_info.firstname} {sale.creator_info.lastname}</td>
                     <td>{formatDate(sale.created_at)}</td>
-                    <td><span className={`status ${sale.status === 1 ? "Approve" : "pending"}`}
-                   style={{color:sale.status === 1 ? "green":"red"}}>
-                    {sale.status === 1 ? "Approve" : "Pending"}</span></td>
+                    <td style={{color:sale?.payment_status === "Full Payment" ? "green":"orange"}}>{sale?.sale_payments?.[0]?.payment_status}</td>
                     <td onClick={(e) => e.stopPropagation()}>   
                       <button  className="delete-btn" onClick={(e) => openDeletePopup(e, sale)} disabled={!sale.sale_uuid}>
                         <Trash2 size={16} />

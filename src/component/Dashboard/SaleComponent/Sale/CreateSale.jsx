@@ -227,9 +227,8 @@ const handleCreate = async (customer) => {
     // Show loader while saving
     setSuccessMessage("Saving sale...");
     
-    const message = await onCreate(payload); // <-- get success message
-    setSuccessMessage(message);              // <-- show success popup
-
+    const message = await onCreate(payload); 
+    setSuccessMessage(message);             
     // Reset form after success
     setForm({ ...form, pallets: [], totalSaleAmount: "" });
     setSelectedContainer(null);
@@ -237,8 +236,7 @@ const handleCreate = async (customer) => {
     setPaymentMethod("");
     setDiscount(0);
 
-    // Reload the table silently
-    setTimeout(() => setView("table"), 1200); // close popup automatically
+    setTimeout(() => setView("table"), 1200); 
   } catch (err) {
     const errorMsg =
       err.response?.data?.message || err.message || "Failed to create sale";
