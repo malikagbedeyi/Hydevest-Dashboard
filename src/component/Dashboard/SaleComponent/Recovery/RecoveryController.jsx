@@ -190,6 +190,35 @@ const handleAddData = () => {
   setView("drilldown");
 };
 
+  const formatMoney = (value) =>
+    new Intl.NumberFormat("en-NG", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(value || 0));
+
+  const formatDate = (date) => {
+    if (!date) return "";
+    return new Date(date)
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+      .replace(/ /g, "-");
+  };
+
+const totalRecoveries = data.length;
+
+const totalCustomers = new Set(
+  data.map((rec) => rec.customerPhone)
+).size;
+
+const totalRecoveryAmount = data.reduce(
+  (sum, rec) => sum + Number(rec.amount || 0),
+  0
+);
+
+
   return (
     <div className="controller">
       <div className="controller-container">
@@ -197,6 +226,25 @@ const handleAddData = () => {
 
           {(view === "empty" || view === "table") && (
             <div className="top-content">
+               <div className="drill-summary-grid">
+          <div className="drill-summary">
+            <div className="summary-item">
+              <p className="small">Total Recovery</p>
+              <h2>{totalRecoveries}</h2>
+            </div>
+
+            <div className="summary-item">
+              <p className="small">Total Customer</p>
+              <h2>{totalCustomers}</h2>
+            </div>
+
+            <div className="summary-item">
+              <p className="small">Total Recovery Amount (NGN)</p>
+              <h2>{formatMoney(totalRecoveryAmount)}</h2>
+            </div>
+
+          </div>
+        </div>
               <div className="top-content-wrapper">
                 <div className="left-wrapper" />
                 <div className="right-wrapper">

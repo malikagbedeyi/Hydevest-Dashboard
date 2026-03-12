@@ -103,6 +103,46 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [page, filters]);
 
+ const metrics = datas.reduce(
+  (acc, sale) => {
+    const wcPieces = Number(sale.wc_pieces) || 0;
+    const pricePerPic = Number(sale.price_per_piece) || 0;
+    const pricePerKg = Number(sale.price_per_kg) || 0;
+
+   const containersCount = sale.container ? 1 : 0;
+
+    const totalPallets = Number(sale.total_no_of_pallets) || 0;
+    const totalPalletPieces = Number(sale.pallet_pieces) || 0;
+
+    acc.totalPreSales += 1;
+    acc.totalWcPieces += wcPieces;
+    acc.totalContainers += containersCount;
+
+    acc.totalPricePerPiece += pricePerPic * wcPieces;
+    acc.totalPricePerKg += pricePerKg * wcPieces;
+
+    acc.totalPallets += totalPallets;
+    acc.totalPalletPieces += totalPalletPieces;
+
+    return acc;
+  },
+  {
+    totalPreSales: 0,
+    totalWcPieces: 0,
+    totalContainers: 0,
+    totalPricePerPiece: 0,
+    totalPricePerKg: 0,
+    totalPallets: 0,
+    totalPalletPieces: 0,
+  }
+);
+
+  const formatMoneyNGN = (value) =>
+    value === "" ? "" : "₦" + Number(value).toLocaleString("en-NG");
+
+  const formatNumber = (value) =>
+    value === "" ? "" : Number(value).toLocaleString("en-NG");
+
   /* ================= EDIT VIEW ================= */
   if (view === "edit" && editingSale) {
     return (
@@ -146,6 +186,34 @@ useEffect(() => {
 
           {/* ===== TOP BAR ===== */}
           <div className="top-content">
+            <div className="drill-summary-grid mb-5">
+          <div className="drill-summary">
+            <div className="summary-item">
+              <p className="small">Total Pre-Sale</p>
+              <h2>{metrics.totalPreSales}</h2>
+            </div>
+
+            <div className="summary-item">
+              <p className="small">Total WC Pieces</p>
+              <h2>{metrics.totalWcPieces.toLocaleString()}</h2>
+            </div>
+
+            <div className="summary-item">
+              <p className="small">Total Container</p>
+              <h2>{metrics.totalContainers}</h2>
+            </div>
+
+          <div className="summary-item">
+  <p className="small">Total Price Per Piece (NGN)</p>
+  <h2>{formatMoneyNGN(metrics.totalPricePerPiece)}</h2>
+</div>
+
+<div className="summary-item">
+  <p className="small">Total Price per KG (NGN)</p>
+  <h2>{formatMoneyNGN(metrics.totalPricePerKg)}</h2>
+</div>
+          </div>
+        </div>
             <div className="top-content-wrapper">
               <div className="left-wrapper" />
 

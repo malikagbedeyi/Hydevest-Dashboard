@@ -316,6 +316,32 @@ const handleRowClick = (sale) => {
   fetchSaleDetails(sale.sale_uuid, sale);
 };
 
+ 
+  const formatCurrency = (value) =>
+  new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+  }).format(value || 0);
+
+const totalSale = sales.length;
+
+const totalContainer = new Set(
+  sales.map((rec) => rec.container?.title)
+).size;
+
+const totalRecoveryAmount = sales.reduce(
+  (sum, rec) => sum + Number(rec.amount_paid || 0),
+  0
+);
+const totalSaleAmount= sales.reduce(
+  (sum, rec) => sum + Number(rec.total_sale_amount || 0),
+  0
+);
+const totalBalance= sales.reduce(
+  (sum, rec) => sum + Number(rec.total_sale_amount - rec.amount_paid || 0),
+  0
+);
+
   return (
     <div className="controller">
       <div className="controller-container">
@@ -323,6 +349,33 @@ const handleRowClick = (sale) => {
 
           {(view === "empty" || view === "table") && (
             <div className="top-content">
+                <div className="drill-summary-grid mb-5">
+          <div className="drill-summary">
+            <div className="summary-item">
+              <p className="small">Total Recovery</p>
+              <h2>{totalSale}</h2>
+            </div>
+
+            <div className="summary-item">
+              <p className="small">Total Container</p>
+              <h2>{totalContainer}</h2>
+            </div>
+            <div className="summary-item">
+              <p className="small">Total Sale Amount (₦)</p>
+              <h2>{formatCurrency(totalSaleAmount)}</h2>
+            </div>
+
+            <div className="summary-item">
+              <p className="small">Total Recovery Amount (₦)</p>
+              <h2>{formatCurrency(totalRecoveryAmount)}</h2>
+            </div>
+            <div className="summary-item">
+              <p className="small">Outstanding Balance (₦)</p>
+              <h2>{formatCurrency(totalBalance)}</h2>
+            </div>
+
+          </div>
+        </div>
               <div className="top-content-wrapper">
                 <div className="left-wrapper" />
 

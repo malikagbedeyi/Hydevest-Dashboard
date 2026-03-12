@@ -181,39 +181,40 @@ const getActiveRate = (tripUuid) => {
   return rate;
 };
 
-const fxRate = 0; // not used anymore
+const fxRate = getActiveRate; // not used anymore
 
 /* =========================
    CALCULATE DRILL SUMMARY (FIXED AVERAGES)
 ========================= */
+const [totalGeneralNGN, setTotalGeneralNGN] = useState(0);
 const summaryData = useMemo(() => {
   return containers.reduce((acc, item) => {
     const rate = getActiveRate(item.trip?.trip_uuid || item.trip_uuid);
-  
     const pieces = Number(item.pieces || 0);
 
     const amountUSD = (Number(item.unit_price_usd || 0) * pieces) + 
                       Number(item.shipping_amount_usd || 0);
     
     const surcharge = item.funding?.toLowerCase() === "partner" ? Number(item.surcharge_ngn || 0) : 0;
-    const amountNGN = rate > 0 ? (amountUSD * rate) + surcharge : 0;
-    const quotedUSDPerPiece = Number(item.quoted_price_usd || 0);
+    const containerNGN = rate > 0 ? (amountUSD * rate) + surcharge : 0;
+    const generalShare = containers.length > 0 ? (totalGeneralNGN / containers.length) : 0;
+    const landingCost = containerNGN + generalShare;
 
     return {
-      totalNGN: acc.totalNGN + amountNGN,
-      totalUSD: acc.totalUSD + amountUSD,
-      totalUnitPrice: acc.totalUnitPrice + Number(item.unit_price_usd || 0),
-      totalQuotedPrice: acc.totalQuotedPrice + quotedUSDPerPiece, 
+      totalLandingCost: acc.totalLandingCost + landingCost,
       totalPieces: acc.totalPieces + pieces,
+      totalUnitPrice: acc.totalUnitPrice + Number(item.unit_price_usd || 0),
+      totalQuotedPrice: acc.totalQuotedPrice + Number(item.quoted_price_usd || 0), 
       count: acc.count + 1
     };
-  }, { totalNGN: 0, totalUSD: 0, totalUnitPrice: 0, totalQuotedPrice: 0, totalPieces: 0, count: 0 });
-}, [containers, tripRates]);
+  }, { totalLandingCost: 0, totalPieces: 0, totalUnitPrice: 0, totalQuotedPrice: 0, count: 0 });
+}, [containers, tripRates, totalGeneralNGN]);
 
+const avgLandingCost = summaryData.count > 0 ? (summaryData.totalLandingCost / summaryData.count) : 0;
+const avgPieces = summaryData.count > 0 ? (summaryData.totalPieces / summaryData.count) : 0;
 const avgUnitPrice = summaryData.count > 0 ? (summaryData.totalUnitPrice / summaryData.count) : 0;
 const avgQuotedPrice = summaryData.count > 0 ? (summaryData.totalQuotedPrice / summaryData.count) : 0;
 
-const [totalGeneralNGN, setTotalGeneralNGN] = useState(0);
 
 useEffect(() => {
   if (!financeData?.length) return;
@@ -239,10 +240,10 @@ useEffect(() => {
   );
 
   const tripSpecificCount = siblingContainers.length > 0 ? siblingContainers.length : 0;
-
+const selectedRate = getActiveRate(selectedContainer?.trip?.trip_uuid || selectedContainer?.trip_uuid);
     return (
      <DrildownContainer container={selectedContainer} navigate={navigate} breadcrumb={breadcrumb}
-  avgContainerRate={fxRate} totalGeneralNGN={totalGeneralNGN} goBackTo={goBackTo}
+  avgContainerRate={selectedRate}  totalGeneralNGN={totalGeneralNGN} goBackTo={goBackTo}
 totalContainerCount={tripSpecificCount}  goBack={() => {fetchContainersWithFinance(page);setView("table");}}
   reloadTable={() => fetchContainersWithFinance(page)}
   onUpdate={(updated) => {setContainers((prev) =>prev.map((c) => c.container_uuid === updated.container_uuid? updated: c));
@@ -271,6 +272,34 @@ const formatMoneyUSD = (value) =>
         <div className="controller-content">
           {/* ===== TOP BAR ===== */}
           <div className="top-content">
+              <div className="drill-summary-grid mb-5">
+     <div className="drill-summary">
+  <div className="summary-item">
+    <p className="small">Total Containers</p>
+    <h2>{totalContainers}</h2>
+  </div>
+
+  <div className="summary-item">
+    <p className="small">Average Landing Cost ₦</p>
+    <h2>{"₦" + formatMoney(avgLandingCost)}</h2>
+  </div>
+
+  <div className="summary-item">
+    <p className="small">Average Pieces</p>
+    <h2>{formatMoney(avgPieces)}</h2>
+  </div>
+
+  <div className="summary-item">
+    <p className="small">Average Quoted Price</p>
+    <h2>{"$" + formatMoneyUSD(avgQuotedPrice)}</h2>
+  </div>
+
+  <div className="summary-item">
+    <p className="small">Average Unit Price</p>
+    <h2>{"$" + formatMoneyUSD(avgUnitPrice)}</h2>
+  </div>
+</div>
+    </div>
             <div className="top-content-wrapper">
               <div className="left-wrapper" />
 
@@ -460,31 +489,6 @@ const formatMoneyUSD = (value) =>
     </div>
   </div>
 )}
-      <div className="drill-summary-grid mt-5">
-      <div className="drill-summary">
-<div className="summary-item">
-  <p className="small">Total Container</p>
-  <h2>{totalContainers}</h2>
-</div>
-<div className="summary-item">
-  <p className="small">Total Amount ₦ </p>
-  <h2>{"₦" + formatMoney(summaryData.totalNGN)}</h2>
-</div>
-<div className="summary-item">
-  <p className="small">Total Pieces</p>
-  <h2>{totalPieces}</h2>
-</div>
-<div className="summary-item">
-  <p className="small">Average Quoted Price </p>
-  <h2>{"$" +formatMoneyUSD(avgQuotedPrice)}</h2>
-</div>
-<div className="summary-item">
-  <p className="small">Average Unit Price </p>
-  <h2>{"$" + formatMoneyUSD(avgUnitPrice)}</h2>
-</div>
-
-    </div>
-    </div>
             {/* ===== TABS ===== */}
             <div className="log-tab-section">
               <div className="tab-content">

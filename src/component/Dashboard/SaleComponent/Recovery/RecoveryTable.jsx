@@ -64,39 +64,12 @@ const RecoveryTable = ({
       .replace(/ /g, "-");
   };
 
-const totalRecoveries = tableData.length;
 
-const totalCustomers = new Set(
-  tableData.map((rec) => rec.customerPhone)
-).size;
-
-const totalRecoveryAmount = tableData.reduce(
-  (sum, rec) => sum + Number(rec.amountPaid || 0),
-  0
-);
 
   return (
     <>
-      <div className="userTable mt-5">
-        <div className="drill-summary-grid">
-          <div className="drill-summary">
-            <div className="summary-item">
-              <p className="small">Total Recovery</p>
-              <h2>{totalRecoveries}</h2>
-            </div>
-
-            <div className="summary-item">
-              <p className="small">Total Customer</p>
-              <h2>{totalCustomers}</h2>
-            </div>
-
-            <div className="summary-item">
-              <p className="small">Total Recovery Amount (NGN)</p>
-              <h2>{formatMoney(totalRecoveryAmount)}</h2>
-            </div>
-
-          </div>
-        </div>
+      <div className="userTable ">
+       
         <div className="table-wrap">
           <table
             className="table"

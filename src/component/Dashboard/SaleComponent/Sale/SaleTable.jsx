@@ -42,6 +42,7 @@ const confirmDelete = () => {
     style: "currency",
     currency: "NGN",
   }).format(value || 0);
+  
   const formatDate = (date) => { 
     if (!date) return "";
   
@@ -52,55 +53,11 @@ const confirmDelete = () => {
     }).replace(/ /g, "-");
   };
   
- 
-const totalSale = currentData.length;
 
-const totalContainer = new Set(
-  currentData.map((rec) => rec.container?.title)
-).size;
-
-const totalRecoveryAmount = currentData.reduce(
-  (sum, rec) => sum + Number(rec.amount_paid || 0),
-  0
-);
-const totalSaleAmount= currentData.reduce(
-  (sum, rec) => sum + Number(rec.total_sale_amount || 0),
-  0
-);
-const totalBalance= currentData.reduce(
-  (sum, rec) => sum + Number(rec.total_sale_amount - rec.amount_paid || 0),
-  0
-);
   return (
     <>
-      <div className="userTable mt-4">
-         <div className="drill-summary-grid">
-          <div className="drill-summary">
-            <div className="summary-item">
-              <p className="small">Total Recovery</p>
-              <h2>{totalSale}</h2>
-            </div>
-
-            <div className="summary-item">
-              <p className="small">Total Container</p>
-              <h2>{totalContainer}</h2>
-            </div>
-            <div className="summary-item">
-              <p className="small">Total Sale Amount (NGN)</p>
-              <h2>{formatCurrency(totalSaleAmount)}</h2>
-            </div>
-
-            <div className="summary-item">
-              <p className="small">Total Recovery Amount (NGN)</p>
-              <h2>{formatCurrency(totalRecoveryAmount)}</h2>
-            </div>
-            <div className="summary-item">
-              <p className="small">Outstanding Balance (NGN)</p>
-              <h2>{formatCurrency(totalBalance)}</h2>
-            </div>
-
-          </div>
-        </div>
+      <div className="userTable ">
+       
         <div className="table-wrap">
           <table className="table" style={{width:"170%",minWidth:"170%",maxWidth:"170%"}}>
             <thead>

@@ -26,7 +26,7 @@ import "../../../../assets/Styles/dashboard/table.scss";
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan="7">No Trips Found</td>
+                  <td style={{textAlign:"center"}} colSpan="7">No Trips Found</td>
                 </tr>
               ) : (
                 data.map((trip, idx) => (
