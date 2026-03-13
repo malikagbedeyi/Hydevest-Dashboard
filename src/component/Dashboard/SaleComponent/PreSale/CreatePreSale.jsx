@@ -617,22 +617,34 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
   </p>
 )}
 
-{!palletCountExceeded &&
- !palletPiecesExceeded &&
- palletCountEqual &&
- palletPiecesEqual && (
-  <p style={{ color: "green", fontWeight: "600" }}>
-    ✅ Total pallets entered is tally with Total Number of Pallets and
-    Total pallet pieces is tally with WC Pieces
-  </p>
-)}
-{!palletCountExceeded &&
- !palletPiecesExceeded &&
- (palletCountLess || palletPiecesLess) && (
-  <p style={{ color: "#d4a017", fontWeight: "500" }}>
-    ⚠️ Pallet distribution not complete.  
-     Total pallets entered: {totalPalletCount}/{maxPalletsAllowed}  || Pieces distributed: {totalPalletPieces}/{maxPiecesAllowed}
-  </p>
+{/* Pallet Distribution Warnings */}
+{!palletCountExceeded && !palletPiecesExceeded && (
+  <>
+    {/* Total Pallets */}
+    <p
+      style={{
+        color: palletCountEqual ? "green" : "#d4a017",
+        fontWeight: palletCountEqual ? 600 : 500,
+        margin: 0,
+      }}
+    >
+      {palletCountEqual
+        ? `✅ Total number of pallets in the distribution tallies with total number of Pre-Sale pallets (${totalPalletCount}/${maxPalletsAllowed})`
+        : `⚠️ Total number of pallets in the distribution does NOT tally with total number of Pre-Sale pallets (${totalPalletCount}/${maxPalletsAllowed})`}
+    </p>
+
+    {/* Total Pieces */}
+    <p
+      style={{
+        color: palletPiecesEqual ? "green" : "#d4a017",
+        fontWeight: palletPiecesEqual ? 600 : 500,
+      }}
+    >
+      {palletPiecesEqual
+        ? `✅ Total number of pallet pieces in the distribution tallies with Pre-Sale WC Pieces (${totalPalletPieces}/${maxPiecesAllowed})`
+        : `⚠️ Total number of pallet pieces in the distribution does NOT tally with Pre-Sale WC Pieces (${totalPalletPieces}/${maxPiecesAllowed})`}
+    </p>
+  </>
 )}
                   {form.pallets.map((pallet, index) => (
                     <div key={index}>
