@@ -101,15 +101,16 @@ const currentData = preSales;
               <tr>
                 <th>S/N</th>
                 <th>Sale Option</th>
-                <th>Container</th>
+                {/* <th>Container</th> */}
+                <th>Container Number</th>
                 <th>WC Avg Weight (kg)</th>
                 <th>WC Pieces</th>
                 <th>Price per Pic (₦)</th>
-                <th>Price per KG (₦)</th>
-                <th>No. of Pallets</th>
-                 <th>Pallet Pieces</th>
+                 <th>Status</th>
+                <th>Total No. of Pallets</th>
+                 {/* <th>Pallet Pieces</th> */}
                 <th>Expected Revenue (₦)</th>
-                <th>Status</th>
+                <th>Price per KG (₦)</th>
                 <th>Created By</th>
                 <th>Date Created</th>
                 {/* <th>Action</th> */}
@@ -128,17 +129,19 @@ const currentData = preSales;
                   <tr key={sale.pre_sale_uuid} onClick={() => onEdit(sale)}>
                     <td>{  idx + 1}</td>
                     <td>{sale.sale_option}</td>
-                    <td>{Array.isArray(sale.container?.title)? sale.container.title.join(", "): sale.container?.title || "—"}</td>
+                    {/* <td>{Array.isArray(sale.container?.title)? sale.container.title.join(", "): sale.container?.title || "—"}</td> */}
+                    <td>TRN-{sale.container.tracking_number}</td>
                     <td>{formatNumber(sale.wc_average_weight)}</td>
                     <td>{formatNumber(sale.wc_pieces)}</td>
                     <td>{formatMoneyNGN(sale.price_per_piece)}</td>
-                    <td>{formatMoneyNGN(sale.price_per_kg)}</td>
-                    <td>{formatNumber(sale.total_no_of_pallets)}</td>
-                    <td>{formatNumber(sale.pallets?.[0]?.pallet_pieces ?? 0)}</td>
-                    <td>{formatMoneyNGN(sale.expected_sales_revenue)}</td>
-                  <td><span className={`status ${sale.status === 1 ? "active" : "pending"}`}
+                     <td><span className={`status ${sale.status === 1 ? "active" : "pending"}`}
                    style={{color:sale.status === 1 ? "green":"red"}}>
                     {sale.status === 1 ? "Approved" : "Pending"}</span></td>
+                    <td>{formatNumber(sale.total_no_of_pallets)}</td>
+                    {/* <td>{formatNumber(sale.pallets?.[0]?.pallet_pieces ?? 0)}</td> */}
+                    <td>{formatMoneyNGN(sale.expected_sales_revenue)}</td>
+                    <td>{formatMoneyNGN(sale.price_per_kg)}</td>
+                 
                     <td>{sale?.creator_info?.firstname} {sale?.creator_info?.lastname}</td>
                     <td>{formatDate(sale.created_at)}</td>
                   </tr>
