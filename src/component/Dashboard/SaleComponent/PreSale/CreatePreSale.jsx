@@ -129,14 +129,27 @@ const toggleContainerDetails = (uuid) => {
     updated[index][field] = value;
     setForm((prev) => ({ ...prev, pallets: updated }));
   };
-  const handleNumberChange = (e) => {
+  const handlePalletNumberChange = (index, field, value) => {
+  // allow only numbers
+  if (/^\d*$/.test(value)) {
+    const updated = [...form.pallets];
+    updated[index][field] = value;
+
+    setForm((prev) => ({
+      ...prev,
+      pallets: updated,
+    }));
+  }
+};
+const handleNumberChange = (e) => {
   const { name, value } = e.target;
 
-  if (/^\d*\.?\d*$/.test(value)) {
-    handleChange(name, value);
-    handlePalletChange(name, value)
+  const cleaned = value.replace(/[^\d.]/g, ""); 
 
-  }
+  setForm((prev) => ({
+    ...prev,
+    [name]: cleaned,
+  }));
 };
 
   const addPallet = () => {
@@ -174,6 +187,17 @@ const toggleContainerDetails = (uuid) => {
       return `❌ Total pallet pieces (${totalPalletPieces}) must not exceed WC Pieces (${maxPiecesAllowed})`;
     return null;
   };
+  const palletCountEqual =
+  maxPalletsAllowed > 0 && totalPalletCount === maxPalletsAllowed;
+
+const palletPiecesEqual =
+  maxPiecesAllowed > 0 && totalPalletPieces === maxPiecesAllowed;
+
+const palletCountLess =
+  maxPalletsAllowed > 0 && totalPalletCount < maxPalletsAllowed;
+
+const palletPiecesLess =
+  maxPiecesAllowed > 0 && totalPalletPieces < maxPiecesAllowed;
 
   // -----------------------------
   // HANDLE CREATE WITH API
@@ -575,7 +599,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                 </div>
                 <div className="pallet-section">
                   <div className="header">
-                    <label style={{color:"#581aae"}}>Pallet Distribution</label>
+                    <h4 style={{color:"#581aae"}}>Pallet Distribution</h4>
                     <button className="create mb-3" type="button" onClick={addPallet}>Add Pallet</button>
                   </div>
                   {palletCountExceeded && (
@@ -592,29 +616,46 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
   </p>
 )}
 
+{!palletCountExceeded &&
+ !palletPiecesExceeded &&
+ palletCountEqual &&
+ palletPiecesEqual && (
+  <p style={{ color: "green", fontWeight: "600" }}>
+    ✅ Total pallets entered is tally with Total Number of Pallets and
+    Total pallet pieces is tally with WC Pieces
+  </p>
+)}
+{!palletCountExceeded &&
+ !palletPiecesExceeded &&
+ (palletCountLess || palletPiecesLess) && (
+  <p style={{ color: "#d4a017", fontWeight: "500" }}>
+    ⚠️ Pallet distribution not complete.  
+     Total pallets entered: {totalPalletCount}/{maxPalletsAllowed}  || Pieces distributed: {totalPalletPieces}/{maxPiecesAllowed}
+  </p>
+)}
                   {form.pallets.map((pallet, index) => (
                     <div key={index}>
                       <div className="grid-2">
                         <div className="form-group">
                           <label>Pallet Pieces</label>
-                          <input
-                            type="number"
-                            value={pallet.pieces}
-                            onChange={(e) =>
-                              handlePalletChange(index, "pieces", e.target.value)
-                            }
-                          />
+                         <input
+  type="text"
+  value={pallet.pieces}
+  onChange={(e) =>
+    handlePalletNumberChange(index, "pieces", e.target.value)
+  }
+/>
                         </div>
 
                         <div className="form-group">
                           <label>No. of Pallets</label>
                           <input
-                            type="number"
-                            value={pallet.count}
-                            onChange={(e) =>
-                              handlePalletChange(index, "count", e.target.value)
-                            }
-                          />
+  type="text"
+  value={pallet.count}
+  onChange={(e) =>
+    handlePalletNumberChange(index, "count", e.target.value)
+  }
+/>
                         </div>
                       </div>
 
