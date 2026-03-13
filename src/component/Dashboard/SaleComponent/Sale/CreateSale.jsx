@@ -496,10 +496,10 @@ useEffect(() => {
                     <>
                       <li>Pre-Sale ID: {presaleByContainerId[selectedContainer.id].pre_sale_unique_id}</li>
                       <li>Sale Option: {presaleByContainerId[selectedContainer.id].sale_option}</li>
-                      <li>Total Pieces: {presaleByContainerId[selectedContainer.id].wc_pieces}</li>
+                      <li>Total Pieces: {formatNumber(presaleByContainerId[selectedContainer.id].wc_pieces)}</li>
                       <li>Total Pallets: {presaleByContainerId[selectedContainer.id].total_no_of_pallets}</li>
-                      <li>Expected Revenue: ₦{presaleByContainerId[selectedContainer.id].expected_sales_revenue}</li>
-                      <li>Status: {presaleByContainerId[selectedContainer.id].status}</li>
+                      <li>Expected Revenue: ₦{formatNumber(presaleByContainerId[selectedContainer.id].expected_sales_revenue)}</li>
+                      <li>Status: {presaleByContainerId[selectedContainer.id].status === 1 ? "Approve" : "Pending"}</li>
                     </>
                   ) : (
                     <li className="error-text">This container has no pre-sale</li>
