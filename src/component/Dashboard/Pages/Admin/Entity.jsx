@@ -1,9 +1,11 @@
 import React from 'react'
 import '../../../../assets/Styles/dashboard/account/account.scss'
-import profile from '../../../../assets/Images/profile-img.png'
+import profile from '../../../../assets/Images/profileImg.png'
 import { ChevronRight } from 'lucide-react'
 import EntityController from '../../AdminComponent/Entity/EntityController'
+import { useOutletContext } from 'react-router-dom'
 const Entity = ({autoOpenCreate, setAutoOpenCreate}) => {
+  const { setShowProfile } = useOutletContext();
   return (
     <div className='account'>
         <div className="headerContainer row">
@@ -23,11 +25,11 @@ const Entity = ({autoOpenCreate, setAutoOpenCreate}) => {
                 <div className="notificationtext">2</div>
                 </div>
               </div>
-              <div className="menuProfile">
-                <div className="profileImg">
-                    <img src={profile} alt="" />
-                </div>
-              </div>
+                                  <div className="menuProfile" onClick={() => setShowProfile(true)}>
+                           <div className="profileImg">
+                             <img src={profile} alt="Profile" />
+                           </div>
+                         </div>
               </div>
             </div>
           </div>

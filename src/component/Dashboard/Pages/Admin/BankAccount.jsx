@@ -1,10 +1,12 @@
 import React from 'react'
 import '../../../../assets/Styles/dashboard/Sale/sales.scss'
-import profile from '../../../../assets/Images/profile-img.png'
+import profile from '../../../../assets/Images/profileImg.png'
 import { ChevronRight } from 'lucide-react'
 import BankAccountController from '../../AdminComponent/BankAccount/BankAccountController'
+import { useOutletContext } from 'react-router-dom'
 
 const BankAccount = ({autoOpenCreate, setAutoOpenCreate}) => {
+  const { setShowProfile } = useOutletContext();
   return (
     <div className='sale'>
         <div className="headerContainer row">
@@ -23,11 +25,11 @@ const BankAccount = ({autoOpenCreate, setAutoOpenCreate}) => {
                 <div className="notificationtext">2</div>
                 </div>
               </div>
-              <div className="menuProfile">
-                <div className="profileImg">
-                    <img src={profile} alt="" />
-                </div>
-              </div>
+                                  <div className="menuProfile" onClick={() => setShowProfile(true)}>
+                                         <div className="profileImg">
+                                           <img src={profile} alt="Profile" />
+                                         </div>
+                                       </div>
               </div>
             </div>
           </div>
