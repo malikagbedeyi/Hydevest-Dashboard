@@ -28,7 +28,7 @@ import { usePopup } from "../../../../context/PopupContext";
   entity: container?.entity_uuid || null,invoiceNumber: container?.invoice_number || "",sourceNation: container?.source_nation || "",sourcePort: container?.source_port || "",
     destinationPort: container?.destination_port || "",supplyCode: container?.supplier_code || "",
     unitpieces: container?.pieces || "",unitPrice: container?.unit_price_usd || "",warehouseChargeNGN: container?.warehouse_charge_ngn || "",
-    offloadAndSorting: container?.offload_and_sorting || "", shipping_amount_usd: container?.shipping_amount_usd || "",quotedPriceUsd:container?.quoted_price_usd || "",
+    offloadAndSorting: container?.offload_and_sorting || "", shipping_amount_usd: container?.shipping_amount_usd || "",quotedPriceUsd: container.quoted_price_usd ?? 0,
     funding: (container?.funding || "").toUpperCase(), surcharge:container?.surcharge_ngn || "",extimated: container?.total_estimated_price_ngn || "",
   });
 
@@ -102,8 +102,8 @@ const updateField = (name, value) => {
     };
 
     if (name === "funding" && value === "ENTITY") {
-      updated.quotedPriceUsd = 0;
-    }
+  updated.quotedPriceUsd =  null;
+}
 
     return updated;
   });
@@ -112,14 +112,6 @@ const updateField = (name, value) => {
     setApproved(false);
   }
 };
-useEffect(() => {
-  if (form.funding === "ENTITY" && form.quotedPriceUsd !== 0) {
-    setForm((prev) => ({
-      ...prev,
-      quotedPriceUsd: 0,
-    }));
-  }
-}, [form.funding]);
 
 const handleNumberChange = (e) => {
   const { name, value } = e.target;
@@ -149,66 +141,82 @@ const handleNumberChange = (e) => {
       funding: (container.funding || "").toUpperCase(),
     }));
   }, [container, entities]);
-  const handleUpdate = async () => {
-    try {
-      if (!container?.container_uuid) return;
 
-      const fundingValue = (form.funding || "").trim().toUpperCase();
-      if (!["PARTNER", "ENTITY"].includes(fundingValue)) {
-        showMessage("Funding must be either PARTNER or ENTITY");
-        return;
-      }
-  const entityValue = form.entity || null;
-      if (fundingValue === "ENTITY" && !entityValue) {
-        showMessage("You must select a valid Entity for ENTITY funding");
-        return;
-      }
 
-  const payload = {
-    container_uuid: container.container_uuid,
+// Inside DrildownContainer.jsx
 
-    title: form.title || "",
-    desc: form.description || "",
-    tracking_number: form.trackingNumber || "",
-    average_weight: Number(form.averageWeight || 0),
-    max_weight: Number(form.maxWeight || 0),
-    entity_uuid: entityValue,
-    invoice_number: form.invoiceNumber || "",
-    source_nation: form.sourceNation || "",
-    source_port: form.sourcePort || "",
-    destination_port: form.destinationPort || "",
-    funding: fundingValue,
-    supplier_code: form.supplyCode || "",
-    pieces: Number(form.unitpieces || 0),
-    unit_price_usd: Number(form.unitPrice || 0),
-    warehouse_charge_ngn: Number(form.warehouseChargeNGN || 0),
-    offload_and_sorting: Number(form.offloadAndSorting || 0),
-    shipping_amount_usd: Number(form.shipping_amount_usd || 0),
-    surcharge_ngn: Number(form.surcharge || 0),
-    total_estimated_price_ngn: Number(form.extimated || 0),
-    quoted_price_usd: Number(form.quotedPriceUsd || 0),
-  };
-      
+const handleUpdate = async () => {
+  try {
+    if (!container?.container_uuid) return;
 
-      await ContainerServices.edit(payload);
-  showMessage("Container updated successfully", "success");
-      const updated = {
-        ...container,
-        ...payload,
-        entity_uuid: payload.entity_uuid,
-      };
-
-      onUpdate(updated);
-      // reloadTable();
-      handleApprovalChange()
-      goBack(true);
-    } catch (err) {
-      console.error("Container update failed:", err.response?.data || err);
-      showMessage(
-        "Update failed."
-      );
+    const fundingValue = (form.funding || "").trim().toUpperCase();
+    if (!["PARTNER", "ENTITY"].includes(fundingValue)) {
+      showMessage("Funding must be either PARTNER or ENTITY");
+      return;
     }
-  };
+
+    const entityValue = form.entity || null;
+    if (fundingValue === "ENTITY" && !entityValue) {
+      showMessage("You must select a valid Entity for ENTITY funding");
+      return;
+    }
+    const payload = {
+      container_uuid: container.container_uuid,
+      title: form.title || "",
+      desc: form.description || "",
+      tracking_number: form.trackingNumber || "",
+      average_weight: Number(form.averageWeight || 0),
+      max_weight: Number(form.maxWeight || 0),
+      entity_uuid: entityValue,
+      invoice_number: form.invoiceNumber || "",
+      source_nation: form.sourceNation || "",
+      source_port: form.sourcePort || "",
+      destination_port: form.destinationPort || "",
+      funding: fundingValue,
+      supplier_code: form.supplyCode || "",
+      pieces: Number(form.unitpieces || 0),
+      unit_price_usd: Number(form.unitPrice || 0),
+      warehouse_charge_ngn: Number(form.warehouseChargeNGN || 0),
+      offload_and_sorting: Number(form.offloadAndSorting || 0),
+      shipping_amount_usd: Number(form.shipping_amount_usd || 0),
+      surcharge_ngn: Number(form.surcharge || 0),
+      total_estimated_price_ngn: Number(form.extimated || 0),
+      quoted_price_usd: fundingValue === "ENTITY" ? 0 : (form.quotedPriceUsd === "" ? 0 : Number(form.quotedPriceUsd)),
+    };
+
+    setLoading(true);
+
+    await ContainerServices.edit(payload);
+
+    const finalStatus = approved ? 1 : 0;
+    const approvalPayload = {
+      container_id: container.id,
+      container_uuid: container.container_uuid,
+      status: finalStatus,
+    };
+    
+    await ContainerServices.change_approval(approvalPayload);
+
+    // 4. Update the local UI state in the parent table
+    const updatedDataForTable = {
+      ...container,
+      ...payload,
+      status: finalStatus, // Force the status into the object sent to the table
+    };
+
+    onUpdate(updatedDataForTable);
+    
+    showMessage("Container updated and approved successfully", "success");
+    
+    // 5. Navigate back
+    goBack(true);
+  } catch (err) {
+    console.error("Update failed:", err);
+    showMessage("Update failed. Please check your connection.");
+  } finally {
+    setLoading(false);
+  }
+};
 
     /** ---------- APPROVE / CHANGE APPROVAL HANDLER ---------- */
   const handleApprovalChange = async () => {
@@ -561,7 +569,7 @@ onChange={(e) => updateField("invoiceNumber", e.target.value)}/>
       <input
         type="text"
         placeholder="Enter Quoted Price USD"
-        value={form.quotedPriceUsd}
+        value={form.quotedPriceUsd === null || form.quotedPriceUsd === undefined ? "" : form.quotedPriceUsd}
         name="quotedPriceUsd"
         onChange={handleNumberChange}
       />

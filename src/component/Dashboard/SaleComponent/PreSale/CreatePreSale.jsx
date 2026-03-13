@@ -509,10 +509,10 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
             <li>Container ID: {container.container_unique_id}</li> 
             <li>Description: {container.desc}</li>
             <li>Tracking Number: TN {container.tracking_number}</li>
-            <li>Unit Pieces: {container.pieces ?? "-"}</li>
+            <li> Pieces: {container.pieces ?? "-"}</li>
             <li>Unit Price ($): {container.unit_price_usd ?? "-"}</li>
             <li>Amount ($): ${Number(container.unit_price_usd  * container.pieces ?? 0).toLocaleString()}</li>
-            <li>Quoted Amount ($): {Number(container.quoted_price_usd ?? 0).toLocaleString()}</li>
+            <li>status: {container.status === 1 ? "Approve" : "Pending" }</li>
             <li>Created Date: {formatDate(container.created_at)}</li>
           </ul>
         )}
