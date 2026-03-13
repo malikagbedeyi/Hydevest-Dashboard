@@ -64,6 +64,17 @@ const currentData = preSales;
     setShowDeletePopup(false);
     setSaleToDelete(null);
   };
+    const formatDate = (date) =>
+    date
+      ? new Date(date)
+          .toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+          .replace(/ /g, "-")
+      : "-";
+
 
   // ------------------------------------
   // DRILL SUMMARY METRICS (WITH AVERAGES)
@@ -93,11 +104,11 @@ const currentData = preSales;
                 <th>Container</th>
                 <th>WC Avg Weight (kg)</th>
                 <th>WC Pieces</th>
-                <th>Price per Pic (NGN)</th>
-                <th>Price per KG (NGN)</th>
+                <th>Price per Pic (₦)</th>
+                <th>Price per KG (₦)</th>
                 <th>No. of Pallets</th>
                  <th>Pallet Pieces</th>
-                <th>Expected Revenue (NGN)</th>
+                <th>Expected Revenue (₦)</th>
                 <th>Status</th>
                 <th>Created By</th>
                 <th>Date Created</th>
@@ -127,9 +138,9 @@ const currentData = preSales;
                     <td>{formatMoneyNGN(sale.expected_sales_revenue)}</td>
                   <td><span className={`status ${sale.status === 1 ? "active" : "pending"}`}
                    style={{color:sale.status === 1 ? "green":"red"}}>
-                    {sale.status === 1 ? "Active" : "Pending"}</span></td>
+                    {sale.status === 1 ? "Approved" : "Pending"}</span></td>
                     <td>{sale?.creator_info?.firstname} {sale?.creator_info?.lastname}</td>
-                    <td>{new Date(sale.created_at).toLocaleDateString()}</td>
+                    <td>{formatDate(sale.created_at)}</td>
                   </tr>
                 ))
               )}
