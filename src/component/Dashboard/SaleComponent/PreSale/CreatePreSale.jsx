@@ -17,32 +17,6 @@ const CreatePreSale = ({ setDatas, setView, containersData, refreshTable }) => {
 
   const [popupMessage, setPopupMessage] = useState(null);
   const [popupType, setPopupType] = useState(null); 
-  // -----------------------------
-  // CONTAINER DATA STATE
-  // -----------------------------
-  const [loadingContainers, setLoadingContainers] = useState(true);
-
-//   useEffect(() => {
-//     const fetchContainers = async () => {
-//       try {
-//         setLoadingContainers(true);
-//         const response = await PresaleServices.containerList({});
-//      if (response.data?.record) {
-//   setContainers(response.data.record);
-// } else {
-//   setContainers([]);
-// }
-
-//       } catch (err) {
-//         console.error("Failed to fetch containers:", err);
-//         setContainers([]);
-//       } finally {
-//         setLoadingContainers(false);
-//       }
-//     };
-
-//     fetchContainers();
-//   }, []);
 
   // -----------------------------
   // SALE OPTION SELECT
@@ -146,11 +120,24 @@ const toggleContainerDetails = (uuid) => {
     setForm((prev) => ({ ...prev, [name]: cleaned }));
   };
 
+
+
+
+
   const handlePalletChange = (index, field, value) => {
     const updated = [...form.pallets];
     updated[index][field] = value;
     setForm((prev) => ({ ...prev, pallets: updated }));
   };
+  const handleNumberChange = (e) => {
+  const { name, value } = e.target;
+
+  if (/^\d*\.?\d*$/.test(value)) {
+    handleChange(name, value);
+    handlePalletChange(name, value)
+
+  }
+};
 
   const addPallet = () => {
     setForm((prev) => ({ ...prev, pallets: [...prev.pallets, { pieces: "", count: "" }] }));
@@ -496,7 +483,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
           className="container-header"
           style={{ display: "flex", justifyContent: "space-between",alignItems:"center", cursor: "pointer" }}
           onClick={() => toggleContainerDetails(container.container_uuid)} >
-          <h5 className="" style={{color:"#581aae"}} >{container.title}</h5>
+          <h5 className="" style={{color:"#581aae"}} >TN {container.tracking_number}</h5>
           <ChevronDown
             className={isExpanded ? "up" : "down"}
             size={18}
@@ -505,15 +492,17 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
 
         {isExpanded && (
           <ul style={{color:"gray"}}>
-            <li>Container ID: {container.container_unique_id}</li> 
+            <li>Container ID : {container.container_unique_id}</li> 
             <li>Description: {container.desc}</li>
-            <li>Tracking Number: TN {container.tracking_number}</li>
-            <li> Pieces: {container.pieces ?? "-"}</li>
-            <li>Unit Price ($): {container.unit_price_usd ?? "-"}</li>
+            <li>Title : {container.title}</li>
+            <li>Total Extimated Price NGN : {formatMoneyNGN(container.total_estimated_price_ngn ?? "0")}</li>
+            <li>Average Weight: {container.average_weight ?? "0"}</li>
+            <li> Pieces: {container.pieces ?? "0"}</li>
+            <li>Unit Price ($): {container.unit_price_usd ?? "0"}</li>
             <li>Amount ($): ${Number(container.unit_price_usd  * container.pieces ?? 0).toLocaleString()}</li>
              {container.funding === "ENTITY" ? (
               <>
-              <li>Average Weight: {container.average_weight ?? "-"}</li>
+              <li>Max Weight: {container.max_weight ?? "-"}</li>
                <li>Status: {container.status === 1 ? "Approved": "Pending"}</li>
                </> ) : (<>
              <li>Quoted Price ($): {container.quoted_price_usd ?? "-"}</li>
@@ -612,7 +601,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                             type="number"
                             value={pallet.pieces}
                             onChange={(e) =>
-                              handlePalletChange(index, "pieces", e.target.value)
+                              handleNumberChange(index, "pieces", e.target.value)
                             }
                           />
                         </div>
