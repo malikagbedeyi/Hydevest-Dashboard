@@ -1,12 +1,13 @@
 import React from 'react'
 import '../../../../assets/Styles/dashboard/account/account.scss'
-import profile from '../../../../assets/Images/profile-img.png'
+import profile from '../../../../assets/Images/profileImg.png'
 import { ChevronRight } from 'lucide-react'
 import AgentController from '../../AccountComponent/Agent/AgentController'
 import { useOutletContext } from "react-router-dom";
 
 const AccAgent = () => {
   const { autoOpenCreate, setAutoOpenCreate, openSubmenuFromChild } = useOutletContext();
+  const { setShowProfile } = useOutletContext();
   return (
     <div className='account'>
         <div className="headerContainer row">
@@ -17,7 +18,7 @@ const AccAgent = () => {
                 <h1>Account</h1>
                 <span> <ChevronRight /> </span>
                 <span>Clearing Agent</span>
-              </div>
+              </div> 
               <div className="rightTopWrapper">
                 <div className="menuicon">
                 {/* <HelpOutlineIcon  className='topicons' /> */}
@@ -26,11 +27,11 @@ const AccAgent = () => {
                 <div className="notificationtext">2</div>
                 </div>
               </div>
-              <div className="menuProfile">
-                <div className="profileImg">
-                    <img src={profile} alt="" />
-                </div>
-              </div>
+              <div className="menuProfile" onClick={() => setShowProfile(true)}>
+                     <div className="profileImg">
+                       <img src={profile} alt="Profile" />
+                     </div>
+                   </div>
               </div>
             </div>
           </div>

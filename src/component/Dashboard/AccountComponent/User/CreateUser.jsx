@@ -228,7 +228,16 @@ const CreateUser = ({ user, mode = "submenu", setView, setData, onSuccess, openS
 
               {/* System User */}
               <div className="form-check">
-                <input type="checkbox" name="is_system_user" checked={form.is_system_user} onChange={handleChange} />
+                <input
+  type="checkbox"
+  name="is_system_user"
+  checked={form.is_system_user === 1}
+  onChange={(e) =>
+    setForm(prev => ({
+      ...prev,
+      is_system_user: e.target.checked ? 1 : 0
+    }))
+  }/>
                 <label style={{ marginLeft: "10px" }}>System User</label>
               </div>
 
@@ -337,7 +346,7 @@ const CreateUser = ({ user, mode = "submenu", setView, setData, onSuccess, openS
                   </div>
                 </div>
                 )}
-                {mode === "edit" && form.is_system_user === 1 && (
+                {mode === "edit"  && (
                 <div className="form-group-select">
                   <label>Status</label>
                   <div className="custom-select">
@@ -375,7 +384,6 @@ const CreateUser = ({ user, mode = "submenu", setView, setData, onSuccess, openS
         </div>
       </div>
     </div>
-  );
   </>
   )
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import '../../../../assets/Styles/dashboard/account/account.scss'
-import profile from '../../../../assets/Images/profile-img.png'
+import profile from '../../../../assets/Images/profileImg.png'
 import { Outlet, useLocation, useOutletContext } from 'react-router-dom'
 import AccountsController from '../../AccountComponent/AccountsController'
 
@@ -9,6 +9,7 @@ const Account = () => {
   const context = useOutletContext();
 
   const isMainAccountPage = location.pathname === "/dashboard/accounts";
+  const { setShowProfile } = useOutletContext();
   return (
     <div className='account'>
       {isMainAccountPage && (
@@ -37,11 +38,11 @@ const Account = () => {
                         <div className="notificationtext">2</div>
                       </div>
                     </div>
-                    <div className="menuProfile">
-                      <div className="profileImg">
-                        <img src={profile} alt="" />
-                      </div>
-                    </div>
+                    <div className="menuProfile" onClick={() => setShowProfile(true)}>
+                           <div className="profileImg">
+                             <img src={profile} alt="Profile" />
+                           </div>
+                         </div>
                   </div>
                 </div>
               </div>

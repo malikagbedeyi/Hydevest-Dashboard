@@ -19,19 +19,17 @@ const UserController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) => {
   const fetchUsers = async (pageNum = page) => {
     try {
       setLoading(true);
-      const res = await api.get("/systemuser/account/systemuser/list", {
-        params: {
-          search_email: search,
-          is_system_user: 1,
-          page: pageNum,
-        },
-      });
+      const res = await SystemUserService.list({
+  search_email: search,
+  is_system_user: 1,
+  page: pageNum,
+});
       setUsers(res.data?.record?.data || []);
       setPagination(res.data?.record || {});
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   };
   
