@@ -75,10 +75,11 @@ const [expandedContainers, setExpandedContainers] = useState([]);
 const filterOption = (containersData ?? []).filter((item) => {
   const title = item.title ?? "";
   const containerId = item.container_unique_id ?? "";
-
+  const trackingNumber = item.tracking_number ?? ""
   return (
-    title.toLowerCase().includes(search.toLowerCase()) ||
-    containerId.toLowerCase().includes(search.toLowerCase())
+    title.toLowerCase().includes(search.toLowerCase()) || 
+    containerId.toLowerCase().includes(search.toLowerCase()) || 
+    trackingNumber.toLowerCase().includes(search.toLowerCase()) 
   );
 });
 
@@ -392,7 +393,7 @@ const handleCreate = async () => {
                 <label>Sale Option</label>
                 <div className="custom-select">
                   <div className="custom-select-drop">
-                    <div className="select-box">
+                    <div className="select-box" onClick={() => SetOpenSelect2(!openSelect2)}>
                       {selectedValues2.length === 0 ? (
                         <span className="placeholder">Sale Option</span>
                       ) : (
@@ -431,13 +432,13 @@ const handleCreate = async () => {
                 <label>Container</label>
                 <div className="custom-select">
                   <div className="custom-select-drop">
-                    <div className="select-box">
+                    <div className="select-box" onClick={() => SetOpenSelect(!openSelect)}>
                       {selectedValues.length === 0 ? (
-                        <span className="placeholder">Select Container(s)</span>
+                        <span className="">Select Container(s)</span>
                       ) : (
                         <div className="selected-tags">
                           {selectedValues.map((item) => (
-                            <span className="tag" key={item.container_uuid}>{item.title}</span>
+                            <span className="tag" key={item.container_uuid}>{item.tracking_number}</span>
                             ))}
                         </div>
                       )}
@@ -471,7 +472,7 @@ const handleCreate = async () => {
                               }}
                               >
                             <span>{item.container_unique_id} :</span>
-                            <span>{item.modelName} ({item.title})</span>
+                            <span style={{letterSpacing:"1",color:"#581aae",fontWeight:"520"}}>{item.tracking_number}</span>
                             </div>
                           </label>
                         );
@@ -495,8 +496,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
         <div
           className="container-header"
           style={{ display: "flex", justifyContent: "space-between",alignItems:"center", cursor: "pointer" }}
-          onClick={() => toggleContainerDetails(container.container_uuid)}
-        >
+          onClick={() => toggleContainerDetails(container.container_uuid)} >
           <h5 className="" style={{color:"#581aae"}} >{container.title}</h5>
           <ChevronDown
             className={isExpanded ? "up" : "down"}
@@ -505,7 +505,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
         </div>
 
         {isExpanded && (
-          <ul>
+          <ul style={{color:"gray"}}>
             <li>Container ID: {container.container_unique_id}</li> 
             <li>Description: {container.desc}</li>
             <li>Tracking Number: TN {container.tracking_number}</li>

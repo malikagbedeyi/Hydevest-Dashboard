@@ -13,7 +13,7 @@ const CURRENCIES = [
   { country: "Canada", code: "CAD", symbol: "$", },
   { country: "South Africa", code: "ZAR", symbol: "R", },
   { country: "Ghana", code: "GHS", symbol: "₵",  },
-  { country: "Nigeria", code: "NGN", symbol: "₦", },
+  { country: "Nigeria", code: "NGN", symbol: "₦", rate: 1 },
 ];
 
   const PAYMENT_TYPES = [

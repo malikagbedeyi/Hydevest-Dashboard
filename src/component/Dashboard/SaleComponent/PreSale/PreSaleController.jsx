@@ -154,6 +154,10 @@ const avgPricePerKg =
   metrics.totalPreSales > 0
     ? metrics.totalPricePerKg / metrics.totalPreSales
     : 0;
+    const avgPieces =
+  metrics.totalPreSales > 0
+    ? metrics.totalWcPieces / metrics.totalPreSales
+    : 0;
 
   const formatMoneyNGN = (value) =>
     value === "" ? "" : "₦" + Number(value).toLocaleString("en-NG");
@@ -211,8 +215,8 @@ const avgPricePerKg =
               <h2>{metrics.totalContainers}</h2>
             </div>
              <div className="summary-item">
-              <p className="small">Total WC Pieces</p>
-              <h2>{metrics.totalWcPieces.toLocaleString()}</h2>
+              <p className="small">Average WC Pieces</p>
+              <h2>{formatMoneyNGN(avgPieces)}</h2>
             </div>
             <div className="summary-item">
               <p className="small">Average Expected Revenue</p>
@@ -224,7 +228,7 @@ const avgPricePerKg =
 </div>
 
 <div className="summary-item">
-  <p className="small">Average Price per KG (NGN)</p>
+  <p className="small">Average Price per KG </p>
   <h2>{formatMoneyNGN(avgPricePerKg)}</h2>
 </div>
           </div>
