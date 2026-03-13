@@ -9,7 +9,7 @@ import { usePopup } from "../../../../context/PopupContext";
 
   const fundingOption = ["PARTNER", "ENTITY"];
 
-  const DrildownContainer = ({container = {},previous= () => {} ,goBack ,onUpdate,avgContainerRate = 0,formatNumber,reloadTable, totalGeneralNGN = 0,totalContainerCount = 0,}) => {
+  const DrildownContainer = ({container = {},previous= () => {} ,goBack ,onUpdate,avgContainerRate,formatNumber,reloadTable, totalGeneralNGN = 0,totalContainerCount = 0,}) => {
 
     const { showMessage } = usePopup();
 

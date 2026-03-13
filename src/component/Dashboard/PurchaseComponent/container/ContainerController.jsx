@@ -58,93 +58,46 @@ useEffect(() => {
 }, [breadcrumb]);
 
 
-  const fetchContainersWithFinance = async (pageNum = page) => {
-    try {
-      setLoading(true);
-
-      /* =========================
-         1️⃣ FETCH CONTAINERS
-      ========================= */
-      const params = {
-  ...filters,
-  page: pageNum
-};
-
-      const containerRes = await ContainerServices.list(params);
-      const containerData = containerRes.data?.record?.data || [];
-
-      /* =========================
-         2️⃣ EXTRACT UNIQUE TRIP UUIDs
-      ========================= */
-
-const tripUuids = [
-  ...new Set(
-    containerData
-      .map((c) => c.trip?.trip_uuid)
-      .filter(Boolean)
-  ),
-];
-
-const rateMap = {};
-
-
-for (const uuid of tripUuids) {
+const fetchContainersWithFinance = async (pageNum = page) => {
   try {
+    setLoading(true);
+    const params = { ...filters, page: pageNum };
+    const containerRes = await ContainerServices.list(params);
+    const containerData = containerRes.data?.record?.data || [];
 
-    const res = await ExpenseServices.list({ trip_uuid: uuid });
+    const tripUuids = [...new Set(containerData.map((c) => c.trip?.trip_uuid).filter(Boolean))];
 
-    const records = res.data?.record?.data || res.data?.data || [];
+    const financeMap = {}; 
 
+    for (const uuid of tripUuids) {
+      try {
+        const res = await ExpenseServices.list({ trip_uuid: uuid });
+        const records = res.data?.record?.data || res.data?.data || [];
+        
+        const totals = records.reduce((acc, item) => {
+          if (Number(item.is_container_payment) === 1) {
+            acc.purchaseNgn += Number(item.total_amount || 0);
+            acc.purchaseUsd += Number(item.amount || 0);
+          } else {
+            acc.generalOverhead += Number(item.total_amount || 0);
+          }
+          return acc;
+        }, { purchaseNgn: 0, purchaseUsd: 0, generalOverhead: 0 });
 
-    const totals = records.reduce(
-      (acc, item) => {
-        // Correct check for Container Payments
-        if (Number(item.is_container_payment) === 1) {
-          acc.ngn += Number(item.total_amount || 0);
-          acc.usd += Number(item.amount || 0); 
-        }
-        return acc;
-      },
-      { ngn: 0, usd: 0 }
-    );
+        const countInTrip = containerData.filter(c => c.trip?.trip_uuid === uuid).length;
 
-    const rate = totals.usd > 0 ? totals.ngn / totals.usd : 0;
-    rateMap[uuid] = rate;
-
-  } catch (err) {
-    console.error("❌ Expense fetch failed for trip:", uuid, err);
-  }
-}
-
-
-setTripRates(rateMap);
-
-      /* =========================
-         5️⃣ CALCULATE USD + NGN PER CONTAINER
-      ========================= */
-      const mappedContainers = containerData.map((item) => {
-        const amountUSD =
-          Number(item.unit_price_usd || 0) *
-            Number(item.pieces || 0) +
-          Number(item.shipping_amount_usd || 0);
-
-        const quotedUSD = Number(item.quoted_price_usd || 0);
-
-return {
-  ...item,
-  amountUSD,
-  quotedUSD,
-};
-      });
-
-      setContainers(mappedContainers);
-      setPagination(containerRes.data?.record || {});
-    } catch (err) {
-      console.error("❌ Fetch containers failed:", err);
-    } finally {
-      setLoading(false);
+        financeMap[uuid] = {
+          rate: totals.purchaseUsd > 0 ? totals.purchaseNgn / totals.purchaseUsd : 0,
+          overheadShare: countInTrip > 0 ? totals.generalOverhead / countInTrip : 0
+        };
+      } catch (err) { console.error("Map failed", err); }
     }
-  };
+
+    setTripRates(financeMap); // Now stores both rate and share
+    setContainers(containerData);
+    setPagination(containerRes.data?.record || {});
+  } catch (err) { console.error(err); } finally { setLoading(false); }
+};
 
   /* =========================
      EFFECTS
@@ -161,15 +114,6 @@ useEffect(() => {
 ========================= */
 const totalContainers = containers.length;
 
-const totalAmountUSD = containers.reduce(
-  (sum, item) => sum + (Number(item.amountUSD) || 0),
-  0
-);
-
-const totalPieces = containers.reduce(
-  (sum, item) => sum + (Number(item.pieces) || 0),
-  0
-);
 
 /* =========================
    CALCULATE DRILL SUMMARY (FIXED)
@@ -181,24 +125,26 @@ const getActiveRate = (tripUuid) => {
   return rate;
 };
 
-const fxRate = getActiveRate; // not used anymore
+const fxRate = selectedContainer
+  ? tripRates[selectedContainer.trip?.trip_uuid]?.rate || 0
+  : 0;
 
 /* =========================
    CALCULATE DRILL SUMMARY (FIXED AVERAGES)
 ========================= */
 const [totalGeneralNGN, setTotalGeneralNGN] = useState(0);
 const summaryData = useMemo(() => {
-  return containers.reduce((acc, item) => {
-    const rate = getActiveRate(item.trip?.trip_uuid || item.trip_uuid);
-    const pieces = Number(item.pieces || 0);
+  if (containers.length === 0) return { totalLandingCost: 0, totalPieces: 0, count: 0 };
 
-    const amountUSD = (Number(item.unit_price_usd || 0) * pieces) + 
-                      Number(item.shipping_amount_usd || 0);
+  return containers.reduce((acc, item) => {
+    const tripId = item.trip?.trip_uuid || item.trip_uuid;
+    const finance = tripRates[tripId] || { rate: 0, overheadShare: 0 };
     
+    const pieces = Number(item.pieces || 0);
+    const amountUSD = (Number(item.unit_price_usd || 0) * pieces) + Number(item.shipping_amount_usd || 0);
     const surcharge = item.funding?.toLowerCase() === "partner" ? Number(item.surcharge_ngn || 0) : 0;
-    const containerNGN = rate > 0 ? (amountUSD * rate) + surcharge : 0;
-    const generalShare = containers.length > 0 ? (totalGeneralNGN / containers.length) : 0;
-    const landingCost = containerNGN + generalShare;
+    const containerNGN = (amountUSD * finance.rate) + surcharge;
+    const landingCost = containerNGN + finance.overheadShare;
 
     return {
       totalLandingCost: acc.totalLandingCost + landingCost,
@@ -207,14 +153,13 @@ const summaryData = useMemo(() => {
       totalQuotedPrice: acc.totalQuotedPrice + Number(item.quoted_price_usd || 0), 
       count: acc.count + 1
     };
-  }, { totalLandingCost: 0, totalPieces: 0, totalUnitPrice: 0, totalQuotedPrice: 0, count: 0 });
-}, [containers, tripRates, totalGeneralNGN]);
-
+}, {totalLandingCost: 0,totalPieces: 0,totalUnitPrice: 0,totalQuotedPrice: 0,count: 0});
+}, [containers, tripRates]);
 const avgLandingCost = summaryData.count > 0 ? (summaryData.totalLandingCost / summaryData.count) : 0;
 const avgPieces = summaryData.count > 0 ? (summaryData.totalPieces / summaryData.count) : 0;
 const avgUnitPrice = summaryData.count > 0 ? (summaryData.totalUnitPrice / summaryData.count) : 0;
 const avgQuotedPrice = summaryData.count > 0 ? (summaryData.totalQuotedPrice / summaryData.count) : 0;
-
+const landingCost = summaryData.count > 0 ? (summaryData.totalLandingCost) : 0
 
 useEffect(() => {
   if (!financeData?.length) return;
@@ -240,12 +185,12 @@ useEffect(() => {
   );
 
   const tripSpecificCount = siblingContainers.length > 0 ? siblingContainers.length : 0;
-const selectedRate = getActiveRate(selectedContainer?.trip?.trip_uuid || selectedContainer?.trip_uuid);
+
     return (
      <DrildownContainer container={selectedContainer} navigate={navigate} breadcrumb={breadcrumb}
-  avgContainerRate={selectedRate}  totalGeneralNGN={totalGeneralNGN} goBackTo={goBackTo}
+  avgContainerRate={fxRate}  totalGeneralNGN={totalGeneralNGN} goBackTo={goBackTo}
 totalContainerCount={tripSpecificCount}  goBack={() => {fetchContainersWithFinance(page);setView("table");}}
-  reloadTable={() => fetchContainersWithFinance(page)}
+  reloadTable={() => fetchContainersWithFinance(page)} 
   onUpdate={(updated) => {setContainers((prev) =>prev.map((c) => c.container_uuid === updated.container_uuid? updated: c));
   }}
 />
@@ -515,10 +460,11 @@ const formatMoneyUSD = (value) =>
             {activeTab === "table" && (
               <ContainerTable
                 data={containers}
+                landingCost={landingCost}
                 loading={loading}
                 totalGeneralNGN={totalGeneralNGN} 
                 getRate={getActiveRate}
-                page={page}
+                page={page} totalContainerCount={tripContainerCount} 
                 setPage={setPage}
                 pagination={pagination}
                 onRowClick={(container) => {
