@@ -58,19 +58,19 @@ const filterOption = (containersData ?? []).filter((item) => {
 });
 
 
- const toggleSelect = (item) => {
+const toggleSelect = (item) => {
   setSelectedValues((prev) => {
     const exists = prev.some(
       (v) => v.container_uuid === item.container_uuid
     );
 
+    // If clicked again → unselect
     if (exists) {
       return prev.filter(
         (v) => v.container_uuid !== item.container_uuid
       );
     }
 
-    // determine max allowed containers
     let maxAllowed = Infinity;
 
     if (selectedSale === "Box Sale" || selectedSale === "Split Sale") {
@@ -81,15 +81,16 @@ const filterOption = (containersData ?? []).filter((item) => {
       maxAllowed = 2;
     }
 
-    // prevent selecting more than allowed
+    // If only 1 allowed → replace the previous selection
+    if (maxAllowed === 1) {
+      return [item];
+    }
+
+    // If 2 allowed (Mixed Sale)
     if (prev.length >= maxAllowed) {
-      setPopupMessage(
-        `You can only select ${maxAllowed} container${
-          maxAllowed > 1 ? "s" : ""
-        } for ${selectedSale}`
-      );
-      setPopupType("error");
-      return prev;
+      const updated = [...prev];
+      updated.shift(); // remove first selected
+      return [...updated, item];
     }
 
     return [...prev, item];
@@ -442,7 +443,7 @@ const handleCreate = async () => {
                 <label>Container</label>
                 <div className="custom-select">
                   <div className="custom-select-drop">
-                    <div className="select-box" onClick={() => SetOpenSelect(!openSelect)}>
+                    <div className="select-box" onClick={() => {if (!selectedSale) {setPopupMessage("Please select a Sale Option first");setPopupType("error");return;}SetOpenSelect(!openSelect);}}>
                       {selectedValues.length === 0 ? (
                         <span className="">Select Container(s)</span>
                       ) : (
@@ -453,7 +454,7 @@ const handleCreate = async () => {
                         </div>
                       )}
                     </div>
-                    <div className="custom-select-icon" onClick={() => SetOpenSelect(!openSelect)}>
+                    <div className="custom-select-icon" onClick={() => {if (!selectedSale) {setPopupMessage("Please select a Sale Option first");setPopupType("error");return;}SetOpenSelect(!openSelect);}}>
                       <ChevronDown className={openSelect ? "up" : "down"} />
                     </div>
                   </div>
@@ -471,8 +472,8 @@ const handleCreate = async () => {
                         const checked = selectedValues.some((v) => v.container_uuid === item.container_uuid);
                         return (
                           <label key={item.container_unique_id} >
-                            <input
-                              type="checkbox"
+                            <input  onClick={() => SetOpenSelect(false)}
+                              type="checkbox" 
                               checked={checked}
                               onChange={() => toggleSelect(item)}/>
                               <div className="grid-option"
