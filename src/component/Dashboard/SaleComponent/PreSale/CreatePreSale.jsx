@@ -511,8 +511,14 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
             <li> Pieces: {container.pieces ?? "-"}</li>
             <li>Unit Price ($): {container.unit_price_usd ?? "-"}</li>
             <li>Amount ($): ${Number(container.unit_price_usd  * container.pieces ?? 0).toLocaleString()}</li>
-            <li>Quoted Price ($):{" "}{container.funding === "ENTiTY" ? "0": container.quoted_price_usd ?? "0"}</li>
-            <li>Quoted Amount ($): ${Number(container.quoted_price_usd  * container.pieces ?? 0).toLocaleString()}</li>
+             {container.funding === "ENTITY" ? (
+              <>
+              <li>Average Weight: {container.average_weight ?? "-"}</li>
+               <li>Status: {container.status === 1 ? "Approved": "Pending"}</li>
+               </> ) : (<>
+             <li>Quoted Price ($): {container.quoted_price_usd ?? "-"}</li>
+            <li>Quoted Amount ($): ${Number((container.quoted_price_usd ?? 0) * (container.pieces ?? 0)).toLocaleString()}</li>
+            </>)}
             <li> Funding: {container.funding }</li>
             <li>Created Date: {formatDate(container.created_at)}</li>
           </ul>
