@@ -519,7 +519,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
             </div>
 
             {/* Pre-sale details section */}
-            <h4 className="mt-5 mb-3">Pre-sale Details</h4>
+            <h4 className="mt-5 mb-4" style={{color:"#581aae"}}>Pre-sale Details</h4>
             {(selectedSale === "Split Sale" || selectedSale === "Mixed Sale") && (
               <div className="from-pallet-option">
                 <div className="grid-2">
@@ -545,7 +545,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                 </div>
                 <div className="grid-split-3">
                   <div className="form-group">
-                    <label>Price Per Pic (NGN)</label>
+                    <label>Price Per Pic (₦)</label>
                     <input
                       name="pricePerPic"
                       value={formatMoneyNGN(form.pricePerPic)}
@@ -564,7 +564,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                     />
                   </div>
                   <div className="form-group">
-                    <label>Price Per Kg (NGN)</label>
+                    <label>Price Per Kg (₦)</label>
                     <input
                       name="pricePerKg"
                       value={formatMoneyNGN(form.pricePerKg)}
@@ -575,7 +575,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                 </div>
                 <div className="pallet-section">
                   <div className="header">
-                    <label>Pallet Distribution</label>
+                    <label style={{color:"#581aae"}}>Pallet Distribution</label>
                     <button className="create mb-3" type="button" onClick={addPallet}>Add Pallet</button>
                   </div>
                   {palletCountExceeded && (
@@ -601,7 +601,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                             type="number"
                             value={pallet.pieces}
                             onChange={(e) =>
-                              handleNumberChange(index, "pieces", e.target.value)
+                              handlePalletChange(index, "pieces", e.target.value)
                             }
                           />
                         </div>
@@ -628,7 +628,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                 </div>
 
                 <div className="form-group">
-                    <label>Expected Sale Revenue (NGN)</label>
+                    <label>Expected Sale Revenue (₦)</label>
                     <input value={formatMoneyNGN(expectedRevenue())} readOnly placeholder="Auto-calculated" />
                   </div>
               </div>
@@ -647,7 +647,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                     />
                   </div>
                   <div className="form-group">
-                    <label>Price Per Kg (NGN)</label>
+                    <label>Price Per Kg (₦)</label>
                     <input
                       name="pricePerKg"
                       value={form.pricePerKg}
@@ -668,7 +668,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                     />
                   </div>
                   <div className="form-group">
-                    <label>Price Per Pic (NGN)</label>
+                    <label>Price Per Pic (₦)</label>
                     <input
                       name="pricePerPic"
                       value={form.pricePerPic}
@@ -677,7 +677,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                     />
                   </div>
                   <div className="form-group">
-                    <label>Expected Sale Revenue (NGN)</label>
+                    <label>Expected Sale Revenue (₦)</label>
                     <input value={expectedRevenue()} readOnly placeholder="Auto-calculated" />
                   </div>
                 </div>
