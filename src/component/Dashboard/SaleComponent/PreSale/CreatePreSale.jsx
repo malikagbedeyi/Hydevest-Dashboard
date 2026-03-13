@@ -360,7 +360,10 @@ const handleCreate = async () => {
 
   const selectedSale = selectedValues2[0]?.saleName;
 
-
+// Determine if user has started filling in pallet distribution
+const hasStartedPalletDistribution = form.pallets.some(
+  (p) => Number(p.count || 0) > 0 || Number(p.pieces || 0) > 0
+);
 
   // -----------------------------
   // RENDER JSX (UNCHANGED)
@@ -616,9 +619,8 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
     WC Pieces ({maxPiecesAllowed})
   </p>
 )}
-
 {/* Pallet Distribution Warnings */}
-{!palletCountExceeded && !palletPiecesExceeded && (
+{hasStartedPalletDistribution && !palletCountExceeded && !palletPiecesExceeded && (
   <>
     {/* Total Pallets */}
     <p
