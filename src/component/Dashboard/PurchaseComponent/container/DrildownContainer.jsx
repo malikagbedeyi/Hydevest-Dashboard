@@ -82,10 +82,52 @@ const quotedUsd =
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  
+ const handleChange = (e) => {
+  const { name, value } = e.target;
+
+  setForm((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+  if (approved) {
+    setApproved(false);
+  }
+};
+const updateField = (name, value) => {
+  setForm((prev) => {
+    const updated = {
+      ...prev,
+      [name]: value,
+    };
+
+    if (name === "funding" && value === "ENTITY") {
+      updated.quotedPriceUsd = 0;
+    }
+
+    return updated;
+  });
+
+  if (approved) {
+    setApproved(false);
+  }
+};
+useEffect(() => {
+  if (form.funding === "ENTITY" && form.quotedPriceUsd !== 0) {
+    setForm((prev) => ({
+      ...prev,
+      quotedPriceUsd: 0,
+    }));
+  }
+}, [form.funding]);
+
+const handleNumberChange = (e) => {
+  const { name, value } = e.target;
+
+  if (/^\d*\.?\d*$/.test(value)) {
+    updateField(name, value);
+  }
+};
 
     const toggleEdit = (field) => {
       setEdit((s) => ({ ...s, [field]: !s[field] }));
@@ -176,6 +218,7 @@ const quotedUsd =
       setLoading(true);
 
       const newStatus = approved ? 1: 0;
+      // const newStatus = approved ? 0 : 1;
 
       const payload = {
         container_id: container.id, 
@@ -198,6 +241,9 @@ const quotedUsd =
       setLoading(false);
     }
   };
+useEffect(() => {
+  setApproved(Number(container?.status) === 1);
+}, [container]);
 
   useEffect(() => {
     const fetchEntities = async () => {
@@ -219,17 +265,7 @@ const quotedUsd =
     fetchEntities();
   }, []);
 
-const handleNumberChange = (e) => {
-  const { name, value } = e.target;
 
-  // Allow only numbers and optional decimal
-  if (/^\d*\.?\d*$/.test(value)) {
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  }
-};
 
     return (
     <div className="drill-container" ref={scrollRef}>
@@ -281,6 +317,13 @@ const handleNumberChange = (e) => {
   >
     {loading ? "Approving..." : "Approve"}
   </button>
+//   <button
+//   className="primary"
+//   onClick={handleApprovalChange}
+//   disabled={loading}
+// >
+//   {loading ? "Approving..." : "Approve"}
+// </button>
 
               )}
                   <div className="status">
@@ -360,12 +403,12 @@ const handleNumberChange = (e) => {
             <div className="form-group">
               <label htmlFor="">Average Weight</label>
               <input type="text"  value={form.averageWeight} name="averageWeight"   placeholder="Enter Average Weight "
-              onChange={(e) =>  setForm({ ...form, averageWeight: e.target.value })}/>
+              onChange={(e) => updateField("averageWeight", e.target.value)}/>
               </div>
             <div className="form-group">
               <label htmlFor="">Max Weight</label>
               <input type="text" value={form.maxWeight}name="maxWeight"   placeholder="Enter Max Weight"
-              onChange={(e) =>  setForm({ ...form, maxWeight: e.target.value })}/>
+              onChange={(e) => updateField("maxWeight", e.target.value)}/>
               </div>
   <div className="form-group-select">
     <label>Entity</label>
@@ -404,10 +447,7 @@ const handleNumberChange = (e) => {
               <div
                 key={entity.uuid || entity.id}
                 className="option-item"
-              onClick={() => {setForm((prev) => ({
-    ...prev,
-    entity: entity.user_uuid || entity.uuid
-  }));
+              onClick={() => {updateField("entity", entity.user_uuid || entity.uuid);
                 setOpenEntityDrop(false);}}>
                 {`${entity.firstname || ""} ${entity.lastname || ""}`.trim() || "—"}
               </div>
@@ -423,28 +463,28 @@ const handleNumberChange = (e) => {
               <div className="form-group">
               <label htmlFor="">Invoice Number</label>
               <input type="text" value={form.invoiceNumber} name="invoiceNumber"  placeholder="Enter Invoice Number"
-              onChange={(e) =>  setForm({ ...form, invoiceNumber: e.target.value })}/>
+onChange={(e) => updateField("invoiceNumber", e.target.value)}/>
               </div>
               <div className="form-group">
             <label>Tracking Number</label>
               <input  name="trackingNumber"   value={form.trackingNumber}
-              onChange={(e) =>  setForm({ ...form, trackingNumber: e.target.value })}/>
+              onChange={(e) => updateField("trackingNumber", e.target.value)}/>
 
           </div>
               <div className="form-group">
               <label htmlFor="">Source Nation</label>
               <input type="text" value={form.sourceNation}  placeholder="Enter Source Nation"
-              onChange={(e) =>  setForm({ ...form, sourceNation: e.target.value })}/>
+              onChange={(e) =>  updateField( "sourceNation", e.target.value )}/>
               </div>
               <div className="form-group">
               <label htmlFor="">Source Port</label>
               <input type="text" value={form.sourcePort}  placeholder="Enter Source Port"
-              onChange={(e) =>  setForm({ ...form, sourcePort: e.target.value })}/>
+              onChange={(e) =>  updateField( "sourcePort", e.target.value )}/>
               </div>
               <div className="form-group">
               <label htmlFor="">Destination Port</label>
               <input type="text" value={form.destinationPort}  placeholder="Enter Destination Port"
-              onChange={(e) =>  setForm({ ...form, destinationPort: e.target.value })}/>
+              onChange={(e) =>  updateField( "destinationPort", e.target.value )}/>
               </div>
               <div className="form-group-select">
                 <label>Funding</label>
@@ -463,7 +503,7 @@ const handleNumberChange = (e) => {
           key={opt}
           className="option-item"
           onClick={() => {
-            setForm((prev) => ({ ...prev, funding: opt.toUpperCase() }));
+            updateField("funding", opt.toUpperCase());
             setOpenFundingdrop(false); 
           }}
         >
@@ -480,7 +520,7 @@ const handleNumberChange = (e) => {
               <label htmlFor="">Supplier Code</label>
               <input type="text" value={form.supplyCode} name="supplyCode" 
                placeholder="Enter Supply Code"
-               onChange={(e) =>  setForm({ ...form, supplyCode: e.target.value })}/>
+               onChange={(e) =>  updateField( "supplyCode", e.target.value )}/>
               </div>
 
               </div>

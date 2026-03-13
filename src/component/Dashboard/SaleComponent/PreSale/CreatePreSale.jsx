@@ -6,7 +6,7 @@ import { PresaleServices } from "../../../../services/Sale/presale";
 export const saleType = [
   { id: 1, saleName: "Box Sale" },
   { id: 2, saleName: "Split Sale" },
-  { id: 3, saleName: "Mixed Sale" },
+  // { id: 3, saleName: "Mixed Sale" },
 ];
 
 const CreatePreSale = ({ setDatas, setView, containersData, refreshTable }) => { 
@@ -50,11 +50,13 @@ const CreatePreSale = ({ setDatas, setView, containersData, refreshTable }) => {
   const [openSelect2, SetOpenSelect2] = useState(false);
   const [selectedValues2, setSelectedValues2] = useState([]);
 const [expandedContainers, setExpandedContainers] = useState([]);
+
   const toggleSelect2 = (item) => {
-    setSelectedValues2([item]);
-    setForm((prev) => ({ ...prev, saleOption: item.saleName }));
-    SetOpenSelect2(false);
-  };
+  setSelectedValues2([item]);
+  setSelectedValues([]); 
+  setForm((prev) => ({ ...prev, saleOption: item.saleName }));
+  SetOpenSelect2(false);
+};
 
   const formatDate = (date) =>
     date
@@ -87,14 +89,37 @@ const filterOption = (containersData ?? []).filter((item) => {
       (v) => v.container_uuid === item.container_uuid
     );
 
+    // remove if already selected
     if (exists) {
       return prev.filter(
         (v) => v.container_uuid !== item.container_uuid
       );
     }
 
+    // determine max allowed containers
+    let maxAllowed = Infinity;
+
+    if (selectedSale === "Box Sale" || selectedSale === "Split Sale") {
+      maxAllowed = 1;
+    }
+
+    if (selectedSale === "Mixed Sale") {
+      maxAllowed = 2;
+    }
+
+    // prevent selecting more than allowed
+    if (prev.length >= maxAllowed) {
+      setPopupMessage(
+        `You can only select ${maxAllowed} container${
+          maxAllowed > 1 ? "s" : ""
+        } for ${selectedSale}`
+      );
+      setPopupType("error");
+      return prev;
+    }
+
     return [...prev, item];
-  }); 
+  });
 };
 
 const toggleContainerDetails = (uuid) => {
@@ -197,7 +222,7 @@ const handleCreate = async () => {
     return;
   }
 
-  const selectedSale = selectedValues2[0]?.saleName;
+  // const selectedSale = selectedValues2[0]?.saleName;
 
   if (!selectedSale) {
     setPopupMessage("Select a sale option");
@@ -485,9 +510,9 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
             <li>Description: {container.desc}</li>
             <li>Tracking Number: TN {container.tracking_number}</li>
             <li>Unit Pieces: {container.pieces ?? "-"}</li>
-            <li>Unit Price (USD): {container.unit_price_usd ?? "-"}</li>
-            <li>Amount (USD): ${Number(container.unit_price_usd ?? 0).toLocaleString()}</li>
-            <li>Quoted Amount (USD): ${Number(container.quoted_price_usd ?? 0).toLocaleString()}</li>
+            <li>Unit Price ($): {container.unit_price_usd ?? "-"}</li>
+            <li>Amount ($): ${Number(container.unit_price_usd  * container.pieces ?? 0).toLocaleString()}</li>
+            <li>Quoted Amount ($): {Number(container.quoted_price_usd ?? 0).toLocaleString()}</li>
             <li>Created Date: {formatDate(container.created_at)}</li>
           </ul>
         )}
