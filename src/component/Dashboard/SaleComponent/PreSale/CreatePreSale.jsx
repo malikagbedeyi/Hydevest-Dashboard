@@ -90,7 +90,6 @@ const filterOption = (containersData ?? []).filter((item) => {
       (v) => v.container_uuid === item.container_uuid
     );
 
-    // remove if already selected
     if (exists) {
       return prev.filter(
         (v) => v.container_uuid !== item.container_uuid
@@ -460,7 +459,7 @@ const handleCreate = async () => {
                       {filterOption.map((item) => {
                         const checked = selectedValues.some((v) => v.container_uuid === item.container_uuid);
                         return (
-                          <label key={item.container_unique_id} onClick={() => SetOpenSelect(false) }>
+                          <label key={item.container_unique_id} >
                             <input
                               type="checkbox"
                               checked={checked}
@@ -512,7 +511,9 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
             <li> Pieces: {container.pieces ?? "-"}</li>
             <li>Unit Price ($): {container.unit_price_usd ?? "-"}</li>
             <li>Amount ($): ${Number(container.unit_price_usd  * container.pieces ?? 0).toLocaleString()}</li>
-            <li>status: {container.status === 1 ? "Approve" : "Pending" }</li>
+            <li>Quoted Price ($):{" "}{container.funding === "ENTiTY" ? "0": container.quoted_price_usd ?? "0"}</li>
+            <li>Quoted Amount ($): ${Number(container.quoted_price_usd  * container.pieces ?? 0).toLocaleString()}</li>
+            <li> Funding: {container.funding }</li>
             <li>Created Date: {formatDate(container.created_at)}</li>
           </ul>
         )}

@@ -12,6 +12,7 @@ const CURRENCIES = [
   { country: "Japan", code: "JPY", symbol: "¥",  },
   { country: "Canada", code: "CAD", symbol: "$", },
   { country: "South Africa", code: "ZAR", symbol: "R", },
+   { country: "Togo", code: "XOF", symbol: "CFA", },
   { country: "Ghana", code: "GHS", symbol: "₵",  },
   { country: "Nigeria", code: "NGN", symbol: "₦", rate: 1 },
 ];
