@@ -11,12 +11,17 @@ const DebtDrilldown = ({ customer, sales, recoveries, goBack }) => {
 
 const customerRecoveries = useMemo(() => {
   return recoveries.filter(r => {
-    const recoveryCustId = r.customer_id || r.customer?.id || r.customer_uuid || r.customer?.user_uuid;
-    
-    const targetCustId = customer.customerId; 
-    return String(recoveryCustId) === String(targetCustId);
+    const recoveryCustomerId = r.customer_id; 
+    const recoveryCustomerUuid = r.customer?.user_uuid; 
+
+    const isNumericMatch = customer.numericId && String(recoveryCustomerId) === String(customer.numericId);
+    const isUuidMatch = customer.customerId && String(recoveryCustomerUuid) === String(customer.customerId);
+
+    return isNumericMatch || isUuidMatch;
   });
 }, [recoveries, customer]);
+
+
   const formatMoney = (val) => "₦" + Number(val).toLocaleString("en-NG", { minimumFractionDigits: 2 });
 
   return (
@@ -101,7 +106,7 @@ const customerRecoveries = useMemo(() => {
                         <td>{r.recovery_unique_id}</td>
                         <td>{r.sale?.sale_unique_id || "N/A"}</td>
                         <td style={{ color: 'green' }}>{formatMoney(r.amount)}</td>
-                        <td>{r.payment_method}</td>
+                        <td>{r.payment?.payment_method}</td>
                         <td>{new Date(r.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}

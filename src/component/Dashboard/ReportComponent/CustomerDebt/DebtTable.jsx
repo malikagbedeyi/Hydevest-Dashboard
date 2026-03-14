@@ -12,11 +12,13 @@ const DebtTable = ({ data, onRowClick, goBack }) => {
   return (
     <div className="userTable">
       <div className="top-content">
+        <div className="top-content-wrapper">
         <div className="right-wrapper">
           <div className="right-wrapper-input">
             <Search className="input-icon" />
             <input placeholder="Search customer name or number..." onChange={(e) => setSearch(e.target.value)} />
           </div>
+        </div>
         </div>
       </div>
       <div className="table-wrap">

@@ -30,37 +30,36 @@ const DebtController = ({ goBack }) => {
 
   useEffect(() => { fetchData(); }, []);
 
-  /* ================= GROUPING LOGIC ================= */
-  const customerDebtData = useMemo(() => {
-    const map = {};
+/* ================= GROUPING LOGIC (UPDATED) ================= */
+const customerDebtData = useMemo(() => {
+  const map = {};
 
-    sales.forEach((sale) => {
-      const custId = sale.customer?.user_uuid || sale.customer?.id;
-      if (!custId) return;
+  sales.forEach((sale) => {
+    const custId = sale.customer?.user_uuid || sale.customer?.id;
+    if (!custId) return;
 
-      if (!map[custId]) {
-        map[custId] = {
-          customerId: custId,
-          numericId: sale.customer?.id,
-          customerUniqueId: sale.customer?.customer_unique_id || `CUST-${custId.toString().slice(0,4)}`,
-          customerName: `${sale.customer?.firstname || ""} ${sale.customer?.lastname || ""}`,
-          customerPhone: sale.customer?.phone_no || "N/A",
-          totalSaleAmount: 0,
-          totalAmountPaid: 0,
-          createdAt: sale.created_at
-        };
-      }
-      map[custId].totalSaleAmount += Number(sale.total_sale_amount || 0);
-      map[custId].totalAmountPaid += Number(sale.amount_paid || 0);
-    });
+    if (!map[custId]) {
+      map[custId] = {
+        customerId: custId, 
+        numericId: sale.customer?.id,
+        customerUniqueId: sale.customer?.customer_unique_id || `CUST-${custId.toString().slice(0,4)}`,
+        customerName: `${sale.customer?.firstname || ""} ${sale.customer?.lastname || ""}`,
+        customerPhone: sale.customer?.phone_no || "N/A",
+        totalSaleAmount: 0,
+        totalAmountPaid: 0,
+        createdAt: sale.created_at
+      };
+    }
+    map[custId].totalSaleAmount += Number(sale.total_sale_amount || 0);
+    map[custId].totalAmountPaid += Number(sale.amount_paid || 0);
+  });
 
-    return Object.values(map).map(c => ({
-      ...c,
-      outstanding: Math.max(c.totalSaleAmount - c.totalAmountPaid, 0),
-      paymentStatus: (c.totalSaleAmount - c.totalAmountPaid) <= 0 ? "Full Payment" : "Part Payment"
-    }));
-  }, [sales]);
-
+  return Object.values(map).map(c => ({
+    ...c,
+    outstanding: Math.max(c.totalSaleAmount - c.totalAmountPaid, 0),
+    paymentStatus: (c.totalSaleAmount - c.totalAmountPaid) <= 0 ? "Full Payment" : "Part Payment"
+  }));
+}, [sales]);
   const metrics = useMemo(() => {
     const totals = customerDebtData.reduce((acc, curr) => ({
       sale: acc.sale + curr.totalSaleAmount,
