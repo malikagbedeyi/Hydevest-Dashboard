@@ -448,6 +448,15 @@
 .filter-item {
   position: relative;
   min-width: 170px;
+  
+}
+.filter-item .create{
+            background: #581aae; 
+            color: #fff;
+            padding: 0.7vw 1.25vw; 
+            border-radius: 1.67vw;  
+            border: none;
+             cursor:pointer;
 }
 
 .filter-item input {
@@ -464,7 +473,6 @@
 .filter-item input:focus {
   border-color: #4a90e2;
 }
-
 .custom-select-drop {
   display: flex;
   justify-content: space-between;

@@ -9,30 +9,52 @@ const ContainerSaleTable = ({ presales = [],formatDate, containerReportData = []
   const [openFieldSelect, setOpenFieldSelect] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all"); // all, paid, outstanding
-  const [openStatusSelect, setOpenStatusSelect] = useState(false);
+const [filters, setFilters] = useState({
+  payment_status: "",
+  from_date: "",
+  to_date: ""
+});
 
+const [openPaymentStatusSelect, setOpenPaymentStatusSelect] = useState(false);
   // --- FILTERING LOGIC ---
-  const filteredData = useMemo(() => {
-    return containerReportData.filter((item) => {
+const filteredData = useMemo(() => {
+  return containerReportData.filter((item) => {
 
-      const s = searchTerm.toLowerCase();
-      const matchesSearch = 
-        searchField === "all" 
-          ? (item.containerName?.toLowerCase().includes(s) || item.trackingNumber?.toLowerCase().includes(s))
-          : searchField === "container" 
-            ? item.containerName?.toLowerCase().includes(s)
-            : item.trackingNumber?.toLowerCase().includes(s);
+    const s = searchTerm.toLowerCase();
 
-      const matchesStatus = 
-        statusFilter === "all" ? true :
-        statusFilter === "paid" ? item.balance <= 0 :
-        item.balance > 0;
+    const matchesSearch =
+      searchField === "all"
+        ? (item.containerName?.toLowerCase().includes(s) ||
+           item.trackingNumber?.toLowerCase().includes(s))
+        : searchField === "container"
+          ? item.containerName?.toLowerCase().includes(s)
+          : item.trackingNumber?.toLowerCase().includes(s);
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [containerReportData, searchTerm, searchField, statusFilter]);
+    const matchesStatus =
+      !filters.payment_status
+        ? true
+        : filters.payment_status === "Full Payment"
+        ? item.balance <= 0
+        : item.balance > 0;
 
-  
+    const itemDate = new Date(item.createdAt);
+
+    const matchesFrom =
+      filters.from_date
+        ? itemDate >= new Date(filters.from_date)
+        : true;
+
+    const matchesTo =
+      filters.to_date
+        ? itemDate <= new Date(filters.to_date)
+        : true;
+
+    return matchesSearch && matchesStatus && matchesFrom && matchesTo;
+
+  });
+}, [containerReportData, searchTerm, searchField, filters]);
+
+
   const totalContainers = filteredData.length;
   const totalSaleAmount = filteredData.reduce((sum, item) => sum + (Number(item.totalSaleAmount) || 0), 0);
   const totalRecoveryAmount = filteredData.reduce((sum, item) => sum + (Number(item.SamountPaid) || 0), 0);
@@ -91,13 +113,6 @@ const ContainerSaleTable = ({ presales = [],formatDate, containerReportData = []
                 <Filter />
               </div>
 
-              {showFilters && (
-                <div className="custom-select-dropdown" style={{ top: '45px', right: 0 }}>
-                  <div className="option-item" onClick={() => { setStatusFilter("all"); setShowFilters(false); }}>All Status</div>
-                  <div className="option-item" onClick={() => { setStatusFilter("paid"); setShowFilters(false); }}>Full Payment</div>
-                  <div className="option-item" onClick={() => { setStatusFilter("outstanding"); setShowFilters(false); }}>Part Payment</div>
-                </div>
-              )}
             </div>
 
             {/* FIELD SELECT */}
@@ -122,6 +137,96 @@ const ContainerSaleTable = ({ presales = [],formatDate, containerReportData = []
             <div className="import-input"><p>Export</p></div>
           </div>
         </div>
+        {showFilters && (
+  <div className="filters-panel" >
+    <div className="filter-item">
+      <div
+        className="custom-select-drop"
+        onClick={() =>
+          setOpenPaymentStatusSelect(!openPaymentStatusSelect)
+        }
+      >
+        <div className="select-box">
+          <span>
+            {filters.payment_status || "All Payment Status"}
+          </span>
+        </div>
+
+        <ChevronDown
+          className={
+            openPaymentStatusSelect ? "up" : "down"
+          }
+        />
+      </div>
+
+      {openPaymentStatusSelect && (
+        <div className="custom-select-dropdown">
+
+          {["", "Part Payment", "Full Payment"].map(
+            (status) => (
+              <div
+                key={status}
+                className="option-item"
+                onClick={() => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    payment_status: status
+                  }));
+
+                  setOpenPaymentStatusSelect(false);
+                }}
+              >
+                {status === ""
+                  ? "All Payment Status"
+                  : status}
+              </div>
+            )
+          )}
+
+        </div>
+      )}
+    </div>
+    <div className="filter-item">
+      <input
+        type="date"
+        value={filters.from_date}
+        onChange={(e) =>
+          setFilters((prev) => ({
+            ...prev,
+            from_date: e.target.value
+          }))
+        }
+      />
+    </div>
+    <div className="filter-item">
+      <input
+        type="date"
+        value={filters.to_date}
+        onChange={(e) =>
+          setFilters((prev) => ({
+            ...prev,
+            to_date: e.target.value
+          }))
+        }
+      />
+    </div>
+    <div className="filter-item">
+      <button style={{margin:"0", display:"flex",width:"100%", color:"#581aae",background:"#fff" ,border:"1px solid #581aae",padding:".8vw 1vw",borderRadius:".8vw",alignItems:"center",justifyContent:"center"}}
+        onClick={() =>{
+          setFilters({
+            payment_status: "",
+            from_date: "",
+            to_date: "",
+          })
+          setShowFilters(false)}
+        }
+      >
+        Clear Filter
+      </button>
+    </div>
+
+  </div>
+)}
       </div>
    
       {/* TABLE */}

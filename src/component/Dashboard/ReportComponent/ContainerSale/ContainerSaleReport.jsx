@@ -86,7 +86,8 @@ salesArray.forEach((sale) => {
       PaymentStatus: sale.payment_status || "Part Payment",
       totalSaleAmount: 0,
       SamountPaid: 0,
-      expectedPresaleAmount: 0
+      expectedPresaleAmount: 0,
+      createdAt: sale.created_at,
     };
   }
 
