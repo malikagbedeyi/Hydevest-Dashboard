@@ -27,20 +27,16 @@ const PayableDrilldown = ({ tripData, allContainers, allExpenses, goBack }) => {
       <div className="drill-summary-grid">
         <div className="drill-summary">
           <div className="summary-item">
-            <p className="small">Total Shipping Amount</p>
-            <h2>{formatUSD(tripData.totalShipping)}</h2>
-          </div>
-          <div className="summary-item">
-            <p className="small">Total Amount USD</p>
-            <h2>{formatUSD(tripData.totalAmountUsd)}</h2>
-          </div>
-          <div className="summary-item">
-            <p className="small">Supplier Amount (Total)</p>
+            <p className="small"> Amount owed Supplier </p>
             <h2>{formatUSD(tripData.supplierAmount)}</h2>
           </div>
           <div className="summary-item">
-            <p className="small">Amount Paid Supplier</p>
+            <p className="small">Amount Paid to Supplier</p>
             <h2 style={{ color: "green" }}>{formatUSD(tripData.amountPaidSupplier)}</h2>
+          </div>
+           <div className="summary-item">
+            <p className="small">Payment Status</p>
+            <h2  style={{ color: tripData.displayStatusColor, fontWeight: '600' }}>{tripData.displayStatus}</h2>
           </div>
         </div>
       </div>

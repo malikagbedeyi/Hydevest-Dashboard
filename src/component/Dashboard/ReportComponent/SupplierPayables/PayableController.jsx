@@ -83,8 +83,6 @@ const payableReportData = useMemo(() => {
     let status = "Settled";
     let statusColor = "green";
 
-    // ✅ FIX: Check payment balance FIRST. 
-    // This ensures if Containers = 0 but Payment > 0, it shows "Over Paid"
     if (amountPaidSupplier > supplierAmount) {
       status = "Over Paid";
       statusColor = "blue"; 
@@ -95,7 +93,6 @@ const payableReportData = useMemo(() => {
       status = "Settled";
       statusColor = "green";
     } else if (tripContainers.length === 0 && amountPaidSupplier === 0) {
-      // Only default to Settled if there are no containers AND no payments
       status = "Settled";
       statusColor = "green";
     }
@@ -112,15 +109,34 @@ const payableReportData = useMemo(() => {
   });
 }, [trips, containers, expenses]);
 
-  const masterMetrics = useMemo(() => {
-    return payableReportData.reduce((acc, curr) => ({
+const masterMetrics = useMemo(() => {
+    const totals = payableReportData.reduce((acc, curr) => ({
       shipping: acc.shipping + curr.totalShipping,
       amountUsd: acc.amountUsd + curr.totalAmountUsd,
       supplierTotal: acc.supplierTotal + curr.supplierAmount,
       paid: acc.paid + curr.amountPaidSupplier
     }), { shipping: 0, amountUsd: 0, supplierTotal: 0, paid: 0 });
-  }, [payableReportData]);
 
+    let status = "Settled";
+    let statusColor = "green";
+
+    if (totals.paid > totals.supplierTotal) {
+      status = "Over Paid";
+      statusColor = "blue";
+    } else if (totals.supplierTotal > totals.paid) {
+      status = "Outstanding";
+      statusColor = "orange";
+    } else if (totals.supplierTotal === totals.paid && totals.supplierTotal > 0) {
+      status = "Settled";
+      statusColor = "green";
+    }
+
+    return {
+      ...totals,
+      displayStatus: status,
+      displayStatusColor: statusColor
+    };
+  }, [payableReportData]);
   const formatUSD = (val) => `$${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
   return (
@@ -134,20 +150,24 @@ const payableReportData = useMemo(() => {
           <div className="drill-summary-grid">
             <div className="drill-summary">
               <div className="summary-item">
-                <p className="small">Total Shipping Amount</p>
-                <h2>{formatUSD(masterMetrics.shipping)}</h2>
-              </div>
-              <div className="summary-item">
-                <p className="small">Total Amount USD</p>
-                <h2>{formatUSD(masterMetrics.amountUsd)}</h2>
-              </div>
-              <div className="summary-item">
-                <p className="small">Total Supplier Amount</p>
+                <p className="small">Total Amount owed to Supplier</p>
                 <h2>{formatUSD(masterMetrics.supplierTotal)}</h2>
               </div>
               <div className="summary-item">
-                <p className="small">Total Amount Paid Supplier</p>
+                <p className="small">Total Amount Paid to Supplier</p>
                 <h2>{formatUSD(masterMetrics.paid)}</h2>
+              </div>
+               <div className="summary-item">
+  <p className="small">Net Balance Owed</p>
+  <h2 style={{ color: masterMetrics.supplierTotal - masterMetrics.paid > 0 ? "orange" : "green" }}>
+    {formatUSD(masterMetrics.supplierTotal - masterMetrics.paid)}
+  </h2>
+</div>
+<div className="summary-item">
+                <p className="small">Global Payment Status</p>
+                <h2 style={{ color: masterMetrics.displayStatusColor }}>
+                  {masterMetrics.displayStatus}
+                </h2>
               </div>
             </div>
           </div>
