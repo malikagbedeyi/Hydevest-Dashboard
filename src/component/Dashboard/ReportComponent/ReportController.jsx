@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import "../../../assets/Styles/dashboard/account/emptyAccount.scss";
-import { Tag, Users, CreditCard, BarChart2 } from "lucide-react";
+import { Tag, Users, CreditCard, BarChart2, PackageCheck, Wallet, HandCoins, DollarSign } from "lucide-react";
 import ContainerSaleReport from "./ContainerSale/ContainerSaleReport";
 
 const reportTypes = [
   { icon: Tag, label: "Container Sales", submenu: "container-sale" },
+  { icon: Wallet, label: "Container payables", submenu: "container-payable" },
+  { icon:HandCoins , label: "Customer Debt", submenu: "customer-dept" },
+  { icon: DollarSign, label: "Profit", submenu: "report-profit" },
   { icon: Users, label: "Partner", submenu: "report-partner" },
   { icon: CreditCard, label: "Purchase", submenu: "report-purchase" },
   { icon: BarChart2, label: "Expensify", submenu: "report-expensify" },
