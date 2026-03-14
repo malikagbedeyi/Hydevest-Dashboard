@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import "../../../assets/Styles/dashboard/account/emptyAccount.scss";
-import { Tag, Users, CreditCard, BarChart2, PackageCheck, Wallet, HandCoins, DollarSign } from "lucide-react";
+import { Tag, Users, CreditCard, BarChart2, PackageCheck, Wallet, HandCoins, DollarSign, ArrowUpCircle } from "lucide-react";
 import ContainerSaleReport from "./ContainerSale/ContainerSaleReport";
+import PayableController from "./SupplierPayables/PayableController";
 
 const reportTypes = [
   { icon: Tag, label: "Container Sales", submenu: "container-sale" },
-  { icon: Wallet, label: "Supp.payables", submenu: "supp-payable" },
+  { icon: Wallet, label: "Supp. Payables", submenu: "supp-payable" },
   { icon:HandCoins , label: "Customer Debt", submenu: "customer-dept" },
-  { icon: DollarSign, label: "Profit", submenu: "report-profit" },
+  { icon: DollarSign, label: "Container Profit", submenu: "report-profit" },
+  { icon: ArrowUpCircle, label: "Financial ", submenu: "report-financial" },
   { icon: Users, label: "Partner", submenu: "report-partner" },
   { icon: CreditCard, label: "Purchase", submenu: "report-purchase" },
   { icon: BarChart2, label: "Expensify", submenu: "report-expensify" },
@@ -63,6 +65,7 @@ const ReportController = () => {
 
           <div className="main-content slide-up">
             {activeReport === "container-sale" && <ContainerSaleReport goBack={resetReportView} />}
+            {activeReport === "supp-payable" && <PayableController goBack={resetReportView} />}
             {activeReport === "report-partner" && <div>Partner Report</div>}
             {activeReport === "report-purchase" && <div>Purchase Report</div>}
             {activeReport === "report-expensify" && <div>Expensify Report</div>}
