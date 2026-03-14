@@ -1,20 +1,21 @@
 import React, { useState, useMemo } from 'react';
 
 const PayableDrilldown = ({ tripData, allContainers, allExpenses, goBack }) => {
-  const [activeTab, setActiveTab] = useState("expenses");
+  const [activeTab, setActiveTab] = useState("containers");
 
+  const tripContainers = useMemo(() => 
+    allContainers.filter(c => 
+      Number(c.trip_id) === Number(tripData.id) || c.trip?.trip_uuid === tripData.trip_uuid
+    ), 
+  [allContainers, tripData]);
 
-const tripContainers = useMemo(() => 
-  allContainers.filter(c => 
-    Number(c.trip_id) === Number(tripData.id) || c.trip?.trip_uuid === tripData.trip_uuid
-  ), 
-[allContainers, tripData]);
+  const tripExpenses = useMemo(() => 
+    allExpenses.filter(e => 
+      (Number(e.trip_id) === Number(tripData.id) || e.trip_uuid === tripData.trip_uuid) 
+      && Number(e.is_container_payment) === 1
+    ), 
+  [allExpenses, tripData]);
 
-const tripExpenses = useMemo(() => 
-  allExpenses.filter(e => 
-    Number(e.trip_id) === Number(tripData.id) || e.trip_uuid === tripData.trip_uuid
-  ), 
-[allExpenses, tripData]);
   const formatUSD = (val) => `$${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
   return (
@@ -47,23 +48,23 @@ const tripExpenses = useMemo(() =>
       <section style={{ background: "#fff", padding: "20px", borderRadius: "16px", marginTop: "20px" }}>
         <div className="tab-section">
           <div className="tab-header">
-            <button className={activeTab === "expenses" ? "active" : ""} onClick={() => setActiveTab("expenses")}>
-              Trip Expenses ({tripExpenses.length})
-            </button>
             <button className={activeTab === "containers" ? "active" : ""} onClick={() => setActiveTab("containers")}>
               Containers ({tripContainers.length})
+            </button>
+            <button className={activeTab === "expenses" ? "active" : ""} onClick={() => setActiveTab("expenses")}>
+              Expense ({tripExpenses.length})
             </button>
           </div>
 
           {activeTab === "expenses" && (
             <div className="userTable">
               <div className="table-wrap">
-                <table className="table" style={{ width: "100%",maxWidth:"100%", }}>
+                <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
                   <thead>
                     <tr>
                       <th>Expense ID</th>
                       <th>Title</th>
-                      <th> Category </th>
+                      <th>Category</th>
                       <th>USD Amount</th>
                       <th>Rate</th>
                       <th>Total NGN</th>
@@ -71,17 +72,23 @@ const tripExpenses = useMemo(() =>
                     </tr>
                   </thead>
                   <tbody>
-                    {tripExpenses.map(exp => (
-                      <tr key={exp.id}>
-                        <td>{exp.expense_unique_id}</td>
-                        <td>{exp.title}</td>
-                        <td>{exp.is_container_payment ? "Container Payment" : "General Payment"}</td>
-                        <td>{formatUSD(exp.amount)}</td>
-                        <td>₦{exp.rate}</td>
-                        <td>₦{exp.total_amount?.toLocaleString()}</td>
-                        <td style={{ color: exp.status === 1  ? "green" : "orange" }}>{exp.status ? "Approved" : "Pending"}</td>
-                      </tr>
-                    ))}
+                    {tripExpenses.length === 0 ? (
+                      <tr><td colSpan="7" style={{ textAlign: 'center' }}>No Container Payments found for this trip</td></tr>
+                    ) : (
+                      tripExpenses.map(exp => (
+                        <tr key={exp.id}>
+                          <td>{exp.expense_unique_id}</td>
+                          <td>{exp.title}</td>
+                          <td>Container Payment</td>
+                          <td>{formatUSD(exp.amount)}</td>
+                          <td>₦{exp.rate}</td>
+                          <td>₦{exp.total_amount?.toLocaleString()}</td>
+                          <td style={{ color: exp.status === 1 ? "green" : "orange" }}>
+                            {exp.status ? "Approved" : "Pending"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -91,7 +98,7 @@ const tripExpenses = useMemo(() =>
           {activeTab === "containers" && (
             <div className="userTable">
               <div className="table-wrap">
-                <table className="table" style={{ width: "100%",maxWidth:"100%", }}>
+                <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
                   <thead>
                     <tr>
                       <th>Container ID</th>
@@ -103,19 +110,23 @@ const tripExpenses = useMemo(() =>
                     </tr>
                   </thead>
                   <tbody>
-                    {tripContainers.map(cont => {
-                       const totalContCost = (cont.unit_price_usd * cont.pieces) + cont.shipping_amount_usd;
-                       return (
-                        <tr key={cont.id}>
-                          <td>{cont.container_unique_id}</td>
-                          <td>TRN-{cont.tracking_number}</td>
-                          <td>{cont.pieces?.toLocaleString()}</td>
-                          <td>{formatUSD(cont.unit_price_usd)}</td>
-                          <td>{formatUSD(cont.shipping_amount_usd)}</td>
-                          <td style={{ fontWeight: 'bold' }}>{formatUSD(totalContCost)}</td>
-                        </tr>
-                       )
-                    })}
+                    {tripContainers.length === 0 ? (
+                      <tr><td colSpan="6" style={{ textAlign: 'center' }}>No Containers found for this trip</td></tr>
+                    ) : (
+                      tripContainers.map(cont => {
+                         const totalContCost = (Number(cont.unit_price_usd) * Number(cont.pieces)) + Number(cont.shipping_amount_usd);
+                         return (
+                          <tr key={cont.id}>
+                            <td>{cont.container_unique_id}</td>
+                            <td>TRN-{cont.tracking_number}</td>
+                            <td>{cont.pieces?.toLocaleString()}</td>
+                            <td>{formatUSD(cont.unit_price_usd)}</td>
+                            <td>{formatUSD(cont.shipping_amount_usd)}</td>
+                            <td style={{ fontWeight: 'bold' }}>{formatUSD(totalContCost)}</td>
+                          </tr>
+                         )
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>

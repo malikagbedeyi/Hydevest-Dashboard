@@ -57,42 +57,61 @@ const fetchData = async () => {
   useEffect(() => {
     fetchData();
   }, []);
- 
-/* ================= AGGREGATION LOGIC ================= */
-  const payableReportData = useMemo(() => {
-    return trips.map((trip) => {
-      // ✅ Use Number() and check both root and nested trip IDs
-      const tripContainers = containers.filter(c => 
-        Number(c.trip_id) === Number(trip.id) || 
-        Number(c.trip?.id) === Number(trip.id)
-      );
-      
-      const totalShipping = tripContainers.reduce((sum, c) => sum + Number(c.shipping_amount_usd || 0), 0);
-      const totalAmountUsd = tripContainers.reduce((sum, c) => {
-        const base = Number(c.unit_price_usd || 0) * Number(c.pieces || 0);
-        return sum + base;
-      }, 0);
-      
-      const supplierAmount = totalAmountUsd + totalShipping;
+/* ================= AGGREGATION LOGIC (FIXED) ================= */
+const payableReportData = useMemo(() => {
+  return trips.map((trip) => {
+    const tripContainers = containers.filter(c => 
+      Number(c.trip_id) === Number(trip.id) || 
+      Number(c.trip?.id) === Number(trip.id)
+    );
+    
+    const totalShipping = tripContainers.reduce((sum, c) => sum + Number(c.shipping_amount_usd || 0), 0);
+    const totalAmountUsd = tripContainers.reduce((sum, c) => {
+      const base = Number(c.unit_price_usd || 0) * Number(c.pieces || 0);
+      return sum + base;
+    }, 0);
+    
+    const supplierAmount = totalAmountUsd + totalShipping;
 
-      const amountPaidSupplier = expenses
-        .filter(e => 
-          (Number(e.trip_id) === Number(trip.id) || Number(e.trip?.id) === Number(trip.id)) 
-          && Number(e.is_container_payment) === 1
-        )
-        .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    const amountPaidSupplier = expenses
+      .filter(e => 
+        (Number(e.trip_id) === Number(trip.id) || e.trip_uuid === trip.trip_uuid) 
+        && Number(e.is_container_payment) === 1
+      )
+      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
-      return {
-        ...trip,
-        totalShipping,
-        totalAmountUsd,
-        supplierAmount,
-        amountPaidSupplier,
-        balanceUSD: supplierAmount - amountPaidSupplier
-      };
-    });
-  }, [trips, containers, expenses]);
-  // Master Totals
+    let status = "Settled";
+    let statusColor = "green";
+
+    // ✅ FIX: Check payment balance FIRST. 
+    // This ensures if Containers = 0 but Payment > 0, it shows "Over Paid"
+    if (amountPaidSupplier > supplierAmount) {
+      status = "Over Paid";
+      statusColor = "blue"; 
+    } else if (supplierAmount > amountPaidSupplier) {
+      status = "Outstanding";
+      statusColor = "orange";
+    } else if (supplierAmount === amountPaidSupplier && supplierAmount > 0) {
+      status = "Settled";
+      statusColor = "green";
+    } else if (tripContainers.length === 0 && amountPaidSupplier === 0) {
+      // Only default to Settled if there are no containers AND no payments
+      status = "Settled";
+      statusColor = "green";
+    }
+
+    return {
+      ...trip,
+      totalShipping,
+      totalAmountUsd,
+      supplierAmount,
+      amountPaidSupplier,
+      displayStatus: status,
+      displayStatusColor: statusColor,
+    };
+  });
+}, [trips, containers, expenses]);
+
   const masterMetrics = useMemo(() => {
     return payableReportData.reduce((acc, curr) => ({
       shipping: acc.shipping + curr.totalShipping,

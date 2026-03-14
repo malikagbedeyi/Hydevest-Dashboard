@@ -49,12 +49,12 @@ const PayableTable = ({ data, onRowClick, goBack }) => {
                 <td>{trip.location}</td>
                 <td>{trip.start_date} </td>
                 <td> {trip.end_date}</td>
-                <td>{trip.creator_info?.firstname}</td>
-                <td>
-                  <span style={{ color: trip.balanceUSD <= 0 ? "green" : "orange" }}>
-                    {trip.balanceUSD <= 0 ? "Settled" : "Pending"}
-                  </span>
-                </td>
+                <td>{trip.creator_info?.firstname} {trip.creator_info?.lastname}</td>
+<td>
+  <span style={{ color: trip.displayStatusColor, fontWeight: '600' }}>
+    {trip.displayStatus}
+  </span>
+</td>
               </tr>
             ))}
           </tbody>
