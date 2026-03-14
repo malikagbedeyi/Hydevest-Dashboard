@@ -5,12 +5,13 @@ import { Tag, Users, CreditCard, BarChart2, PackageCheck, Wallet, HandCoins, Dol
 import ContainerSaleReport from "./ContainerSale/ContainerSaleReport";
 import PayableController from "./SupplierPayables/PayableController";
 import DebtController from "./CustomerDebt/DebtController";
+import ContainerProfitController from "./ContainerProfit/ContainerProfitController";
 
 const reportTypes = [
   { icon: Tag, label: "Container Sales", submenu: "container-sale" },
   { icon: Wallet, label: "Supp. Payables", submenu: "supp-payable" },
   { icon:HandCoins , label: "Customer Debt", submenu: "customer-dept" },
-  { icon: DollarSign, label: "Container Profit", submenu: "report-profit" },
+  { icon: DollarSign, label: "Container Profit", submenu: "container-profit" },
   { icon: ArrowUpCircle, label: "Financial ", submenu: "report-financial" },
   { icon: Users, label: "Partner", submenu: "report-partner" },
   { icon: CreditCard, label: "Purchase", submenu: "report-purchase" },
@@ -68,7 +69,7 @@ const ReportController = () => {
             {activeReport === "container-sale" && <ContainerSaleReport goBack={resetReportView} />}
             {activeReport === "supp-payable" && <PayableController goBack={resetReportView} />}
             {activeReport === "customer-dept" && <DebtController goBack={resetReportView} />}
-            {activeReport === "report-purchase" && <div>Purchase Report</div>}
+            {activeReport === "container-profit" &&  <ContainerProfitController goBack={resetReportView} />}
             {activeReport === "report-expensify" && <div>Expensify Report</div>}
           </div>
         </div>
