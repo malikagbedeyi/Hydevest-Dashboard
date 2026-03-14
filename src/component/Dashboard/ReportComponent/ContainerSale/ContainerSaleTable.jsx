@@ -73,15 +73,15 @@ const filteredData = useMemo(() => {
             <h2>{totalContainers}</h2>
           </div>
           <div className="summary-item">
-            <p className="small">Total Sale Amount</p>
+            <p className="small">Total Sales to Date</p>
             <h2>₦{totalSaleAmount.toLocaleString()}</h2>
           </div>
           <div className="summary-item">
-            <p className="small">Total Recovery Amount</p>
+            <p className="small">Total Recovery to Date</p>
             <h2>₦{totalRecoveryAmount.toLocaleString()}</h2>
           </div>
           <div className="summary-item">
-            <p className="small">Outstanding Balance</p>
+            <p className="small">Total Amount Receivable</p>
             <h2>₦{totalOutstandingBalance.toLocaleString()}</h2>
           </div>
           <div className="summary-item">
