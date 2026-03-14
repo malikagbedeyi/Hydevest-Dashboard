@@ -26,14 +26,9 @@ const [showFilters, setShowFilters] = useState(false);
 const [openStatusSelect, setOpenStatusSelect] = useState(false);
 const [openProgressSelect, setOpenProgressSelect] = useState(false);
 
-// Inside TripController.jsx
 const { autoOpenCreate, setAutoOpenCreate } = useOutletContext();
 
-useEffect(() => {
-  if (autoOpenCreate === "create") { 
-    setAutoOpenCreate(null); 
-  }
-}, [autoOpenCreate]);
+
 
 
   const logFields = ["all", "All Field", "Performed By"];
@@ -100,6 +95,13 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [page, filters]);
   /* ===================== UI ===================== */
+ useEffect(() => {
+      if (autoOpenCreate) {
+        setView("create");
+        setAutoOpenCreate(false); 
+      }
+    }, [autoOpenCreate])
+  
 
   return (
     <div className="controller">

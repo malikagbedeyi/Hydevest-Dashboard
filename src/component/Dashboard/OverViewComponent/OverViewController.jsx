@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { TrendingUp, DollarSign, Package, Activity, Clock, PlusCircle, ArrowRight, Loader2, PlaneTakeoff, Tag } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+import { TrendingUp, DollarSign, Package, Activity, Clock, PlusCircle, ArrowRight, Loader2, PlaneTakeoff, Tag, Calendar } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import "../../../assets/Styles/dashboard/drilldown.scss"; 
 import { RecoveryServices } from '../../../services/Sale/recovery';
 import { SaleServices } from '../../../services/Sale/sale';
@@ -17,55 +17,66 @@ const OverViewController = () => {
     recentSales: [],
     chartData: []
   });
-const { openSubmenuFromChild } = useOutletContext();
+
+  // Date Filter State
+  const [dateRange, setDateRange] = useState({
+    from: new Date(new Date().setMonth(new Date().getMonth() - 5)).toISOString().split('T')[0], // 6 months ago
+    to: new Date().toISOString().split('T')[0] // Today
+  });
+
+  const { openSubmenuFromChild } = useOutletContext();
   const [navigating, setNavigating] = useState(false);
 
- const fetchData = async () => {
+/* ================= FETCH DATA (UPDATED LOGIC) ================= */
+const fetchData = async () => {
   try {
     setLoading(true);
+    
+    const apiFromDate = dateRange.from;
+    const apiToDate = `${dateRange.to} 23:59:59`; 
+
     const [salesRes, recoveryRes, containerRes] = await Promise.all([
-      SaleServices.list({ page: 1 }), 
-      RecoveryServices.list({ page: 1 }),
+      SaleServices.list({ from_date: apiFromDate, to_date: apiToDate }), 
+      RecoveryServices.list({ from_date: apiFromDate, to_date: apiToDate }),
       ContainerServices.list({ page: 1 })
     ]);
 
     const salesRaw = salesRes?.data?.record?.data || [];
-    
-    // 1. Generate the last 6 months as a baseline (so Jan, Feb etc show up as 0)
+  
+    const totalSalesFromBackend = salesRes?.data?.record?.total || salesRaw.length;
+
+    /* ================= GENERATE CHART DATA ================= */
+    const start = new Date(dateRange.from);
+    const end = new Date(dateRange.to);
     const chartBase = {};
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      const label = d.toLocaleString('en-GB', { month: 'short', year: 'numeric' }); // "Mar 2026"
+
+    let current = new Date(start.getFullYear(), start.getMonth(), 1);
+    while (current <= end) {
+      const label = current.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
       chartBase[label] = { name: label, Sales: 0, recovered: 0 };
+      current.setMonth(current.getMonth() + 1);
     }
 
-    // 2. Map existing sales into those month buckets
     salesRaw.forEach(sale => {
       const date = new Date(sale.created_at);
       const label = date.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
-      
-      // Only add to the bucket if it exists in our 6-month window
       if (chartBase[label]) {
         chartBase[label].Sales += Number(sale.total_sale_amount || 0);
         chartBase[label].recovered += Number(sale.amount_paid || 0);
       }
     });
 
-    const chartMap = Object.values(chartBase);
-
-    // Calculate totals for matrix section
     const totalRev = salesRaw.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
     const totalRec = salesRaw.reduce((sum, s) => sum + Number(s.amount_paid || 0), 0);
 
     setDashboardData({
       totalContainer: containerRes?.data?.record?.total || 0,
-      totalSales: salesRes?.data?.record?.total || 0,
+      totalSales: totalSalesFromBackend, // Show 9 here
       totalRevenue: totalRev,
       totalRecovered: totalRec,
       pendingBalance: Math.max(totalRev - totalRec, 0),
-      recentSales: salesRaw.slice(0, 5),
-      chartData: chartMap 
+      recentSales: salesRaw.slice(0, 7), 
+      chartData: Object.values(chartBase) 
     });
   } catch (err) {
     console.error("Error loading overview data", err);
@@ -76,27 +87,21 @@ const { openSubmenuFromChild } = useOutletContext();
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [dateRange]);
 
   const formatCurrency = (val) => 
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(val);
 
-
-const handleAction = (parentId, path, action) => {
+  const handleAction = (parentId, path, action) => {
     setNavigating(true);
-
-    setTimeout(() => {
-      openSubmenuFromChild(parentId, path, action);
-    }, 400);
+    setTimeout(() => { openSubmenuFromChild(parentId, path, action); }, 400);
   };
 
   if (loading || navigating) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '80vh', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
         <Loader2 size={50} className="animate-spin" color="#581aae" />
-        <p style={{ color: '#581aae', fontWeight: '600' }}>
-          {navigating ? "Opening modules..." : "Preparing Dashboard..."}
-        </p>
+        <p style={{ color: '#581aae', fontWeight: '600' }}>{navigating ? "Opening modules..." : "Syncing Data..."}</p>
       </div>
     );
   }
@@ -104,10 +109,11 @@ const handleAction = (parentId, path, action) => {
   return (
     <div className="drilldown" style={{ padding: "20px" }}>
       
+      {/* 1. TOP METRICS */}
       <div className="drill-summary-grid">
         <div className="drill-summary">
           <div className="summary-item">
-            <p className="small">Total Revenue</p>
+            <p className="small">Total Sales (Period)</p>
             <h2>{formatCurrency(dashboardData.totalRevenue)}</h2>
           </div>
           <div className="summary-item">
@@ -125,10 +131,34 @@ const handleAction = (parentId, path, action) => {
         </div>
       </div>
 
-      {/* 2. CHART & QUICK ACTIONS SECTION */}
       <div className="grid-overview-main mt-4" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
+        
+        {/* CHART SECTION */}
         <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-          <h4 style={{ marginBottom: '20px', fontWeight: '600',color:"#581aae" }}>Sales vs Recovery Trend</h4>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h4 style={{ fontWeight: '600', color: "#581aae" }}>Sales vs Recovery Trend</h4>
+            
+            {/* DATE FILTERS */}
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#f8f9fa', padding: '5px 10px', borderRadius: '8px', border: '1px solid #eee' }}>
+                <Calendar size={14} color="#581aae" />
+                <input 
+                  type="date" 
+                  value={dateRange.from} 
+                  onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+                  style={{ border: 'none', background: 'transparent', fontSize: '12px', outline: 'none' }}
+                />
+                <span style={{ fontSize: '12px', color: '#999' }}>to</span>
+                <input 
+                  type="date" 
+                  value={dateRange.to} 
+                  onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+                  style={{ border: 'none', background: 'transparent', fontSize: '12px', outline: 'none' }}
+                />
+              </div>
+            </div>
+          </div>
+
           <div style={{ width: '100%', height: 300 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={dashboardData.chartData}>
@@ -139,7 +169,7 @@ const handleAction = (parentId, path, action) => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                <XAxis  dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#666'}} dy={10} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#666' }} dy={10} />
                 <YAxis hide />
                 <Tooltip 
                   contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
@@ -151,7 +181,6 @@ const handleAction = (parentId, path, action) => {
             </ResponsiveContainer>
           </div>
         </div>
-
         {/* QUICK ACTIONS BOX */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", color: "#581aae",boxShadow: '0 4px 12px rgba(0,0,0,0.1)'  }}>
@@ -180,9 +209,9 @@ const handleAction = (parentId, path, action) => {
             </div>
           </div>
 
-          <div style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' , marginTop:"1vw",background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee' }}>
-            <p className="small" style={{ color: '#666', }}>Total Containers</p>
-            <h3 style={{ margin: '5px 0' }}>{dashboardData.totalContainer}</h3>
+          <div style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' ,  marginTop:"1vw",background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee' }}>
+            <p  className="summary-card-hover"  onClick={() => handleAction("/dashboard/purchase", "/dashboard/container", "table")} style={{ color: '#666' }}>Total Containers</p>
+            <h3 style={{ margin: '5px 0',cursor: 'pointer', }}>{dashboardData.totalContainer}</h3>
             <div style={{ color: '#581aae', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
             onClick={() =>  handleAction("/dashboard/report", "/dashboard/report", "container-sale")}>
               View Reports <ArrowRight size={12} />
