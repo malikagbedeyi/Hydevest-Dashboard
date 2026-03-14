@@ -6,7 +6,7 @@ import ContainerSaleReport from "./ContainerSale/ContainerSaleReport";
 
 const reportTypes = [
   { icon: Tag, label: "Container Sales", submenu: "container-sale" },
-  { icon: Wallet, label: "Container payables", submenu: "container-payable" },
+  { icon: Wallet, label: "Supp.payables", submenu: "supp-payable" },
   { icon:HandCoins , label: "Customer Debt", submenu: "customer-dept" },
   { icon: DollarSign, label: "Profit", submenu: "report-profit" },
   { icon: Users, label: "Partner", submenu: "report-partner" },
