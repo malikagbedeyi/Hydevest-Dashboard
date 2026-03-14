@@ -86,7 +86,7 @@ setForm(prev => ({
       pallet_uuid: available.pallet_uuid,
       palletOption: available.pallet_pieces,
       purchasePrice: 0,
-      pricePerPic: Number(presale?.price_per_piece) || 0, // ⭐ ADD THIS
+      pricePerPic: Number(presale?.price_per_piece) || 0,
       noOfPallets: 0,
       remaining_no_of_pallets: available.remaining_no_of_pallets || 0,
       createdAt: new Date().toISOString(),

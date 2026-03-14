@@ -69,7 +69,7 @@ const fetchRecoveries = async (pageNum = page) => {
       setLoading(true);
       const result = await RecoveryServices.list({
         page: pageNum,
-        ...filters // ✅ THIS SENDS YOUR FILTERS TO THE BACKEND
+        ...filters 
       });
 
       const records = result.data?.record?.data || [];

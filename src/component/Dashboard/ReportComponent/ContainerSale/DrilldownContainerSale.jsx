@@ -60,7 +60,7 @@ const presaleAmount = useMemo(() => {
           </div>
            <div className="summary-item">
             <p className='small'> UnSold  Stock</p>
-            <h2>{formatMoneyNGN(data.totalSaleAmount)}</h2>
+            <h2>{formatMoneyNGN(0)}</h2>
           </div>
         </div>
       </div>

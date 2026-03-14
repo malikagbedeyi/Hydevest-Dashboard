@@ -79,6 +79,7 @@ const RecoveryTable = ({
               <tr>
                 <th>S/N</th>
                 <th>Sale ID</th>
+                <th>Tracking Number</th>
                 <th>Customer Name</th>
                 <th>Phone</th>
                 <th>Amount Paid</th>
@@ -102,9 +103,9 @@ const RecoveryTable = ({
                   <tr key={rec.id} onClick={() => handleRowClick?.(rec)}>
                     <td>{(pagination.page - 1) * pagination.limit + idx + 1} </td>
                     <td>{rec.sale?.sale_unique_id}</td>
+                    <td>TRN-{rec.container?.tracking_number || "N/A"}</td>
                     <td>{rec.customerName}</td>
                     <td>{rec.customerPhone}</td>
-
                     <td>{formatMoney(rec.amountPaid)}</td>
                     <td>{rec.creator_info.firstname} {rec.creator_info.lastname}</td>
                     <td style={{color:rec?.sale?.payment_status=== "Full Payment" ? "green":"orange"}}> {rec?.sale?.payment_status}</td>

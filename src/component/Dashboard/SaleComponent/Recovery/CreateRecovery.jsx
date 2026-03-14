@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "../../../../assets/Styles/dashboard/create.scss";
 import { ChevronDown, Paperclip, Trash2 } from "lucide-react";
 import { RecoveryServices } from "../../../../services/Sale/recovery";
+import { SaleServices } from "../../../../services/Sale/sale";
 
 const CreateRecovery = ({ setView, onCreate }) => {
 
@@ -30,7 +31,8 @@ const [availablePayments] = useState(["Cash", "Transfer"]);
   const [attachments, setAttachments] = useState([]);
   const [collapsedContainers, setCollapsedContainers] = useState(false);
 const [popup, setPopup] = useState({open: false,type: "", message: ""});
-
+const [saleDetails, setSaleDetails] = useState([]);
+const [containerTracking, setContainerTracking] = useState("");
 
 
   /* ===================== CUSTOMER SEARCH ===================== */
@@ -81,8 +83,42 @@ setLoadingCustomer(false);
   fetchCustomers();
 }, [customerSearch,debouncedSearch]);
 
+useEffect(() => {
+  if (!selectedSale?.sale_uuid) return;
 
+  const fetchSaleDetails = async () => {
+    try {
+      const res = await SaleServices.details({
+        sale_uuid: selectedSale.sale_uuid,
+      });
 
+      const records = res?.data?.record || [];
+      setSaleDetails(records);
+
+      if (records.length > 0) {
+        const containerId = records[0].container_id;
+
+        const saleMatch = customerSales.find(
+          (s) => s.container?.id === containerId
+        );
+
+        if (saleMatch) {
+          setContainerTracking(saleMatch.container?.tracking_number || "");
+        }
+      }
+
+    } catch (err) {
+      console.error("Failed to fetch sale details", err);
+      setSaleDetails([]);
+    }
+  };
+
+  fetchSaleDetails();
+}, [selectedSale, customerSales]);
+const totalPalletPurchased = saleDetails.reduce(
+  (sum, item) => sum + Number(item.pallet_purchased || 0),
+  0
+);
   /* ===================== FETCH SALES BY CUSTOMER ===================== */
 
   useEffect(() => {
@@ -443,11 +479,12 @@ setCustomers([]);
                   <p style={{ color: "green" }}>Fully Paid</p>
                 ) : (
                   <ul className={collapsedContainers ? "" : "d-none"}>
-                    <li>No Of Pallets: {formatNumber(selectedSale.noOfPallets)}</li>
+                    <li>Pallet Purchased: {formatNumber(totalPalletPurchased)}</li>
                     <li>Customer Phone: {selectedSale.customer?.phone}</li>
                     <li>Total Sale Amount: ₦{formatMoney(selectedSale.totalSaleAmount)}</li>
                     <li>Payment to Date: ₦{formatMoney(selectedSale.amountPaid)}</li>
                     <li>Outstanding Balance: ₦{formatMoney(selectedSale.balance)}</li>
+                    <li> Tracking Number: TRN-{containerTracking || "N/A"}</li>
                     <li>Date Created: {formatDate(selectedSale.createdAt)}</li>
                   </ul>
 
