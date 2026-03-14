@@ -44,7 +44,8 @@ const [filters, setFilters] = useState({
 });
 
 const logFields = ["all", "Pre-sale ID", "Performed By"];
-const preSaleFields = ["all", "pre_sale_unique_id", "sale_option", "date_created"]; 
+
+const preSaleFields = ["all", "Pre-sale ID",];
 const activeFields = activeTab === "table" ? preSaleFields : logFields;
 
 useEffect(() => {
@@ -186,7 +187,20 @@ const avgPricePerKg =
 />
     );
   }
+const filteredData = datas.filter(sale => {
+  if (!search) return true;
 
+  if (searchField === "all") {
+    return (
+      sale.pre_sale_unique_id?.toLowerCase().includes(search.toLowerCase()) ||
+      sale.sale_option?.toLowerCase().includes(search.toLowerCase()) ||
+      sale.tracking_number?.toLowerCase().includes(search.toLowerCase())
+    );
+  } else {
+    const fieldValue = sale[searchField];
+    return fieldValue?.toLowerCase().includes(search.toLowerCase());
+  }
+});
   /* ================= CREATE VIEW ================= */
   if (view === "create") {
     return (
@@ -239,18 +253,41 @@ const avgPricePerKg =
               <div className="right-wrapper">
                 <div className="right-wrapper-input">
                   <Search className="input-icon" />
-    <input
+<input
   placeholder={`Search by ${searchField === 'all' ? 'All Fields' : searchField}...`}
   value={search}
   onChange={(e) => {
     const value = e.target.value;
     setSearch(value);
+    
     setFilters((prev) => {
-      const updated = { ...prev };
+      // Clear previous search filters to avoid conflicts
+      const updated = { 
+        ...prev, 
+        pre_sale_unique_id: "", 
+        sale_option: "", 
+        tracking_number: "", 
+        status: "" 
+      };
+
       if (activeTab === "table") {
-        updated.pre_sale_unique_id = (searchField === "all" || searchField === "pre_sale_unique_id") ? value : "";
+        if (searchField === "all") {
+          updated.pre_sale_unique_id = value;
+          updated.sale_option = value;
+          updated.tracking_number = value;
+        } else {
+          const fieldMap = {
+            "Pre-sale ID": "pre_sale_unique_id",
+            "Tracking Number": "tracking_number",
+            "Sale Option": "sale_option",
+            "Status": "status",
+            "Date Created": "date_created"
+          };
+          const apiKey = fieldMap[searchField];
+          if (apiKey) updated[apiKey] = value;
+        }
       } else {
-        // LOG MAPPING
+
         updated.entity_id = (searchField === "all" || searchField === "Pre-sale ID") ? value : "";
         updated.user_name = (searchField === "all" || searchField === "Performed By") ? value : "";
       }
