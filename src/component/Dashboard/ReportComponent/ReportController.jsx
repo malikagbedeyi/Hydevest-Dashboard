@@ -4,6 +4,7 @@ import "../../../assets/Styles/dashboard/account/emptyAccount.scss";
 import { Tag, Users, CreditCard, BarChart2, PackageCheck, Wallet, HandCoins, DollarSign, ArrowUpCircle } from "lucide-react";
 import ContainerSaleReport from "./ContainerSale/ContainerSaleReport";
 import PayableController from "./SupplierPayables/PayableController";
+import DebtController from "./CustomerDebt/DebtController";
 
 const reportTypes = [
   { icon: Tag, label: "Container Sales", submenu: "container-sale" },
@@ -66,7 +67,7 @@ const ReportController = () => {
           <div className="main-content slide-up">
             {activeReport === "container-sale" && <ContainerSaleReport goBack={resetReportView} />}
             {activeReport === "supp-payable" && <PayableController goBack={resetReportView} />}
-            {activeReport === "report-partner" && <div>Partner Report</div>}
+            {activeReport === "customer-dept" && <DebtController goBack={resetReportView} />}
             {activeReport === "report-purchase" && <div>Purchase Report</div>}
             {activeReport === "report-expensify" && <div>Expensify Report</div>}
           </div>

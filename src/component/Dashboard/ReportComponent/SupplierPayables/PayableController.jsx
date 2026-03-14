@@ -31,22 +31,19 @@ const fetchData = async () => {
     setTrips(tripData);
     setContainers(contData);
 
-    // 2. Extract unique Trip UUIDs from the trips found
     const tripUuids = tripData.map(t => t.trip_uuid).filter(Boolean);
     
-    // 3. Fetch Expenses for each trip individually to avoid the 400 error
     const expensePromises = tripUuids.map(uuid => 
       ExpenseServices.list({ trip_uuid: uuid })
         .then(res => res?.data?.record?.data || [])
-        .catch(() => []) // If one fails, return empty array for that trip
+        .catch(() => []) 
     );
 
     const allExpensesArrays = await Promise.all(expensePromises);
-    const combinedExpenses = allExpensesArrays.flat(); // Merge all into one list
+    const combinedExpenses = allExpensesArrays.flat(); 
 
     setExpenses(combinedExpenses);
 
-    console.log("Payable Debug -> Combined Expenses Total:", combinedExpenses.length);
   } catch (err) {
     console.error("Critical error fetching payable data", err);
   } finally {

@@ -28,7 +28,6 @@ const RetailerController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) 
     
 
       setData(res.data.record?.data || []);
-      console.log("customer data",res.data)
       setCurrentPage(res.data.record?.current_page || 1);
       setTotalPages(res.data.record?.last_page || 1);
     } catch (err) {

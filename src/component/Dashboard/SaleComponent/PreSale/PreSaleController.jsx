@@ -69,7 +69,6 @@ useEffect(() => {
 useEffect(() => {
   const fetchContainers = async () => {
     try {
-      // Use Sale container list endpoint instead of presale
       const res = await PresaleServices.containerList({});
       setContainers(res.data?.record ?? []);
     } catch (err) {
@@ -219,7 +218,7 @@ const filteredData = datas.filter(sale => {
       <CreatePreSale
         containersData={containers}
         setView={setView}
-        datas={datas} // Current list
+        datas={datas} 
       setDatas={setDatas}
         refreshTable={() => fetchPreSales(1)}
       />
@@ -265,7 +264,7 @@ const filteredData = datas.filter(sale => {
               <div className="right-wrapper">
                 <div className="right-wrapper-input">
                   <Search className="input-icon" />
-<input
+                  <input
   placeholder={`Search by ${searchField === 'all' ? 'All Fields' : searchField}...`}
   value={search}
   onChange={(e) => {
@@ -273,7 +272,6 @@ const filteredData = datas.filter(sale => {
     setSearch(value);
     
     setFilters((prev) => {
-      // Clear previous search filters to avoid conflicts
       const updated = { 
         ...prev, 
         pre_sale_unique_id: "", 
@@ -318,7 +316,6 @@ const filteredData = datas.filter(sale => {
 
                 <div className="select-input">
   <div className="select-input-field">
-
     <div
       className="custom-select-drop"
       onClick={() => setOpenFieldSelect(!openFieldSelect)}

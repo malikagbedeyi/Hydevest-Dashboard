@@ -12,9 +12,10 @@ const PayableTable = ({ data, onRowClick, goBack }) => {
   }, [data, searchTerm]);
 
   return (
-    <div className="userTable">
-      <div className="top-content">
-        <div className="right-wrapper">
+    <>
+       <div className="top-content">
+       <div className="top-content-wrapper">
+         <div className="right-wrapper">
           <div className="right-wrapper-input">
             <Search className="input-icon" />
             <input 
@@ -24,8 +25,9 @@ const PayableTable = ({ data, onRowClick, goBack }) => {
             />
           </div>
         </div>
+       </div>
       </div>
-
+    <div className="userTable">
       <div className="table-wrap">
         <table className="table" style={{ width: "100%",maxWidth:"100%", }}>
           <thead>
@@ -64,6 +66,7 @@ const PayableTable = ({ data, onRowClick, goBack }) => {
         <button className="cancel" onClick={goBack}>Previous</button>
       </div>
     </div>
+    </>
   );
 };
 
