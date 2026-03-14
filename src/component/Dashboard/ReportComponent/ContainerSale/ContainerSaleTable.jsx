@@ -60,8 +60,7 @@ const filteredData = useMemo(() => {
   const totalRecoveryAmount = filteredData.reduce((sum, item) => sum + (Number(item.SamountPaid) || 0), 0);
   const totalOutstandingBalance = filteredData.reduce((sum, item) => sum + (Number(item.balance) || 0), 0);
   
-  // Presale total matches the visible containers
-  const totalPresaleAmount = presales.reduce((sum, p) => sum + (Number(p.expected_sales_revenue) || 0), 0);
+const totalPresaleAmount = filteredData.reduce((sum, item) => sum + (Number(item.expectedPresaleAmount) || 0), 0);
 
   return (
     <div>
@@ -236,11 +235,12 @@ const filteredData = useMemo(() => {
             <thead>
               <tr>
                 <th>S/N</th>
-                <th>Container</th>
+                {/* <th>Container</th> */}
                 <th> Tracking Number</th>
                 <th>Sales to Date</th>
                 <th>Recovery to Date</th>
                 <th>Amount Receivable</th>
+                <th>Expected Revenue</th>
                 <th>UnSold Stock</th>
                 <th>Payment Status</th>
               </tr>
@@ -256,13 +256,14 @@ const filteredData = useMemo(() => {
                 filteredData.map((row, idx) => (
                   <tr key={row.containerId} onClick={() => onRowClick(row)} style={{ cursor: "pointer" }}>
                     <td>{idx + 1}</td>
-                    <td>{row.containerName}</td>
-                    <td>TN{row.trackingNumber}</td>
+                    {/* <td>{row.containerName}</td> */}
+                    <td>TRN-{row.trackingNumber}</td>
                     <td>₦{row.totalSaleAmount.toLocaleString()}</td>
                     <td>₦{row.SamountPaid.toLocaleString()}</td>
                     <td style={{ color: row.balance > 0 ? '#d9534f' : '#5cb85c' }}>
                         ₦{row.balance.toLocaleString()}
                     </td>
+                    <td>₦{row.expectedPresaleAmount?.toLocaleString()}</td>
                     <td>₦{0}</td>
                     <td> <span  style={{ color: row?.balance  <= 0 ? "green" : "orange" }}>
                       {row?.balance <= 0 ? "Full Payment":"Part Payment" }
