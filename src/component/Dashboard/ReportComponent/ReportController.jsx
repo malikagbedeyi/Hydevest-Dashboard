@@ -47,9 +47,9 @@ const ReportController = () => {
       <div className="emptyAccount-container">
         <div className="emptyAccount-content">
           {!activeReport && (
-            <div className="top-content fade-in">
+            <div className="top-content slide-up">
               <div className="top-content-account">
-                <div className="top-content-account-wrappper" style={{ gridTemplateColumns: "repeat(4,1fr)" }}>
+                <div className="top-content-account-wrappper" style={{ gridTemplateColumns: "repeat(3,1fr)",gap:"3vw" }}>
               {reportTypes.map(({ icon: Icon, label, submenu, ready }) => (
   <div
     key={label}
