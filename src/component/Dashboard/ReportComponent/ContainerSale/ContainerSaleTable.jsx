@@ -237,7 +237,7 @@ const filteredData = useMemo(() => {
               <tr>
                 <th>S/N</th>
                 <th>Container</th>
-                <th>Container Tracking Number</th>
+                <th> Tracking Number</th>
                 <th>Total Sale Amount</th>
                 <th>Total Recovery Amount</th>
                 <th>Outstanding</th>

@@ -138,7 +138,7 @@ salesArray.forEach((sale) => {
       <div className="section-report-head">
         <h3>
           {selectedContainer
-            ? `Container Tracking Number:TRN-${selectedContainer.trackingNumber}`
+            ? `Tracking Number:TRN-${selectedContainer.trackingNumber}`
             : "Container Sale Report"}
         </h3>
       </div>

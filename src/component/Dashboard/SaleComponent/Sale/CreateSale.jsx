@@ -143,6 +143,7 @@ setForm(prev => ({
       palletId: p.id,
       containerId: container.container.id,
       containerName: container.container.name,
+      PresaleID: p.pre_sale_unique_id,
       purchasePrice: p.purchasePrice,
       noOfPallets: p.noOfPallets,
       palletOption: p.palletOption,
@@ -151,12 +152,15 @@ setForm(prev => ({
     }))
   ), [containerSales]);
 
-  const activeContainer = useMemo(() => {
-    if (activeContainerId && containerSales[activeContainerId]) return containerSales[activeContainerId];
-    return Object.values(containerSales).find(c => c.pallets.length > 0);
-  }, [activeContainerId, containerSales]);
 
+const activeContainer = useMemo(() => {
+  if (selectedContainer && containerSales[selectedContainer.id]) {
+    return containerSales[selectedContainer.id];
+  }
+  return Object.values(containerSales).find(c => c.pallets.length > 0);
+}, [selectedContainer, containerSales]);
   const computedTotalSaleAmount = useMemo(() => totalSaleAmount(tableSaleItems), [tableSaleItems]);
+
   const computedNoOfPallets = totalPalletCount(containerSales);
   const computedPurchasePricePerPiece = totalPurchasePricePerPiece(containerSales);
 
@@ -211,10 +215,10 @@ const buildCreatePayload = (customer) => {
     container_uuid: selectedContainer.container_uuid,
     pre_sale_uuid: presale.pre_sale_uuid,
     customer_uuid: customer.user_uuid,
-    purchase_prices: purchase_prices.join(","),       // ✅ array as CSV
-    pallets_purchased: pallets_purchased.join(","),   // ✅ array as CSV
-    pallet_uuids: pallet_uuids.join(","),             // ✅ array as CSV
-    pallet_pieces: pallet_pieces.join(","),           // ✅ array as CSV
+    purchase_prices: purchase_prices.join(","),      
+    pallets_purchased: pallets_purchased.join(","),  
+    pallet_uuids: pallet_uuids.join(","),            
+    pallet_pieces: pallet_pieces.join(","),         
     amount_paid: Number(amountPaid) || 0,
     total_sale_amount: containerData.pallets.reduce((sum, p) => sum + Number(p.total || 0), 0) - discount,
     discount,
@@ -251,6 +255,7 @@ const handleSaveSaleItems = () => {
   if (!form.pallets.length) return;
   const containerId = activeContainerId;
   if (!containerId) return;
+  const presaleInfo = presaleByContainerId[containerId];
 
   setContainerSales(prev => {
     const updated = { ...prev };
@@ -258,7 +263,7 @@ const handleSaveSaleItems = () => {
 
     form.pallets.forEach(p => {
       const price = Number(p.purchasePrice) || 0;
-      const qty = Math.min(Number(p.noOfPallets) || 0, Number(p.remaining_no_of_pallets) || 0);
+      const qty = Number(p.noOfPallets) || 0;
       const pieces = Number(p.palletOption) || 0;
 
       if (!price || !qty || !p.pallet_uuid) return;
@@ -269,7 +274,8 @@ const handleSaveSaleItems = () => {
         palletOption: pieces,
         purchasePrice: price,
         noOfPallets: qty,
-        total: price * qty * pieces, // ✅ store total here
+        total: price * qty * pieces,
+        pre_sale_unique_id: presaleInfo?.pre_sale_unique_id || "N/A", 
         createdAt: p.createdAt || new Date().toISOString(),
       };
 
@@ -299,14 +305,30 @@ const handleSaveSaleItems = () => {
   );
 });
 
-  const toggleSelect = (item) => {
-    if (activeContainerId && containerSales[item.id]?.pallets?.length > 0) {
-      setSuccessMessage("You cannot remove a container that already has sale items");
-      return;
-    }
-    setSelectedContainer(item);
-  };
 
+const toggleSelect = (item) => {
+
+  const hasExistingSaleItems = Object.values(containerSales)
+    .some(c => c.pallets && c.pallets.length > 0);
+
+  if (hasExistingSaleItems && selectedContainer?.id !== item.id) {
+    setSuccessMessage(
+      "You cannot select another container because sale items already exist for the current container."
+    );
+    return;
+  }
+
+  if (salePop && activeContainerId !== item.id) {
+    setSuccessMessage(
+      "Please save or cancel the current item before switching containers."
+    );
+    return;
+  }
+
+  setSelectedContainer(item);
+  setActiveContainerId(item.id);
+  setForm(prev => ({ ...prev, pallets: [] }));
+};
   // ---------------------- FETCH PALLETS ----------------------
   useEffect(() => {
     if (!selectedContainer) return;
@@ -573,20 +595,20 @@ useEffect(() => {
             />
 
             {/* ================= ACTIVE CONTAINER TOTALS / TABLE ================= */}
-            {activeContainer && activeContainer.pallets.length > 0 && (
-              <div className="sale-row">
-                {tableSaleItems.length > 0 && (
-                  <div className="sale-row mt-3">
-                    <SaleItemsTable
-                      items={tableSaleItems}
-                      onDelete={handleDeleteSaleItem}
-                      onEdit={handleEditSaleItem}
-                      formatNumber={formatNumber}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
+
+{tableSaleItems.length > 0 && (
+  <div className="sale-row mt-3">
+    <div className="sale-header-details">
+       <h3 className="title-text" style={{color: "#581aae"}}>Added Sale Items ({tableSaleItems.length})</h3>
+    </div>
+    <SaleItemsTable
+      items={tableSaleItems}
+      onDelete={handleDeleteSaleItem}
+      onEdit={handleEditSaleItem}
+      formatNumber={formatNumber}
+    />
+  </div>
+)}
 
             {/* ================== Totals & Payments ================== */}
             <div className="grid-2 mt-3">

@@ -37,22 +37,23 @@ const { presaleByContainerId, isPurchasePriceLowerThanPresale } = usePresaleHelp
 const saleItems = useMemo(() => {
   if (!editableData?.containers) return [];
 
-  return editableData.containers.flatMap((c) =>
-    c.pallets.map((p) => ({
-      palletId: p.id,
-      containerId: c.containerId,
-      containerName: c.name,
-
-      purchasePrice: p.purchase_price,
-      noOfPallets: p.pallet_purchased,
-      palletOption: p.pallet_pieces,
-
-      total: p.sale_amount,
-
-      createdAt: p.created_at,
-    }))
+return editableData.containers.flatMap((c) =>
+    c.pallets.map((p) => {
+      const presaleInfo = presaleByContainerId[c.containerId];
+      return {
+        palletId: p.id,
+        containerId: c.containerId,
+        containerName: c.name,
+        PresaleID: presaleInfo?.pre_sale_unique_id || "N/A", 
+        purchasePrice: p.purchase_price,
+        noOfPallets: p.pallet_purchased,
+        palletOption: p.pallet_pieces,
+        total: p.sale_amount,
+        createdAt: p.created_at,
+      };
+    })
   );
-}, [editableData]);
+}, [editableData, presaleByContainerId]);
   /* =========================================
       CHANGE HANDLER
   ========================================= */
@@ -366,7 +367,7 @@ const handleDeleteSaleItem = (palletId, containerId) => {
           </div>
 
           <div className="summary-item">
-            <p>Balance</p>
+            <p>OutStanding Balance</p>
 <h2>
   {editableData.balance === 0 ? (
     <span style={{ color: "green", fontWeight: "600" }}>
@@ -380,7 +381,7 @@ const handleDeleteSaleItem = (palletId, containerId) => {
 
           <div className="summary-item">
             <p>Total Pallets</p>
-            <h2>{totalPalletsCount}</h2>
+            <h2>{editableData.noOfPallets}</h2>
           </div>
 
         </div>

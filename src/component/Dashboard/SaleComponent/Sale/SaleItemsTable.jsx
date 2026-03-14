@@ -22,6 +22,7 @@
               <tr>
                 <th>S/N</th>
                 <th>Container</th>
+                <th>Presale ID</th>
                 <th>Purchase Price </th>
                 <th>No. of Pallets</th>
                 <th>Pallet Distribution</th>
@@ -36,6 +37,7 @@
                 <tr key={row.palletId}>
                   <td>{idx + 1}</td>
                   <td>{row.containerName}</td>
+                  <td>{row.PresaleID}</td>
                   <td>{formatNumber(row.purchasePrice)}</td>
                   <td>{row.noOfPallets}</td>
                   <td>{row.palletOption}</td>

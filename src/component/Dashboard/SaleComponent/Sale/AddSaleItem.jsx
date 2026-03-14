@@ -104,7 +104,7 @@ const AddSaleItem = ({
     handlePalletChange(index, "noOfPallets", safeQty);
   }}
 />
-                    <small className="error" style={{color:"yellow"}}>
+                    <small className="error" style={{color:"orange"}}>
                       {remainingPallets > 0
                         ? `Only ${remainingPallets} pallet(s) remaining`
                         : "No pallets remaining"}

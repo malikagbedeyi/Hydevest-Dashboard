@@ -53,10 +53,14 @@ const presaleAmount = useMemo(() => {
             <h2>{formatMoneyNGN(data.SamountPaid)}</h2>
           </div>
           <div className="summary-item">
-            <p className='small'>Outstanding Balance</p>
+            <p className='small'>Amount Receivable</p> 
             <h2 style={{ color: data.balance > 0 ? "orange" : "green" }}>
               {data.balance === 0 ? "Fully Paid" : formatMoneyNGN(data.balance)}
             </h2>
+          </div>
+           <div className="summary-item">
+            <p className='small'> UnSold  Stock</p>
+            <h2>{formatMoneyNGN(data.totalSaleAmount)}</h2>
           </div>
         </div>
       </div>
