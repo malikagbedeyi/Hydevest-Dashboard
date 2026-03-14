@@ -37,51 +37,54 @@ const [containerTracking, setContainerTracking] = useState("");
 
   /* ===================== CUSTOMER SEARCH ===================== */
 
-  useEffect(() => {
-
+useEffect(() => {
   const timer = setTimeout(() => {
     setDebouncedSearch(customerSearch);
-  }, 500);
-
+  }, 400); 
   return () => clearTimeout(timer);
-
 }, [customerSearch]);
 
 useEffect(() => {
-  if (!debouncedSearch) {
+  if (debouncedSearch.trim().length < 2) {
     setCustomers([]);
     return;
   }
+
   const fetchCustomers = async () => {
-
     try {
-setLoadingCustomer(true);
-      const res = await RecoveryServices.getCustomer(customerSearch);
-setLoadingCustomer(false);
-      const customer = res?.data?.customer;
+      setLoadingCustomer(true);
+      const res = await RecoveryServices.getCustomer(debouncedSearch);
+      
+      const rawData = res?.data?.customer || res?.data?.record || [];
+      
+      let customerList = [];
 
-      if (!customer) {
-        setCustomers([]);
-        return;
+      if (Array.isArray(rawData)) {
+        customerList = rawData.map(c => ({
+          uuid: c.user_uuid,
+          name: `${c.firstname} ${c.lastname}`,
+          phone: c.phone_no
+        }));
+      } else if (rawData && typeof rawData === 'object') {
+        customerList = [{
+          uuid: rawData.user_uuid,
+          name: `${rawData.firstname} ${rawData.lastname}`,
+          phone: rawData.phone_no
+        }];
       }
 
-      setCustomers([{
-        uuid: customer.user_uuid,
-        name: `${customer.firstname} ${customer.lastname}`,
-        phone: customer.phone_no
-      }]);
+      setCustomers(customerList);
 
     } catch (err) {
-
       console.error("Customer fetch failed", err);
       setCustomers([]);
-
+    } finally {
+      setLoadingCustomer(false);
     }
-
   };
 
   fetchCustomers();
-}, [customerSearch,debouncedSearch]);
+}, [debouncedSearch]); // ✅ Only depend on the debounced value
 
 useEffect(() => {
   if (!selectedSale?.sale_uuid) return;
@@ -359,65 +362,60 @@ if (type === "success") {
 
           {/* ================= CUSTOMER SELECT ================= */}
           <div className="grid-2">
-            <div className="form-group-select">
+<div className="form-group-select">
+  <label>Customer</label>
+  <div className="custom-select">
+    <div
+      className="custom-select-drop"
+      onClick={() => setOpenCustomerSelect(!openCustomerSelect)}
+    >
+      <div className="select-box">
+        {selectedCustomer ? (
+          <span>{selectedCustomer.name} - {selectedCustomer.phone}</span>
+        ) : (
+          <span className="placeholder">Search or Select Customer</span>
+        )}
+      </div>
+      <ChevronDown className={openCustomerSelect ? "up" : "down"} />
+    </div>
 
-              <label>Customer</label>
+    {openCustomerSelect && (
+      <div className="select-dropdown">
+        <input
+          type="text"
+          autoFocus
+          placeholder="Type name or phone number..."
+          value={customerSearch}
+          onChange={(e) => setCustomerSearch(e.target.value)}
+          className="search-input"
+          onKeyDown={handleKeyDown}
+        />
+        
+        {loadingCustomer && <div className="option-item">Searching suggestions...</div>}
+        
+        {!loadingCustomer && customers.length === 0 && customerSearch.length > 0 && (
+          <div className="option-item muted">No matches found</div>
+        )}
 
-              <div className="custom-select">
-
-                <div
-                  className="custom-select-drop"
-                  onClick={() => {  setOpenCustomerSelect(!openCustomerSelect);
-                    if (!customers.length) {setCustomerSearch(""); }}}>
-
-                  <div className="select-box">
-
-                    {selectedCustomer ? (
-                      <span>
-                        {selectedCustomer.name} - {selectedCustomer.phone}
-                      </span>
-                    ) : (
-                      <span className="placeholder">Select Customer</span>
-                    )}
-
-                  </div>
-                  <ChevronDown className={openCustomerSelect ? "up" : "down"}  />
-
-                </div>
-
-                {openCustomerSelect && (
-
-                  <div className="select-dropdown">
-
-                    <input
-                      type="text"
-                      placeholder="Search customer by phone number"
-                      value={customerSearch}
-                      onChange={(e) => setCustomerSearch(e.target.value)}
-                      className="search-input"
-                      onKeyDown={handleKeyDown}
-                    />
-                    {loadingCustomer && ( <div className="option-item">Searching...</div>)}
-                    {!loadingCustomer && customers.length === 0 && debouncedSearch && (
-                      <div className="option-item">Customer not found</div>)}
-                    {customers.map((customer) => (
-                      <div
-                        key={customer.uuid}
-                        className="option-item"
-                        onClick={() => {
-                          setSelectedCustomer(customer);
-setCustomerSearch("");
-setOpenCustomerSelect(false);
-setCustomers([]);
-                        }}
-                      >
-                        {customer.name} - {customer.phone}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+{customers.map((customer, index) => (
+  <div
+    key={customer.uuid}
+    className={`option-item ${highlightIndex === index ? "highlight" : ""}`}
+    onClick={() => {
+      setSelectedCustomer(customer);
+      setCustomerSearch(""); 
+      setDebouncedSearch(""); 
+      setOpenCustomerSelect(false);
+      setCustomers([]); 
+    }}
+  >
+    <span>{customer.name} - {customer.phone}</span>
+  </div>
+))}
+      </div>
+    )}
+  </div>
+</div>
             {/* ================= SALE SELECT ================= */}
               <div className="form-group-select">
                 <label>Sale ID</label>

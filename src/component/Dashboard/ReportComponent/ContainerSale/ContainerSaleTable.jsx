@@ -71,6 +71,10 @@ const totalPresaleAmount = filteredData.reduce((sum, item) => sum + (Number(item
             <p className="small">Total Containers</p>
             <h2>{totalContainers}</h2>
           </div>
+           <div className="summary-item">
+            <p className="small">Total Expected Revenue</p>
+            <h2>₦{totalPresaleAmount.toLocaleString()}</h2>
+          </div>
           <div className="summary-item">
             <p className="small">Total Sales to Date</p>
             <h2>₦{totalSaleAmount.toLocaleString()}</h2>
@@ -82,10 +86,6 @@ const totalPresaleAmount = filteredData.reduce((sum, item) => sum + (Number(item
           <div className="summary-item">
             <p className="small">Total Amount Receivable</p>
             <h2>₦{totalOutstandingBalance.toLocaleString()}</h2>
-          </div>
-          <div className="summary-item">
-            <p className="small">Total Expected Revenue</p>
-            <h2>₦{totalPresaleAmount.toLocaleString()}</h2>
           </div>
         </div>
       </div>
@@ -237,12 +237,12 @@ const totalPresaleAmount = filteredData.reduce((sum, item) => sum + (Number(item
                 <th>S/N</th>
                 {/* <th>Container</th> */}
                 <th> Tracking Number</th>
+                <th>Expected Revenue</th>
                 <th>Sales to Date</th>
                 <th>Recovery to Date</th>
                 <th>Amount Receivable</th>
-                <th>Expected Revenue</th>
                 <th>UnSold Stock</th>
-                <th>Payment Status</th>
+                <th>Sales Status</th>
               </tr>
             </thead>
             <tbody>
@@ -257,13 +257,13 @@ const totalPresaleAmount = filteredData.reduce((sum, item) => sum + (Number(item
                   <tr key={row.containerId} onClick={() => onRowClick(row)} style={{ cursor: "pointer" }}>
                     <td>{idx + 1}</td>
                     {/* <td>{row.containerName}</td> */}
-                    <td>TRN-{row.trackingNumber}</td>
+                    <td>TRN-{row.trackingNumber}</td> 
+                    <td>₦{row.expectedPresaleAmount?.toLocaleString()}</td>
                     <td>₦{row.totalSaleAmount.toLocaleString()}</td>
                     <td>₦{row.SamountPaid.toLocaleString()}</td>
                     <td style={{ color: row.balance > 0 ? '#d9534f' : '#5cb85c' }}>
                         ₦{row.balance.toLocaleString()}
                     </td>
-                    <td>₦{row.expectedPresaleAmount?.toLocaleString()}</td>
                     <td>₦{0}</td>
                     <td> <span  style={{ color: row?.balance  <= 0 ? "green" : "orange" }}>
                       {row?.balance <= 0 ? "Full Payment":"Part Payment" }
