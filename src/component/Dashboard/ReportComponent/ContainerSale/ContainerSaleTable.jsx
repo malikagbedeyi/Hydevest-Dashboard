@@ -238,9 +238,10 @@ const filteredData = useMemo(() => {
                 <th>S/N</th>
                 <th>Container</th>
                 <th> Tracking Number</th>
-                <th>Total Sale Amount</th>
-                <th>Total Recovery Amount</th>
-                <th>Outstanding</th>
+                <th>Sales to Date</th>
+                <th>Recovery to Date</th>
+                <th>Amount Receivable</th>
+                <th>UnSold Stock</th>
                 <th>Payment Status</th>
               </tr>
             </thead>
@@ -262,6 +263,7 @@ const filteredData = useMemo(() => {
                     <td style={{ color: row.balance > 0 ? '#d9534f' : '#5cb85c' }}>
                         ₦{row.balance.toLocaleString()}
                     </td>
+                    <td>₦{0}</td>
                     <td> <span  style={{ color: row?.balance  <= 0 ? "green" : "orange" }}>
                       {row?.balance <= 0 ? "Full Payment":"Part Payment" }
                       </span>
