@@ -16,6 +16,12 @@ const ContainerProfitController = ({ goBack }) => {
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
+  // ✅ 1. Added Date Filter State
+  const [dateRange, setDateRange] = useState({
+    from: "",
+    to: ""
+  });
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -29,7 +35,6 @@ const ContainerProfitController = ({ goBack }) => {
       setPresales(preRes?.data?.record?.data || []);
       setSales(saleRes?.data?.record?.data || []);
 
-      // Fetch expenses for every unique trip found in containers
       const tripUuids = [...new Set(contData.map(c => c.trip?.trip_uuid).filter(Boolean))];
       const expPromises = tripUuids.map(uuid => 
         ExpenseServices.list({ trip_uuid: uuid }).then(res => res.data?.record?.data || [])
@@ -48,10 +53,24 @@ const ContainerProfitController = ({ goBack }) => {
 
   /* ================= PROFIT AGGREGATION LOGIC ================= */
   const profitReportData = useMemo(() => {
-    return containers.map((container) => {
+    // ✅ 2. Filter data based on Trip End Date if filter is set
+    let data = containers;
+
+    if (dateRange.from || dateRange.to) {
+      data = containers.filter(container => {
+        const tripEndDate = new Date(container.trip?.end_date);
+        const fromDate = dateRange.from ? new Date(dateRange.from) : null;
+        const toDate = dateRange.to ? new Date(dateRange.to) : null;
+
+        if (fromDate && tripEndDate < fromDate) return false;
+        if (toDate && tripEndDate > toDate) return false;
+        return true;
+      });
+    }
+
+    return data.map((container) => {
       const tripUuid = container.trip?.trip_uuid;
       
-      // 1. Landing Cost Calculation
       const tripExps = expenses.filter(e => e.trip_uuid === tripUuid || Number(e.trip_id) === Number(container.trip_id));
       const tripContainersCount = containers.filter(c => c.trip_id === container.trip_id).length;
 
@@ -72,7 +91,6 @@ const ContainerProfitController = ({ goBack }) => {
       const surcharge = container.funding?.toLowerCase() === "partner" ? Number(container.surcharge_ngn || 0) : 0;
       const landingCost = (amountUSD * fxRate) + surcharge + overheadShare;
 
-      // 2. Revenue Data
       const presale = presales.find(p => p.container_one_id === container.id || p.container_two_id === container.id);
       const expectedRevenue = Number(presale?.expected_sales_revenue || 0);
 
@@ -90,8 +108,9 @@ const ContainerProfitController = ({ goBack }) => {
         saleRecords: actualSales
       };
     });
-  }, [containers, expenses, presales, sales]);
+  }, [containers, expenses, presales, sales, dateRange]); // Added dateRange as dependency
 
+  // ✅ 3. Master Metrics update automatically because they depend on filtered profitReportData
   const masterMetrics = useMemo(() => {
     return profitReportData.reduce((acc, curr) => ({
       landing: acc.landing + curr.landingCost,
@@ -118,7 +137,14 @@ const ContainerProfitController = ({ goBack }) => {
               <div className="summary-item"><p className="small">Actual Profit</p><h2 style={{color: masterMetrics.actProf >= 0 ? 'green' : 'red'}}>{formatMoney(masterMetrics.actProf)}</h2></div>
             </div>
           </div>
-          <ContainerProfitTable data={profitReportData} onRowClick={setSelectedItem} goBack={goBack} />
+          
+          <ContainerProfitTable 
+            data={profitReportData} 
+            onRowClick={setSelectedItem} 
+            goBack={goBack} 
+            dateRange={dateRange} // Pass down
+            setDateRange={setDateRange} // Pass down
+          />
         </>
       ) : (
         <ContainerProfitDrilldown data={selectedItem} goBack={() => setSelectedItem(null)} />
