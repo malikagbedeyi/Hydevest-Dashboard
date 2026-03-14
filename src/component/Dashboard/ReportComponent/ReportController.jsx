@@ -8,14 +8,15 @@ import DebtController from "./CustomerDebt/DebtController";
 import ContainerProfitController from "./ContainerProfit/ContainerProfitController";
 
 const reportTypes = [
-  { icon: Tag, label: "Container Sales", submenu: "container-sale" },
-  { icon: Wallet, label: "Supp. Payables", submenu: "supp-payable" },
-  { icon:HandCoins , label: "Customer Debt", submenu: "customer-dept" },
-  { icon: DollarSign, label: "Container Profit", submenu: "container-profit" },
-  { icon: ArrowUpCircle, label: "Financial ", submenu: "report-financial" },
-  { icon: Users, label: "Partner", submenu: "report-partner" },
-  { icon: CreditCard, label: "Purchase", submenu: "report-purchase" },
-  { icon: BarChart2, label: "Expensify", submenu: "report-expensify" },
+  { icon: Tag, label: "Container Sales", submenu: "container-sale", ready: true },
+  { icon: Wallet, label: "Supp. Payables", submenu: "supp-payable", ready: true },
+  { icon: HandCoins, label: "Customer Debt", submenu: "customer-dept", ready: true },
+  { icon: DollarSign, label: "Container Profit", submenu: "container-profit", ready: true },
+
+  { icon: ArrowUpCircle, label: "Financial", submenu: "report-financial", ready: false },
+  { icon: Users, label: "Partner", submenu: "report-partner", ready: false },
+  { icon: CreditCard, label: "Purchase", submenu: "report-purchase", ready: false },
+  { icon: BarChart2, label: "Expensify", submenu: "report-expensify", ready: false },
 ];
 
 const ReportController = () => {
@@ -49,17 +50,27 @@ const ReportController = () => {
             <div className="top-content fade-in">
               <div className="top-content-account">
                 <div className="top-content-account-wrappper" style={{ gridTemplateColumns: "repeat(4,1fr)" }}>
-                  {reportTypes.map(({ icon: Icon, label, submenu }) => (
-                    <div
-                      key={label}
-                      className="account-grid"
-                      onClick={() => handleReportClick(submenu)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <Icon />
-                      <span style={{ fontSize: "1.5vw" }}>{label}</span>
-                    </div>
-                  ))}
+              {reportTypes.map(({ icon: Icon, label, submenu, ready }) => (
+  <div
+    key={label}
+    className="account-grid"
+    onClick={() => ready && handleReportClick(submenu)}
+    style={{
+      cursor: ready ? "pointer" : "not-allowed",
+      opacity: ready ? 1 : 0.4
+    }}
+  >
+    <Icon color={ready ? "#581aae" : "gray"} />
+    <span
+      style={{
+        fontSize: "1.5vw",
+        color: ready ? "#581aae" : "gray"
+      }}
+    >
+      {label}
+    </span>
+  </div>
+))}
                 </div>
               </div>
             </div>
