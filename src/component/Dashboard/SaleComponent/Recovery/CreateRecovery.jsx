@@ -338,7 +338,7 @@ if (type === "success") {
 
   return (
 
-    <div className="trip-modal fade-in">
+    <div className="trip-modal slide-up">
 
        {popup.open && (
       <div className="trip-card-popup">

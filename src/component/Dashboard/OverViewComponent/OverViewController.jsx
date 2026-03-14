@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { TrendingUp, DollarSign, Package, Activity, Clock, PlusCircle, ArrowRight, Loader2 } from "lucide-react";
+import { TrendingUp, DollarSign, Package, Activity, Clock, PlusCircle, ArrowRight, Loader2, PlaneTakeoff, Tag } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import "../../../assets/Styles/dashboard/drilldown.scss"; 
 import { RecoveryServices } from '../../../services/Sale/recovery';
@@ -20,43 +20,59 @@ const OverViewController = () => {
 const { openSubmenuFromChild } = useOutletContext();
   const [navigating, setNavigating] = useState(false);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [salesRes, recoveryRes, containerRes ] = await Promise.all([
-        SaleServices.list({ page: 1 }),
-        RecoveryServices.list({ page: 1 }),
-        ContainerServices.list({page:1 })
-      ]);
+ const fetchData = async () => {
+  try {
+    setLoading(true);
+    const [salesRes, recoveryRes, containerRes] = await Promise.all([
+      SaleServices.list({ page: 1 }), 
+      RecoveryServices.list({ page: 1 }),
+      ContainerServices.list({ page: 1 })
+    ]);
 
-      const salesRaw = salesRes?.data?.record?.data || [];
-      const recoveryRaw = recoveryRes?.data?.record?.data || [];
-      const containerRaw = containerRes?.data?.record?.data || [];
-
-      const totalRev = salesRaw.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
-      const totalRec = salesRaw.reduce((sum, s) => sum + Number(s.amount_paid || 0), 0);
-
-      const chartMap = salesRaw.slice(0, 6).reverse().map(sale => ({
-        name: sale.sale_unique_id.replace("SALES-", "#"),
-        revenue: Number(sale.total_sale_amount),
-        recovered: Number(sale.amount_paid)
-      }));
-
-      setDashboardData({
-        totalContainer : containerRes?.data?.record?.total || 0,
-        totalSales: salesRes?.data?.record?.total || 0,
-        totalRevenue: totalRev,
-        totalRecovered: totalRec,
-        pendingBalance: Math.max(totalRev - totalRec, 0),
-        recentSales: salesRaw.slice(0, 5),
-        chartData: chartMap
-      });
-    } catch (err) {
-      console.error("Error loading overview data", err);
-    } finally {
-      setLoading(false);
+    const salesRaw = salesRes?.data?.record?.data || [];
+    
+    // 1. Generate the last 6 months as a baseline (so Jan, Feb etc show up as 0)
+    const chartBase = {};
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const label = d.toLocaleString('en-GB', { month: 'short', year: 'numeric' }); // "Mar 2026"
+      chartBase[label] = { name: label, Sales: 0, recovered: 0 };
     }
-  };
+
+    // 2. Map existing sales into those month buckets
+    salesRaw.forEach(sale => {
+      const date = new Date(sale.created_at);
+      const label = date.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
+      
+      // Only add to the bucket if it exists in our 6-month window
+      if (chartBase[label]) {
+        chartBase[label].Sales += Number(sale.total_sale_amount || 0);
+        chartBase[label].recovered += Number(sale.amount_paid || 0);
+      }
+    });
+
+    const chartMap = Object.values(chartBase);
+
+    // Calculate totals for matrix section
+    const totalRev = salesRaw.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
+    const totalRec = salesRaw.reduce((sum, s) => sum + Number(s.amount_paid || 0), 0);
+
+    setDashboardData({
+      totalContainer: containerRes?.data?.record?.total || 0,
+      totalSales: salesRes?.data?.record?.total || 0,
+      totalRevenue: totalRev,
+      totalRecovered: totalRec,
+      pendingBalance: Math.max(totalRev - totalRec, 0),
+      recentSales: salesRaw.slice(0, 5),
+      chartData: chartMap 
+    });
+  } catch (err) {
+    console.error("Error loading overview data", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchData();
@@ -65,10 +81,9 @@ const { openSubmenuFromChild } = useOutletContext();
   const formatCurrency = (val) => 
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(val);
 
-  // if (loading) return <div className="p-5">Loading Dashboard...</div>;
 
 const handleAction = (parentId, path, action) => {
-    setNavigating(true); // Start spinner feedback
+    setNavigating(true);
 
     setTimeout(() => {
       openSubmenuFromChild(parentId, path, action);
@@ -113,7 +128,7 @@ const handleAction = (parentId, path, action) => {
       {/* 2. CHART & QUICK ACTIONS SECTION */}
       <div className="grid-overview-main mt-4" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
         <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-          <h4 style={{ marginBottom: '20px', fontWeight: '600',color:"#581aae" }}>Revenue vs Recovery Trend</h4>
+          <h4 style={{ marginBottom: '20px', fontWeight: '600',color:"#581aae" }}>Sales vs Recovery Trend</h4>
           <div style={{ width: '100%', height: 300 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={dashboardData.chartData}>
@@ -124,13 +139,13 @@ const handleAction = (parentId, path, action) => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#666'}} dy={10} />
+                <XAxis  dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#666'}} dy={10} />
                 <YAxis hide />
                 <Tooltip 
                   contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   formatter={(value) => formatCurrency(value)}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="#581aae" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
+                <Area type="monotone" dataKey="Sales" stroke="#581aae" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
                 <Area type="monotone" dataKey="recovered" stroke="#22c55e" strokeWidth={3} fill="transparent" />
               </AreaChart>
             </ResponsiveContainer>
@@ -142,11 +157,23 @@ const handleAction = (parentId, path, action) => {
           <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", color: "#581aae",boxShadow: '0 4px 12px rgba(0,0,0,0.1)'  }}>
             <h4>Quick Actions</h4>
             <div className="mt-3" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+<button 
+  style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+  onClick={() => handleAction("/dashboard/purchase", "/dashboard/trip", "create")}
+>
+  <PlaneTakeoff size={18} /> Create New Trip
+</button>
+
+              <button style={{  background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                onClick={() => handleAction("/dashboard/sales", "/dashboard/pre-sale", "create")}>
+                <Tag size={18} /> Create Presale
+              </button>
               <button className="action-btn-animated" style={{ background: '#581aae', border: 'none', color: '#fff', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
               onClick={() => handleAction("/dashboard/sales", "/dashboard/sales", "create")}>
                 <PlusCircle size={18} /> Record New Sale
               </button>
-              <button style={{ background: '#581aae', border: 'none', color: '#fff', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+              
+              <button style={{  background: '#fff', border: '1px solid #581aae', color: '#581aae',padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
                            onClick={() => handleAction("/dashboard/sales", "/dashboard/recovery", "create")}>
                 <DollarSign size={18} /> Add Payment
               </button>

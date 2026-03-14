@@ -9,14 +9,26 @@ import PresaleLog from "./PresaleLog";
 
 import { PresaleServices } from "../../../../services/Sale/presale";
 import { SaleServices } from "../../../../services/Sale/sale";
+import { useOutletContext } from "react-router-dom";
 
 const PreSaleController = ({ openSubmenu }) => {
+
+  const { autoOpenCreate, setAutoOpenCreate } = useOutletContext();
+
+  useEffect(() => {
+      if (autoOpenCreate) {
+        setView("create");
+        setAutoOpenCreate(false); 
+      }
+    }, [autoOpenCreate])
+  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [datas, setDatas] = useState([]);
   const [containers, setContainers] = useState([]);
 
-  const [view, setView] = useState("table"); // table | create | edit
-  const [activeTab, setActiveTab] = useState("table"); // table | logs
+  const [view, setView] = useState("table"); 
+  const [activeTab, setActiveTab] = useState("table");
 
   const [editingSale, setEditingSale] = useState(null);
   const [page, setPage] = useState(1);

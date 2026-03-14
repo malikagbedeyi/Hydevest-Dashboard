@@ -7,6 +7,7 @@ import TripDetails from "./TripDetails";
 import { TripServices } from "../../../../services/Trip/trip";
 import TripLogs from "./TripLogs";
 import { SystemUserService } from '../../../../services/Account/systemUser.service';
+import { useOutletContext } from "react-router-dom";
 
 const TripController = ({ breadcrumb, navigate, goBackTo }) => {
   const [systemUsers, setSystemUsers] = useState([]);
@@ -24,6 +25,17 @@ const [openFieldSelect, setOpenFieldSelect] = useState(false);
 const [showFilters, setShowFilters] = useState(false);
 const [openStatusSelect, setOpenStatusSelect] = useState(false);
 const [openProgressSelect, setOpenProgressSelect] = useState(false);
+
+// Inside TripController.jsx
+const { autoOpenCreate, setAutoOpenCreate } = useOutletContext();
+
+useEffect(() => {
+  if (autoOpenCreate === "create") { 
+    setAutoOpenCreate(null); 
+  }
+}, [autoOpenCreate]);
+
+
   const logFields = ["all", "All Field", "Performed By"];
 const tripFields = ["all", "title", "location", "progress"];
 const activeFields = activeTab === "table" ? tripFields : logFields;

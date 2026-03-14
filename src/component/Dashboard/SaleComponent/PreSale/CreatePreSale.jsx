@@ -389,7 +389,7 @@ const hasStartedPalletDistribution = form.pallets.some(
   // JSX (UNCHANGED)
   // -----------------------------
   return (
-    <div className="trip-modal">
+    <div className="trip-modal slide-up">
       <div className="create-container-modal">
         <div className="create-container-card">
 

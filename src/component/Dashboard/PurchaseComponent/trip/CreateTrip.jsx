@@ -94,7 +94,7 @@ const handleCreate = async () => {
   }
   /* ================= UI (UNCHANGED) ================= */
   return (
-    <div className="create-trip-modal">
+    <div className="create-trip-modal slide-up">
       <div className="trip-card">
         <div className="header">
           <h2>Create Trip</h2>
