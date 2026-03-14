@@ -63,8 +63,8 @@ const confirmDelete = () => {
             <thead>
               <tr>
                 <th>S/N</th>
-                <th>Container</th>
-                <th>Container Tracking Number</th>
+                {/* <th>Container</th> */}
+                <th> Tracking Number</th>
                 <th>Sale Option</th>
                 {/* <th>Purchase Price Per Price </th> */}
                 <th>Customer Name</th>
@@ -88,7 +88,7 @@ const confirmDelete = () => {
                 currentData.map((sale, idx) => (
                   <tr key={sale.id} onClick={() => handleRowClick(sale)}>
                     <td>{idx + 1}</td>
-                    <td>{typeof sale.container?.title === "string"? sale.container.title: "—"}</td>
+                    {/* <td>{typeof sale.container?.title === "string"? sale.container.title: "—"}</td> */}
                     <td>TN {sale.container.tracking_number}</td>
                     <td> <span style={{padding: "4px 10px",borderRadius: "12px",fontSize: "12px", background:sale.presale.sale_option === "BOX SALE" ? "#f3e8ff" : "#e0f2fe",background:sale.presale.sale_option === "SPLIT SALE" ? "#8b51db" : "#e0f2fe",
                       color:sale.presale.sale_option === "BOX SALE" ? "#581aae" : "#0369a1",color:sale.presale.sale_option === "SPLIT SALE" ? "#fff" : "#0369a1",}}>{sale.presale.sale_option || "—"}</span></td>

@@ -107,8 +107,8 @@ const currentData = preSales;
                 <th>WC Pieces</th>
                 <th>Price per Pic (₦)</th>
                  <th>Expected Revenue (₦)</th>
+                 <th>Status</th>
                 <th> No. of Pallets</th>
-                <th>Status</th>
                  {/* <th>Pallet Pieces</th> */}
                 
                 <th>Price per KG (₦)</th>
@@ -137,11 +137,10 @@ const currentData = preSales;
                     <td>{formatMoneyNGN(sale.price_per_piece)}</td>
                       
                     <td>{formatMoneyNGN(sale.expected_sales_revenue)}</td>
-                    <td>{formatNumber(sale.total_no_of_pallets)}</td>
                      <td><span className={`status ${sale.status === 1 ? "active" : "pending"}`}
                    style={{color:sale.status === 1 ? "green":"red"}}>
                     {sale.status === 1 ? "Approved" : "Pending"}</span></td>
-                  
+                   <td>{formatNumber(sale.total_no_of_pallets)}</td>
                     <td>{formatMoneyNGN(sale.price_per_kg)}</td>
                  
                     <td>{sale?.creator_info?.firstname} {sale?.creator_info?.lastname}</td>

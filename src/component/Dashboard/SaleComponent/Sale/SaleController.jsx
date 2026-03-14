@@ -352,13 +352,8 @@ const totalBalance= sales.reduce(
                 <div className="drill-summary-grid mb-5">
           <div className="drill-summary">
             <div className="summary-item">
-              <p className="small">Total Recovery</p>
+              <p className="small"> sale Record</p>
               <h2>{totalSale}</h2>
-            </div>
-
-            <div className="summary-item">
-              <p className="small">Total Container</p>
-              <h2>{totalContainer}</h2>
             </div>
             <div className="summary-item">
               <p className="small">Total Sale Amount (₦)</p>
@@ -373,7 +368,10 @@ const totalBalance= sales.reduce(
               <p className="small">Outstanding Balance (₦)</p>
               <h2>{formatCurrency(totalBalance)}</h2>
             </div>
-
+<div className="summary-item">
+              <p className="small">Total Container</p>
+              <h2>{totalContainer}</h2>
+            </div>
           </div>
         </div>
               <div className="top-content-wrapper">
@@ -530,7 +528,7 @@ const totalBalance= sales.reduce(
         className={activeTab === "table" ? "active" : ""}
         onClick={() => setActiveTab("table")}
       >
-        Recovery Table
+        Sale Table
       </li>
 
       <li
