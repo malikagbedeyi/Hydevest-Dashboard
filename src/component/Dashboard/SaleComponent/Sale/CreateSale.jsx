@@ -423,7 +423,7 @@ useEffect(() => {
                 <div className="custom-select-drop">
                   <div className="select-box">
                     {selectedContainer ? (
-                      <span>{selectedContainer.name || selectedContainer.title}</span>
+                      <span>{selectedContainer.trackingNumber || selectedContainer.title}</span>
                     ) : (
                       <span className="placeholder">Select Container</span>
                     )}
@@ -456,7 +456,7 @@ useEffect(() => {
                             checked={selectedContainer?.id === item.id}
                             onChange={() => toggleSelect(item)}
                           />
-                          <span>{item.name || item.title}</span>
+                          <span>{item.trackingNumber}</span>
                         </label>
                       ))}
                     </div>
@@ -485,7 +485,7 @@ useEffect(() => {
             <div className="sale-grid-3">
               <div className="container-details">
                 <div className="collapsed-container">
-                  <h4 className="mt-4">{selectedContainer.name} - Pre-sale Details</h4>
+                  <h4 className="mt-4">TRN-{selectedContainer.trackingNumber} - Pre-sale Details</h4>
                   <ChevronDown
                     onClick={() => toggleCollapsedContainer(selectedContainer.id)}
                     className={collapsedContainers[selectedContainer.id] ? "up" : "down"}
@@ -495,9 +495,13 @@ useEffect(() => {
                   {presaleByContainerId[selectedContainer.id] ? (
                     <>
                       <li>Pre-Sale ID: {presaleByContainerId[selectedContainer.id].pre_sale_unique_id}</li>
+                      <li>Pre-Sale Title: {presaleByContainerId[selectedContainer.id].title}</li>
+                         <li>Wc Average Weight: {formatNumber(presaleByContainerId[selectedContainer.id].wc_average_weight)}</li>
                       <li>Sale Option: {presaleByContainerId[selectedContainer.id].sale_option}</li>
-                      <li>Total Pieces: {formatNumber(presaleByContainerId[selectedContainer.id].wc_pieces)}</li>
-                      <li>Total Pallets: {presaleByContainerId[selectedContainer.id].total_no_of_pallets}</li>
+                      <li>WC Pieces: {formatNumber(presaleByContainerId[selectedContainer.id].wc_pieces)}</li>
+                      <li>Total Pallets : {formatNumber(presaleByContainerId[selectedContainer.id].total_no_of_pallets)}</li>
+                      <li>Price Per Pic : {formatNumber(presaleByContainerId[selectedContainer.id].price_per_piece)}</li>
+                      <li>Price Per Kg : {formatNumber(presaleByContainerId[selectedContainer.id].price_per_kg)}</li>
                       <li>Expected Revenue: ₦{formatNumber(presaleByContainerId[selectedContainer.id].expected_sales_revenue)}</li>
                       <li>Status: {presaleByContainerId[selectedContainer.id].status === 1 ? "Approve" : "Pending"}</li>
                     </>

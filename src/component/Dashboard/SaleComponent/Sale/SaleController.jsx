@@ -150,7 +150,7 @@ const normalizedPreSales = containerPreSales
   .filter(item => item.presale)
   .map(item => ({
     id: item.presale.id,
-    container_id: item.id, // matches normalizedContainers.id
+    container_id: item.id,
     pre_sale_unique_id: item.presale.pre_sale_unique_id,
     pre_sale_uuid: item.presale.pre_sale_uuid,
     sale_option: item.presale.sale_option,
@@ -158,7 +158,10 @@ const normalizedPreSales = containerPreSales
     total_no_of_pallets: item.presale.total_no_of_pallets,
     expected_sales_revenue: item.presale.expected_sales_revenue,
     status: item.presale.status,
-    pricePerPic: item.presale.price_per_piece,
+    price_per_piece: item.presale.price_per_piece,
+    price_per_kg: item.presale.price_per_kg || 0, 
+    title: item.title,
+    wc_average_weight:item.presale.wc_average_weight
   }));
 
 useEffect(() => {
@@ -352,7 +355,7 @@ const totalBalance= sales.reduce(
                 <div className="drill-summary-grid mb-5">
           <div className="drill-summary">
             <div className="summary-item">
-              <p className="small"> sale Record</p>
+              <p className="small"> sales Record</p>
               <h2>{totalSale}</h2>
             </div>
             <div className="summary-item">
@@ -528,7 +531,7 @@ const totalBalance= sales.reduce(
         className={activeTab === "table" ? "active" : ""}
         onClick={() => setActiveTab("table")}
       >
-        Sale Table
+        Sales Table
       </li>
 
       <li

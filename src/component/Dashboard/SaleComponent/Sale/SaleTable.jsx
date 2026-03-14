@@ -72,7 +72,7 @@ const confirmDelete = () => {
                 <th>Discount</th>
                 <th>Total Sale Amount</th>
                 <th>Total Amount Paid</th>
-                 <th>Balance</th>
+                 <th>Outstanding Balance</th>
                  <th>Created By</th>
                 <th>Date Created</th>
                  <th>Payment Status</th>
