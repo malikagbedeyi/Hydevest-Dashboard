@@ -17,7 +17,7 @@ const PayableDrilldown = ({ tripData, allContainers, allExpenses, goBack }) => {
   [allExpenses, tripData]);
 
   const formatUSD = (val) => `$${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-
+const netBalance = Number(tripData.supplierAmount || 0) - Number(tripData.amountPaidSupplier || 0);
   return (
     <div className="drilldown">
       <div className="section-report-head">
@@ -33,6 +33,12 @@ const PayableDrilldown = ({ tripData, allContainers, allExpenses, goBack }) => {
           <div className="summary-item">
             <p className="small">Amount Paid to Supplier</p>
             <h2 style={{ color: "green" }}>{formatUSD(tripData.amountPaidSupplier)}</h2>
+          </div>
+          <div className="summary-item">
+            <p className="small">Net Balance Owed</p>
+            <h2 style={{ color: netBalance > 0 ? "orange" : netBalance < 0 ? "#2196F3" : "green" }}>
+              {formatUSD(netBalance)}
+            </h2>
           </div>
            <div className="summary-item">
             <p className="small">Payment Status</p>
