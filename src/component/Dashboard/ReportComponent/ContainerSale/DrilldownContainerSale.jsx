@@ -40,27 +40,23 @@ const presaleAmount = useMemo(() => {
     <div className="drilldown">
       <div className="drill-summary-grid">
         <div className="drill-summary">
-          <div className="summary-item">
-            <p className='small'>Con Tracking Number</p>
-            <h2>TN{data.trackingNumber || 'N/A'}</h2>
+                    <div className="summary-item">
+            <p className='small'>Expected Revenue (presale)</p>
+            <h2>{formatMoneyNGN(presaleAmount)}</h2>
           </div>
           <div className="summary-item">
-            <p className='small'>Total Sale Amount</p>
+            <p className='small'> Sales to Date</p>
             <h2>{formatMoneyNGN(data.totalSaleAmount)}</h2>
           </div>
           <div className="summary-item">
-            <p className='small'>Total Recovery Amount</p>
-            <h2>{formatMoneyNGN(data.amountPaid)}</h2>
+            <p className='small'> Recovery to Date</p>
+            <h2>{formatMoneyNGN(data.SamountPaid)}</h2>
           </div>
           <div className="summary-item">
             <p className='small'>Outstanding Balance</p>
             <h2 style={{ color: data.balance > 0 ? "orange" : "green" }}>
               {data.balance === 0 ? "Fully Paid" : formatMoneyNGN(data.balance)}
             </h2>
-          </div>
-          <div className="summary-item">
-            <p className='small'>Presale Amount</p>
-            <h2>{formatMoneyNGN(presaleAmount)}</h2>
           </div>
         </div>
       </div>

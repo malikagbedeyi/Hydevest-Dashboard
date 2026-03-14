@@ -35,7 +35,7 @@ const ContainerSaleTable = ({ presales = [],formatDate, containerReportData = []
   
   const totalContainers = filteredData.length;
   const totalSaleAmount = filteredData.reduce((sum, item) => sum + (Number(item.totalSaleAmount) || 0), 0);
-  const totalRecoveryAmount = filteredData.reduce((sum, item) => sum + (Number(item.amountPaid) || 0), 0);
+  const totalRecoveryAmount = filteredData.reduce((sum, item) => sum + (Number(item.SamountPaid) || 0), 0);
   const totalOutstandingBalance = filteredData.reduce((sum, item) => sum + (Number(item.balance) || 0), 0);
   
   // Presale total matches the visible containers
@@ -63,7 +63,7 @@ const ContainerSaleTable = ({ presales = [],formatDate, containerReportData = []
             <h2>₦{totalOutstandingBalance.toLocaleString()}</h2>
           </div>
           <div className="summary-item">
-            <p className="small">Total Presale Amount</p>
+            <p className="small">Total Expected Revenue</p>
             <h2>₦{totalPresaleAmount.toLocaleString()}</h2>
           </div>
         </div>
@@ -153,7 +153,7 @@ const ContainerSaleTable = ({ presales = [],formatDate, containerReportData = []
                     <td>{row.containerName}</td>
                     <td>TN{row.trackingNumber}</td>
                     <td>₦{row.totalSaleAmount.toLocaleString()}</td>
-                    <td>₦{row.amountPaid.toLocaleString()}</td>
+                    <td>₦{row.SamountPaid.toLocaleString()}</td>
                     <td style={{ color: row.balance > 0 ? '#d9534f' : '#5cb85c' }}>
                         ₦{row.balance.toLocaleString()}
                     </td>

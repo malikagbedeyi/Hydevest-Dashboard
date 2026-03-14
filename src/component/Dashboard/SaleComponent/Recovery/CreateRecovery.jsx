@@ -102,7 +102,7 @@ setLoadingCustomer(false);
           balance:
             Number(sale.total_sale_amount || 0) -
             Number(sale.amount_paid || 0) ,
-          noOfPallets: sale.presale?.total_no_of_pallets || 0,
+          noOfPallets: sale.no_of_pallets || 0,
           customer: {
             phone: selectedCustomer.phone
           },
@@ -318,7 +318,7 @@ if (type === "success") {
       <div className="create-container-modal">
         <div className="create-container-card">
           <div className="tab-section">
-          <h2 >Create Recovery</h2>
+          <h2 style={{color:"#581aae"}}>Create Recovery</h2>
           <p>Select customer and sale</p>
 
           {/* ================= CUSTOMER SELECT ================= */}
@@ -465,7 +465,7 @@ setCustomers([]);
           <div className="sale-grid-3">
 
             <div className="payment-header">
-              <h5>Payment Details</h5>
+              <h5 style={{color:"#581aae"}}>Payment Details</h5>
             </div>
 
             <div className="grid-2" style={{ background: "#fff", padding: "10px" }}>

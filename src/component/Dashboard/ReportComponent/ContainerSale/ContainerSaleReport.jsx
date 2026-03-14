@@ -74,24 +74,27 @@ const containerReportData = useMemo(() => {
 
   const map = {};
 
-  // 1. Group Sales by Container
-  salesArray.forEach((sale) => {
-    const containerId = sale.container?.id;
-    if (!containerId) return;
+salesArray.forEach((sale) => {
+  const containerId = sale.container?.id;
+  if (!containerId) return;
 
-    if (!map[containerId]) {
-      map[containerId] = {
-        containerId,
-        containerName: sale.container?.title || "Unknown",
-        trackingNumber: sale.container?.tracking_number || "N/A",
-        PaymentStatus: sale.payment_status || "Part Payment",
-        totalSaleAmount: 0,
-        amountPaid: 0,
-        expectedPresaleAmount: 0 
-      };
-    }
-    map[containerId].totalSaleAmount += Number(sale.total_sale_amount || 0);
-  });
+  if (!map[containerId]) {
+    map[containerId] = {
+      containerId,
+      containerName: sale.container?.title || "Unknown",
+      trackingNumber: sale.container?.tracking_number || "N/A",
+      PaymentStatus: sale.payment_status || "Part Payment",
+      totalSaleAmount: 0,
+      SamountPaid: 0,
+      expectedPresaleAmount: 0
+    };
+  }
+
+  map[containerId].totalSaleAmount += Number(sale.total_sale_amount || 0);
+
+  // 🔥 ADD SALE PAYMENT
+  map[containerId].SamountPaid += Number(sale.amount_paid || 0);
+});
 
   recoveriesArray.forEach((recovery) => {
     const containerId = recovery.container_id;
@@ -111,7 +114,7 @@ const containerReportData = useMemo(() => {
 
   return Object.values(map).map((c) => ({
     ...c,
-    balance: Math.max(c.totalSaleAmount - c.amountPaid, 0),
+    balance: Math.max(c.totalSaleAmount - c.SamountPaid, 0),
   }));
 }, [sales, recoveries, presales]);
 
@@ -134,7 +137,7 @@ const containerReportData = useMemo(() => {
       <div className="section-report-head">
         <h3>
           {selectedContainer
-            ? `ContainerName: ${selectedContainer.containerName}`
+            ? `Container Tracking Number:TRN-${selectedContainer.trackingNumber}`
             : "Container Sale Report"}
         </h3>
       </div>

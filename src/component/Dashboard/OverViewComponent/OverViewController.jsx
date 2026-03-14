@@ -34,7 +34,7 @@ const { openSubmenuFromChild } = useOutletContext();
       const containerRaw = containerRes?.data?.record?.data || [];
 
       const totalRev = salesRaw.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
-      const totalRec = recoveryRaw.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+      const totalRec = salesRaw.reduce((sum, s) => sum + Number(s.amount_paid || 0), 0);
 
       const chartMap = salesRaw.slice(0, 6).reverse().map(sale => ({
         name: sale.sale_unique_id.replace("SALES-", "#"),
