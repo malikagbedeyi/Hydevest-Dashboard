@@ -104,7 +104,7 @@ const handleAction = (parentId, path, action) => {
             <h2 style={{ color: "orange" }}>{formatCurrency(dashboardData.pendingBalance)}</h2>
           </div>
           <div className="summary-item">
-            <p className="small">Sales Count</p>
+            <p className="small">Sales Record</p>
             <h2>{dashboardData.totalSales}</h2>
           </div>
         </div>
@@ -154,7 +154,7 @@ const handleAction = (parentId, path, action) => {
           </div>
 
           <div style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' , marginTop:"1vw",background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee' }}>
-            <p className="small" style={{ color: '#666', }}>Active Containers</p>
+            <p className="small" style={{ color: '#666', }}>Total Containers</p>
             <h3 style={{ margin: '5px 0' }}>{dashboardData.totalContainer}</h3>
             <div style={{ color: '#581aae', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
             onClick={() =>  handleAction("/dashboard/report", "/dashboard/report", "container-sale")}>

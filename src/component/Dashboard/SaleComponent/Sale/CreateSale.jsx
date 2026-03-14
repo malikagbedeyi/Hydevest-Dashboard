@@ -74,22 +74,25 @@ const [availablePayments, setAvailablePayments] = useState(["CASH", "TRANSFER"])
       return;
     }
 
-    setForm(prev => ({
-      ...prev,
-      pallets: [
-        ...prev.pallets,
-        {
-          id: crypto.randomUUID(),
-          containerId: resolvedContainerId,
-          pallet_uuid: available.pallet_uuid,
-          palletOption: available.pallet_pieces,
-          purchasePrice: 0,
-          noOfPallets: 0,
-          remaining_no_of_pallets: available.remaining_no_of_pallets || 0,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    }));
+   const presale = presaleByContainerId[resolvedContainerId];
+
+setForm(prev => ({
+  ...prev,
+  pallets: [
+    ...prev.pallets,
+    {
+      id: crypto.randomUUID(),
+      containerId: resolvedContainerId,
+      pallet_uuid: available.pallet_uuid,
+      palletOption: available.pallet_pieces,
+      purchasePrice: 0,
+      pricePerPic: Number(presale?.price_per_piece) || 0, // ⭐ ADD THIS
+      noOfPallets: 0,
+      remaining_no_of_pallets: available.remaining_no_of_pallets || 0,
+      createdAt: new Date().toISOString(),
+    },
+  ],
+}));
 
     setSalePop(true);
   };
@@ -284,10 +287,17 @@ const handleSaveSaleItems = () => {
 };
 
   // ---------------------- FILTER CONTAINERS ----------------------
-  const filterContainers = (containersData || []).filter(item => {
-    const name = item?.name ?? item?.title ?? "";
-    return name.toLowerCase().includes(searchContainer.toLowerCase());
-  });
+ const filterContainers = (containersData || []).filter(item => {
+  const name = item?.name ?? item?.title ?? "";
+  const tracking = item?.trackingNumber ?? "";
+
+  const search = searchContainer.toLowerCase();
+
+  return (
+    name.toLowerCase().includes(search) ||
+    tracking.toLowerCase().includes(search)
+  );
+});
 
   const toggleSelect = (item) => {
     if (activeContainerId && containerSales[item.id]?.pallets?.length > 0) {

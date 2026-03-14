@@ -29,6 +29,8 @@ const AddSaleItem = ({
     }));
   };
 
+  const onlyNumbers = (value) => value.replace(/[^0-9]/g, "");
+
   return (
     <div className="add-sale-popup">
       <div className="popup-overlay" />
@@ -74,35 +76,34 @@ const AddSaleItem = ({
                   {/* ===== Purchase Price ===== */}
                   <div className="form-group">
                     <label>Purchase Price (Per Piece)</label>
-                    <input
-                      type="number"
-                      value={pallet.purchasePrice}
-                      onChange={(e) =>
-                        handlePalletChange(index, "purchasePrice", Number(e.target.value) || 0)
-                      }
-                    />
-                    {isPurchasePriceLowerThanPresale(pallet) && (
-                      <small className="error">
-                        Price is lower than pre-sale price per piece {pallet.pricePerPic}
-                      </small>
-                    )}
+                   <input
+  type="text"
+  value={pallet.purchasePrice}
+  onChange={(e) => {
+    const raw = onlyNumbers(e.target.value);
+    handlePalletChange(index, "purchasePrice", Number(raw) || 0);
+  }}
+/>
+{isPurchasePriceLowerThanPresale(pallet) && (
+  <small className="error">
+    Purchase price is lower than pre-sale price ({formatNumber(pallet.pricePerPic)})
+  </small>
+)}
                   </div>
 
                   {/* ===== No of Pallets ===== */}
                   <div className="form-group">
                     <label>No. of Pallets Purchased</label>
                     <input
-                      type="number"
-                      min={0}
-                      max={remainingPallets}
-                      disabled={remainingPallets === 0}
-                      value={pallet.noOfPallets}
-                      onChange={(e) => {
-                        const raw = Number(e.target.value) || 0;
-                        const safeQty = raw > remainingPallets ? remainingPallets : raw;
-                        handlePalletChange(index, "noOfPallets", safeQty);
-                      }}
-                    />
+  type="text"
+  value={pallet.noOfPallets}
+  onChange={(e) => {
+    const raw = onlyNumbers(e.target.value);
+    const qty = Number(raw) || 0;
+    const safeQty = qty > remainingPallets ? remainingPallets : qty;
+    handlePalletChange(index, "noOfPallets", safeQty);
+  }}
+/>
                     <small className="error">
                       {remainingPallets > 0
                         ? `Only ${remainingPallets} pallet(s) remaining`
@@ -132,7 +133,7 @@ const AddSaleItem = ({
                             <span className="option-sale disabled">Select a container first</span>
                           ) : palletOptions.length === 0 ? (
                             <span className="option-sale disabled">No pallet options available</span>
-                          ) : (
+                          ) : ( 
                             palletOptions.map((opt) => (
                               <span
                                 key={opt.pallet_uuid}
