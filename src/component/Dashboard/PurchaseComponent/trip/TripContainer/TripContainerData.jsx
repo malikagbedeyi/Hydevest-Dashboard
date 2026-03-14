@@ -118,11 +118,12 @@ const calculateQuotedContainerNGN = (item, rate) => {
           <thead>
             <tr>
               <th>S/N</th>
-              <th>Title</th>
+              <th>Status</th>
               {/* <th>Description</th> */}
                <th>Container Number</th>
                <th>Pieces</th>
-               <th>Status</th>
+               <th>Average Weight</th>
+               <th>Max Weight</th>
                <th>Unit Price ($)</th>
                <th>Shipping Amount ($)</th>
                <th>Surcharge (₦)</th>
@@ -147,11 +148,12 @@ const calculateQuotedContainerNGN = (item, rate) => {
                 <tr key={item.id} onClick={() => handleContainerRowClick(item)}
                 style={{ cursor: "pointer" }}>
                   <td>{(pagination.from || 0) + idx}</td>
-                  <td>{item.title}</td>
+                  <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>
                   {/* <td>{item.desc || "-"}</td> */}
                   <td>TRN-{item.tracking_number || "-"}</td>
                   <td>{formatMoney(item.pieces || 0)}</td>
-                  <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>
+                  <td>{formatMoney(item.average_weight)}</td>
+                  <td>{formatMoney(item.max_weight)}</td>
                   <td>${formatMoneyUSd(item.unit_price_usd || 0)}</td>
                   <td>${formatMoneyUSd(Number(item.shipping_amount_usd) || 0)}</td>
                   <td>₦{formatMoney(Number(item.surcharge_ngn || 0))}</td>

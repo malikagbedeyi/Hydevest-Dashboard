@@ -68,11 +68,12 @@ const calculateQuotedContainerNGN = (item, rate) => {
           <thead>
             <tr>
               <th>S/N</th>
-              <th>Title</th>
-              {/* <th>Description</th> */}
-              <th>Container Number</th>
-              <th>Pieces</th>
               <th>Status</th>
+              {/* <th>Description</th> */}
+              <th>Tracking Number</th>
+              <th>Pieces</th>
+              <th>Average Weight</th>
+              <th>Max weight</th>
               <th>Unit Price ($)</th>
               <th>Amount ($)</th>
               <th>Amount (₦)</th>
@@ -103,10 +104,11 @@ const calculateQuotedContainerNGN = (item, rate) => {
       return (
         <tr key={item.container_uuid} onClick={() => onRowClick(item)} style={{ cursor: "pointer" }}>
           <td>{String(idx + 1).padStart(2, "0")}</td>
-          <td>{item.title}</td>
+          <td>{item.status === 1 ? (<span style={{ color: "green" }}>Approved</span>) : (<span style={{ color: "orange" }}>Pending</span>)}</td>
           <td>TRN-{item.tracking_number || "-"}</td>
           <td>{Number(item.pieces || 0).toLocaleString()}</td>
-          <td>{item.status === 1 ? (<span style={{ color: "green" }}>Approved</span>) : (<span style={{ color: "orange" }}>Pending</span>)}</td>
+           <td>{formatMoney(item.average_weight)}</td>
+             <td>{formatMoney(item.max_weight)}</td>
           <td>${formatMoneyUSD(item.unit_price_usd)}</td>
           <td>${formatMoneyUSD(calculateContainerUSD(item))}</td>
           <td>₦{itemRate > 0 ? formatMoney(calculateContainerNGN(item, itemRate)) : "₦0.00"}</td>
