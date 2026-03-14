@@ -95,11 +95,7 @@ const ContainerProfitTable = ({ data, onRowClick, goBack, dateRange, setDateRang
                   <td style={{color: row.expectedProfit >= 0 ? 'green' : 'red'}}>₦{row.expectedProfit.toLocaleString()}</td>
                   <td>₦{row.actualRevenue.toLocaleString()}</td>
                   <td style={{color: row.actualProfit >= 0 ? 'green' : 'red'}}>₦{row.actualProfit.toLocaleString()}</td>
-                  <td>
-                    <span style={{ color: row.trip?.progress === "COMPLETED" ? "green" : "orange" }}>
-                      {row.trip?.progress || "IN-TRANSIT"}
-                    </span>
-                  </td>
+                  <td style={{color:"orange"}}>{"In-progress"}</td>
                 </tr>
               )) : (
                 <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>No records found for the selected period.</td></tr>
