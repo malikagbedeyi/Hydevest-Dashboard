@@ -2,7 +2,14 @@ import React, { useState } from 'react';
 
 const ContainerProfitDrilldown = ({ data, goBack }) => {
   const [activeTab, setActiveTab] = useState("presale");
+  const [salesPage, setSalesPage] = useState(1);
+  const itemsPerPage = 5; // Smaller number for drilldown views
+
   const formatMoney = (val) => "₦" + Number(val).toLocaleString("en-NG");
+
+  // Pagination Logic for Sales Tab
+  const totalSalesPages = Math.ceil(data.saleRecords.length / itemsPerPage);
+  const paginatedSales = data.saleRecords.slice((salesPage - 1) * itemsPerPage, salesPage * itemsPerPage);
 
   return (
     <div className="drilldown">
@@ -26,7 +33,7 @@ const ContainerProfitDrilldown = ({ data, goBack }) => {
           {activeTab === "presale" && (
             <div className="userTable">
               <div className="table-wrap">
-                <table className="table" style={{ width: "100%",maxWidth:"100%", }}>
+                <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
                   <thead>
                     <tr>
                       <th>Presale ID</th>
@@ -57,9 +64,10 @@ const ContainerProfitDrilldown = ({ data, goBack }) => {
           {activeTab === "sales" && (
             <div className="userTable">
               <div className="table-wrap">
-                <table className="table" style={{ width: "100%",maxWidth:"100%", }}>
+                <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
                   <thead>
                     <tr>
+                      <th>S/N</th>
                       <th>Sale ID</th>
                       <th>Customer</th>
                       <th>Amount Paid</th>
@@ -68,8 +76,9 @@ const ContainerProfitDrilldown = ({ data, goBack }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.saleRecords.length > 0 ? data.saleRecords.map(s => (
+                    {paginatedSales.length > 0 ? paginatedSales.map((s, idx) => (
                       <tr key={s.id}>
+                        <td>{String((salesPage - 1) * itemsPerPage + idx + 1).padStart(2, '0')}</td>
                         <td>{s.sale_unique_id}</td>
                         <td>{s.customer?.firstname} {s.customer?.lastname}</td>
                         <td>{formatMoney(s.amount_paid)}</td>
@@ -77,10 +86,17 @@ const ContainerProfitDrilldown = ({ data, goBack }) => {
                         <td>{new Date(s.created_at).toLocaleDateString()}</td>
                       </tr>
                     )) : (
-                      <tr><td colSpan="5" style={{textAlign:'center'}}>No Sales Recorded</td></tr>
+                      <tr><td colSpan="6" style={{textAlign:'center'}}>No Sales Recorded</td></tr>
                     )}
                   </tbody>
                 </table>
+                {totalSalesPages > 1 && (
+                  <div className="pagination">
+                    <button disabled={salesPage === 1} onClick={() => setSalesPage(p => p - 1)}>Previous</button>
+                    <span>{salesPage} / {totalSalesPages}</span>
+                    <button disabled={salesPage === totalSalesPages} onClick={() => setSalesPage(p => p + 1)}>Next</button>
+                  </div>
+                )}
               </div>
             </div>
           )}
