@@ -1,7 +1,7 @@
 import React from 'react';
 import logo from '../../../../assets/Images/Logo/LogoMain.png'
 import { Printer, X } from "lucide-react";
-
+import Signature from '../../../../assets/Images/Dashboard/hydevestSignature.png'
 const SaleInvoice = ({ data, customer, items, close }) => {
     const handlePrint = () => {
         window.print();
@@ -241,11 +241,12 @@ const isBoxSale =
 
 <div id="customer-section"  style={invoiceStyles.signatureArea}>
                         <div style={invoiceStyles.sigBox}>
+                            <img style={{width:"50%"}} src={Signature} alt="" />
                             <div style={invoiceStyles.sigLine}></div>
                             <p style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Authorized Signatory</p>
                         </div>
-                        <div style={invoiceStyles.sigBox}>
-                            <div style={invoiceStyles.sigLine}></div>
+                        <div  style={invoiceStyles.sigBox}>
+                            <div className='mt-5' style={invoiceStyles.sigLine}></div>
                             <p style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Customer Signature</p>
                         </div>
                     </div>

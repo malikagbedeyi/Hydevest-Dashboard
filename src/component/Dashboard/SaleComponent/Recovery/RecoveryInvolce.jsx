@@ -1,6 +1,7 @@
 import React from 'react';
 import logo from '../../../../assets/Images/Logo/LogoMain.png';
 import { Printer } from "lucide-react";
+import Signature from '../../../../assets/Images/Dashboard/hydevestSignature.png'
 
 const RecoveryInvoice = ({ data }) => {
     const handlePrint = () => {
@@ -147,12 +148,13 @@ const RecoveryInvoice = ({ data }) => {
 
                 <div id="customer-section"  style={styles.signatureArea}>
                         <div style={styles.sigBox}>
+                            <img style={{width:"50%"}} src={Signature} alt="" />
                             <div style={styles.sigLine}></div>
                             <p style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Authorized Signatory</p>
                         </div>
                         <div style={styles.sigBox}>
-                            <div style={styles.sigLine}></div>
-                            <p style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Customer Signature</p>
+                            <div className='mt-5' style={styles.sigLine}></div>
+                            <p  style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Customer Signature</p>
                         </div>
                     </div>
 
