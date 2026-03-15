@@ -18,15 +18,17 @@ const SaleCustomer = ({ onCustomerResolved }) => {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
+const [matchingCustomers, setMatchingCustomers] = useState([]);
+
 const handleCustomerSearch = async (e) => {
   const value = e.target.value.trim();
   setPhone(value);
-
   setFoundCustomer(null);
   setForm({ customerName: "", customerEmail: "", customerAddress: "" });
 
   if (!value) {
     setShowAddCustomerFields(false);
+    setMatchingCustomers([]);
     return;
   }
 
@@ -36,36 +38,25 @@ const handleCustomerSearch = async (e) => {
 
     const search = value.toLowerCase();
 
-    const customer = customers.find(c =>
+    const matches = customers.filter(c =>
       String(c.phone_no).includes(search) ||
       `${c.firstname} ${c.lastname}`.toLowerCase().includes(search) ||
       c.firstname?.toLowerCase().includes(search) ||
       c.lastname?.toLowerCase().includes(search)
     );
 
-    if (!customer) {
+    if (matches.length === 0) {
       setShowAddCustomerFields(true);
+      setMatchingCustomers([]);
       return;
     }
 
-    const mapped = {
-      id: customer.id,
-      user_uuid: customer.user_uuid,
-      name: `${customer.firstname} ${customer.lastname}`.trim(),
-      email: customer.email,
-      phone: customer.phone_no,
-      address: customer.address,
-    };
-
-    setFoundCustomer(mapped);
+    setMatchingCustomers(matches);
     setShowAddCustomerFields(false);
-    onCustomerResolved(mapped);
-
   } catch (err) {
     setShowAddCustomerFields(true);
   }
 };
-
   const handleAddCustomer = async () => {
     if (!phone || !form.customerName || !form.customerEmail || !form.customerAddress) {
       setMessage("Please fill all customer fields");
@@ -139,8 +130,8 @@ const handleCustomerSearch = async (e) => {
 
       <div className="grid-4" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "20px" }}>
         <div className="form-group" style={{ flex: "4", position: "relative" }}>
-<input placeholder="Search customer by phone or name"value={phone}onChange={handleCustomerSearch}/>
-          {phone && (
+          <input placeholder="Search customer by phone or name"value={phone}onChange={handleCustomerSearch}/>
+          {/* {phone && (
             <X size={16} style={{ position: 'absolute', right: '30px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: 'red' }}
               onClick={() => {
                 setPhone("");
@@ -150,7 +141,32 @@ const handleCustomerSearch = async (e) => {
                 setForm({ customerName: "", customerEmail: "", customerAddress: "" });
               }}
             />
-          )}
+          )} */}
+          {matchingCustomers.length > 0 && (
+  <div className="customer-dropdown">
+    {matchingCustomers.map(c => (
+      <div
+        key={c.user_uuid}
+        className="customer-option"
+        onClick={() => {
+          const mapped = {
+            id: c.id,
+            user_uuid: c.user_uuid,
+            name: `${c.firstname} ${c.lastname}`,
+            email: c.email,
+            phone: c.phone_no,
+            address: c.address,
+          };
+          setFoundCustomer(mapped);
+          onCustomerResolved(mapped);
+          setMatchingCustomers([]);
+        }}
+      >
+        {c.firstname} {c.lastname} — {c.phone_no}
+      </div>
+    ))}
+  </div>
+)}
         </div>
 
         {!foundCustomer && (
