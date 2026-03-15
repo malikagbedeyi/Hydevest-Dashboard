@@ -119,6 +119,3 @@ export default App;
 
 
 
-// git add .
-// git commit -m "fix: restrict numeric fields to only accept numbers"
-// git push origin main

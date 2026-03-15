@@ -71,7 +71,6 @@ const fetchSales = async (pageNum = page) => {
     const record = res?.data?.record;
 
     const records = record?.data || [];
-
     setSales(records);
 
     setPagination({
@@ -176,8 +175,6 @@ const fetchSaleDetails = async (sale_uuid, saleMasterData) => {
   try {
     const res = await SaleServices.details({ sale_uuid });
     const saleRecords = res?.data?.record || [];
-
-
     if (!saleRecords.length) {
       setSelectedSale(null);
       setView("table");
@@ -193,7 +190,7 @@ const fetchSaleDetails = async (sale_uuid, saleMasterData) => {
    saleRecords.forEach((rec) => {
   const containerId = rec.container_id;
 
-  // Initialize container only if it doesn't exist
+
   if (!containersMap[containerId]) {
     const containerMeta = containerPreSales.find(c => c.id === containerId);
     containersMap[containerId] = {
@@ -204,7 +201,6 @@ const fetchSaleDetails = async (sale_uuid, saleMasterData) => {
     };
   }
 
-  // Push the pallet into the existing container
   containersMap[containerId].pallets.push({
     id: rec.sale_detail_uuid,
     palletId: rec.pallet_id,

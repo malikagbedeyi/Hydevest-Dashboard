@@ -12,7 +12,6 @@ const reportTypes = [
   { icon: Wallet, label: "Supp. Payables", submenu: "supp-payable", ready: true },
   { icon: HandCoins, label: "Customer Debt", submenu: "customer-dept", ready: true },
   { icon: DollarSign, label: "Container Profit", submenu: "container-profit", ready: true },
-
   { icon: ArrowUpCircle, label: "Financial", submenu: "report-financial", ready: false },
   { icon: Users, label: "Partner", submenu: "report-partner", ready: false },
   { icon: CreditCard, label: "Purchase", submenu: "report-purchase", ready: false },
@@ -20,19 +19,11 @@ const reportTypes = [
 ];
 
 const ReportController = () => {
-  const [activeReport, setActiveReport] = useState(null);
+   const { autoOpenCreate, setAutoOpenCreate } = useOutletContext();
+   const [activeReport, setActiveReport] = useState(autoOpenCreate || null);
   const [isTransitioning, setIsTransitioning] = useState(true);
-  const { autoOpenCreate, setAutoOpenCreate } = useOutletContext();
 
-  useEffect(() => {
-    if (autoOpenCreate === "container-sale") {
-      setActiveReport("container-sale");
-      setAutoOpenCreate(false);
-    }
 
-    const timer = setTimeout(() => setIsTransitioning(false), 300);
-    return () => clearTimeout(timer);
-  }, [autoOpenCreate, setAutoOpenCreate]);
 
   const handleReportClick = (submenu) => {
     setActiveReport(submenu);
@@ -41,6 +32,16 @@ const ReportController = () => {
   const resetReportView = () => {
     setActiveReport(null);
   };
+
+useEffect(() => {
+    if (autoOpenCreate) {
+      setActiveReport(autoOpenCreate);
+      setAutoOpenCreate(false);
+    }
+
+    const timer = setTimeout(() => setIsTransitioning(false), 300);
+    return () => clearTimeout(timer);
+  }, [autoOpenCreate, setAutoOpenCreate]);
 
   return (
     <div className={`emptyAccount ${isTransitioning ? 'page-loading' : 'page-ready'}`}>
@@ -80,7 +81,7 @@ const ReportController = () => {
             {activeReport === "container-sale" && <ContainerSaleReport goBack={resetReportView} />}
             {activeReport === "supp-payable" && <PayableController goBack={resetReportView} />}
             {activeReport === "customer-dept" && <DebtController goBack={resetReportView} />}
-            {activeReport === "container-profit" &&  <ContainerProfitController goBack={resetReportView} />}
+            {activeReport === "container-profit" && <ContainerProfitController goBack={resetReportView} />}
             {activeReport === "report-expensify" && <div>Expensify Report</div>}
           </div>
         </div>

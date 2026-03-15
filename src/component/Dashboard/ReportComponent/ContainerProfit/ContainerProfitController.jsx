@@ -108,9 +108,9 @@ const ContainerProfitController = ({ goBack }) => {
         saleRecords: actualSales
       };
     });
-  }, [containers, expenses, presales, sales, dateRange]); // Added dateRange as dependency
+  }, [containers, expenses, presales, sales, dateRange]); 
 
-  // ✅ 3. Master Metrics update automatically because they depend on filtered profitReportData
+
   const masterMetrics = useMemo(() => {
     return profitReportData.reduce((acc, curr) => ({
       landing: acc.landing + curr.landingCost,
@@ -122,6 +122,11 @@ const ContainerProfitController = ({ goBack }) => {
   }, [profitReportData]);
 
   const formatMoney = (val) => "₦" + Number(val).toLocaleString("en-NG", { maximumFractionDigits: 2 });
+  
+  if(profitReportData?.sales_status === null ) {
+    masterMetrics.actProf = 0
+  }
+
 
   return (
     <div className="drilldown">

@@ -1,93 +1,24 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { TrendingUp, DollarSign, Package, Activity, Clock, PlusCircle, ArrowRight, Loader2, PlaneTakeoff, Tag, Calendar } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useState } from 'react';
+import { DollarSign, Loader2, PlaneTakeoff, Tag, PlusCircle, ArrowRight, Calendar, X, Filter, Check, Ship, BarChart3, Users, FileText } from "lucide-react";
 import "../../../assets/Styles/dashboard/drilldown.scss"; 
-import { RecoveryServices } from '../../../services/Sale/recovery';
-import { SaleServices } from '../../../services/Sale/sale';
 import { useOutletContext } from 'react-router-dom';
-import { ContainerServices } from '../../../services/Trip/container';
+import { useDashboardData } from './useDashboardData';
+import DashboardCharts from './DashboardCharts';
 
 const OverViewController = () => {
-  const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
-    totalSales: 0,
-    totalRevenue: 0,
-    totalRecovered: 0,
-    pendingBalance: 0,
-    recentSales: [],
-    chartData: []
-  });
-
-  // Date Filter State
-  const [dateRange, setDateRange] = useState({
-    from: new Date(new Date().setMonth(new Date().getMonth() - 5)).toISOString().split('T')[0], // 6 months ago
-    to: new Date().toISOString().split('T')[0] // Today
-  });
-
   const { openSubmenuFromChild } = useOutletContext();
   const [navigating, setNavigating] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
 
-/* ================= FETCH DATA (UPDATED LOGIC) ================= */
-const fetchData = async () => {
-  try {
-    setLoading(true);
-    
-    const apiFromDate = dateRange.from;
-    const apiToDate = `${dateRange.to} 23:59:59`; 
+  const defaultRange = {
+    from: new Date(new Date().setMonth(new Date().getMonth() - 5)).toISOString().split('T')[0],
+    to: new Date().toISOString().split('T')[0]
+  };
 
-    const [salesRes, recoveryRes, containerRes] = await Promise.all([
-      SaleServices.list({ from_date: apiFromDate, to_date: apiToDate }), 
-      RecoveryServices.list({ from_date: apiFromDate, to_date: apiToDate }),
-      ContainerServices.list({ page: 1 })
-    ]);
+  const [activeFilters, setActiveFilters] = useState(defaultRange);
+  const [tempFilters, setTempFilters] = useState(defaultRange);
 
-    const salesRaw = salesRes?.data?.record?.data || [];
-  
-    const totalSalesFromBackend = salesRes?.data?.record?.total || salesRaw.length;
-
-    /* ================= GENERATE CHART DATA ================= */
-    const start = new Date(dateRange.from);
-    const end = new Date(dateRange.to);
-    const chartBase = {};
-
-    let current = new Date(start.getFullYear(), start.getMonth(), 1);
-    while (current <= end) {
-      const label = current.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
-      chartBase[label] = { name: label, Sales: 0, recovered: 0 };
-      current.setMonth(current.getMonth() + 1);
-    }
-
-    salesRaw.forEach(sale => {
-      const date = new Date(sale.created_at);
-      const label = date.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
-      if (chartBase[label]) {
-        chartBase[label].Sales += Number(sale.total_sale_amount || 0);
-        chartBase[label].recovered += Number(sale.amount_paid || 0);
-      }
-    });
-
-    const totalRev = salesRaw.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
-    const totalRec = salesRaw.reduce((sum, s) => sum + Number(s.amount_paid || 0), 0);
-
-    setDashboardData({
-      totalContainer: containerRes?.data?.record?.total || 0,
-      totalSales: totalSalesFromBackend, // Show 9 here
-      totalRevenue: totalRev,
-      totalRecovered: totalRec,
-      pendingBalance: Math.max(totalRev - totalRec, 0),
-      recentSales: salesRaw.slice(0, 7), 
-      chartData: Object.values(chartBase) 
-    });
-  } catch (err) {
-    console.error("Error loading overview data", err);
-  } finally {
-    setLoading(false);
-  }
-};
-
-  useEffect(() => {
-    fetchData();
-  }, [dateRange]);
+  const { loading, data: dashboardData } = useDashboardData(activeFilters);
 
   const formatCurrency = (val) => 
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(val);
@@ -101,168 +32,105 @@ const fetchData = async () => {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '80vh', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
         <Loader2 size={50} className="animate-spin" color="#581aae" />
-        <p style={{ color: '#581aae', fontWeight: '600' }}>{navigating ? "Opening modules..." : "Syncing Data..."}</p>
+        <p style={{ color: '#581aae', fontWeight: '600' }}>Syncing Data...</p>
       </div>
     );
   }
 
   return (
     <div className="drilldown" style={{ padding: "20px" }}>
+      {/* FILTER CONTROLS */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+           {showFilter && (
+             <div style={{ display: 'flex', gap: '10px', background: '#fff', padding: '10px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+               <input type="date" value={tempFilters.from} onChange={(e) => setTempFilters(p => ({...p, from: e.target.value}))} />
+               <input type="date" value={tempFilters.to} onChange={(e) => setTempFilters(p => ({...p, to: e.target.value}))} />
+               <button onClick={() => setActiveFilters(tempFilters)} style={{ background: '#581aae', color: '#fff', border: 'none', borderRadius: '4px', padding: '0 10px' }}><Check size={14}/></button>
+             </div>
+           )}
+        </div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => setShowFilter(!showFilter)} style={{ border: '1px solid #581aae', color: '#581aae', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', background: '#fff' }}><Filter size={14} /> Filter</button>
+          <button onClick={() => { setActiveFilters(defaultRange); setShowFilter(false); }} style={{ color: '#ff4d4f', border: 'none', cursor: 'pointer', background: 'none' }}><X size={14} /> Reset</button>
+        </div>
+      </div>
       
-      {/* 1. TOP METRICS */}
+      {/* METRICS GRID */}
       <div className="drill-summary-grid">
         <div className="drill-summary">
-          <div className="summary-item">
-            <p className="small">Total Sales (Period)</p>
-            <h2>{formatCurrency(dashboardData.totalRevenue)}</h2>
-          </div>
-          <div className="summary-item">
-            <p className="small">Total Recovered</p>
-            <h2>{formatCurrency(dashboardData.totalRecovered)}</h2>
-          </div>
-          <div className="summary-item">
-            <p className="small">Outstanding</p>
-            <h2 style={{ color: "orange" }}>{formatCurrency(dashboardData.pendingBalance)}</h2>
-          </div>
-          <div className="summary-item">
-            <p className="small">Sales Record</p>
-            <h2>{dashboardData.totalSales}</h2>
-          </div>
+          <div className="summary-item"><p className="small">Revenue</p><h2>{formatCurrency(dashboardData.totalRevenue)}</h2></div>
+          <div className="summary-item"><p className="small">Recovered</p><h2>{formatCurrency(dashboardData.totalRecovered)}</h2></div>
+          <div className="summary-item"><p className="small">Outstanding</p><h2 style={{ color: "orange" }}>{formatCurrency(dashboardData.pendingBalance)}</h2></div>
+          <div className="summary-item"><p className="small">Sales</p><h2>{dashboardData.totalSales}</h2></div>
         </div>
       </div>
 
+      {/* CHARTS & ACTIONS GRID */}
       <div className="grid-overview-main mt-4" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
-        
-        {/* CHART SECTION */}
-        <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h4 style={{ fontWeight: '600', color: "#581aae" }}>Sales vs Recovery Trend</h4>
-            
-            {/* DATE FILTERS */}
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#f8f9fa', padding: '5px 10px', borderRadius: '8px', border: '1px solid #eee' }}>
-                <Calendar size={14} color="#581aae" />
-                <input 
-                  type="date" 
-                  value={dateRange.from} 
-                  onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-                  style={{ border: 'none', background: 'transparent', fontSize: '12px', outline: 'none' }}
-                />
-                <span style={{ fontSize: '12px', color: '#999' }}>to</span>
-                <input 
-                  type="date" 
-                  value={dateRange.to} 
-                  onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-                  style={{ border: 'none', background: 'transparent', fontSize: '12px', outline: 'none' }}
-                />
-              </div>
-            </div>
-          </div>
+        <DashboardCharts 
+          chartData={dashboardData.chartData} 
+          pieData={dashboardData.pieData} 
+          formatCurrency={formatCurrency} 
+        />
 
-          <div style={{ width: '100%', height: 300 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dashboardData.chartData}>
-                <defs>
-                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#581aae" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#581aae" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#666' }} dy={10} />
-                <YAxis hide />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  formatter={(value) => formatCurrency(value)}
-                />
-                <Area type="monotone" dataKey="Sales" stroke="#581aae" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
-                <Area type="monotone" dataKey="recovered" stroke="#22c55e" strokeWidth={3} fill="transparent" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        {/* QUICK ACTIONS BOX */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", color: "#581aae",boxShadow: '0 4px 12px rgba(0,0,0,0.1)'  }}>
+          {/* QUICK ACTIONS */}
+          <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
             <h4>Quick Actions</h4>
             <div className="mt-3" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-<button 
-  style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-  onClick={() => handleAction("/dashboard/purchase", "/dashboard/trip", "create")}
->
-  <PlaneTakeoff size={18} /> Create New Trip
-</button>
-
-              <button style={{  background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-                onClick={() => handleAction("/dashboard/sales", "/dashboard/pre-sale", "create")}>
-                <Tag size={18} /> Create Presale
-              </button>
-              <button className="action-btn-animated" style={{ background: '#581aae', border: 'none', color: '#fff', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-              onClick={() => handleAction("/dashboard/sales", "/dashboard/sales", "create")}>
-                <PlusCircle size={18} /> Record New Sale
-              </button>
-              
-              <button style={{  background: '#fff', border: '1px solid #581aae', color: '#581aae',padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-                           onClick={() => handleAction("/dashboard/sales", "/dashboard/recovery", "create")}>
-                <DollarSign size={18} /> Add Payment
-              </button>
+              <button style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/purchase", "/dashboard/trip", "create")}><PlaneTakeoff size={18} /> New Trip</button>
+              <button style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/sales", "/dashboard/pre-sale", "create")}><Tag size={18} /> New Presale</button>
+              <button className="action-btn-animated" style={{ background: '#581aae', border: 'none', color: '#fff', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/sales", "/dashboard/sales", "create")}><PlusCircle size={18} /> New Sale</button>
+              <button style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/sales", "/dashboard/recovery", "create")}><DollarSign size={18} /> Add Payment</button>
             </div>
           </div>
 
-          <div style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' ,  marginTop:"1vw",background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee' }}>
-            <p  className="summary-card-hover"  onClick={() => handleAction("/dashboard/purchase", "/dashboard/container", "table")} style={{ color: '#666' }}>Total Containers</p>
-            <h3 style={{ margin: '5px 0',cursor: 'pointer', }}>{dashboardData.totalContainer}</h3>
-            <div style={{ color: '#581aae', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
-            onClick={() =>  handleAction("/dashboard/report", "/dashboard/report", "container-sale")}>
-              View Reports <ArrowRight size={12} />
+         {/* CONTAINERS IN TRANSIT */}
+          <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee', cursor: 'pointer' }} onClick={() => handleAction("/dashboard/purchase", "/dashboard/trip", "table")}>
+            <p className="small">Container In Transit</p>
+            <h3 style={{ color: 'orange' }}>{dashboardData.inTransitCount}</h3>
+            <div style={{ color: '#581aae', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>Track Progress <ArrowRight size={12} /></div>
+          </div>
+
+          {/* TOTAL CONTAINERS */}
+          <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee', cursor: 'pointer' }} onClick={() => handleAction("/dashboard/purchase", "/dashboard/container", "table")}>
+            <p className="small">Total Containers</p>
+            <h3>{dashboardData.totalContainer}</h3>
+            <div style={{ color: '#581aae', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>View All <ArrowRight size={12} /></div>
+          </div>
+
+          <div style={{ marginTop: '10px', marginBottom: '-5px',display:"flex",justifyContent:"space-between" }}>
+            <h5 style={{ fontWeight: '700', color: '#581aae', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileText size={18} /> Reports
+            </h5>
+            
+           <div style={{display:"flex",gap:"1vw",alignContent:"center",justifyContent:"center",cursor:"pointer"}}>
+            <span style={{color:"#581aae"}} onClick={() => handleAction("/dashboard/report", "/dashboard/report")}> View</span>
+             <ArrowRight size={16} color="#581aae" />
+           </div>
+          </div>
+
+<div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee', cursor: 'pointer' }} 
+     onClick={() => handleAction("/dashboard/report", "/dashboard/report", "customer-dept")}>
+  <p className="small">Customers Debt List</p>
+  <h3 style={{ color: '#d9534f' }}>{dashboardData.debtorsCount}</h3>
+  <div style={{ color: '#581aae', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+    View Debt List <ArrowRight size={12} />
+  </div>
+</div>
+          <div style={{ background: "#fff", padding: "15px 20px", borderRadius: "16px", border: '1px solid #eee', cursor: 'pointer' }}onClick={() => handleAction("/dashboard/report", "/dashboard/report", "container-profit")}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: '600',color:"#581aae" }}>Container Profit Report</span>
+                <ArrowRight size={16} color="#581aae" />
             </div>
           </div>
+
         </div>
       </div>  
-
-      {/* 3. RECENT ACTIVITY TABLE */}
-      <div className="mt-4" style={{ background: "#fff", padding: "24px", borderRadius: "16px", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-          <Clock size={20} color="#581aae" />
-          <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "600" }}>Recent Sales Activity</h3>
-        </div>
-
-        <div className="userTable">
-          <div className="table-wrap">
-            <table className="table" style={{ width: "100%", minWidth: "100%", maxWidth: "100%" }}>
-              <thead>
-                <tr>
-                  <th>Sale ID</th>
-                  <th>Customer</th>
-                  <th>Container</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dashboardData.recentSales.map((sale) => (
-                  <tr key={sale.id}>
-                    <td style={{ fontWeight: "600", color: "#581aae" }}>{sale.sale_unique_id}</td>
-                    <td>{sale.customer?.firstname} {sale.customer?.lastname}</td>
-                    <td>{sale.container?.title}</td>
-                    <td>{formatCurrency(sale.total_sale_amount)}</td>
-                    <td>
-                      <span className={`status ${sale.payment_status === "Full Payment" ? "Approve" : "pending"}`}
-                        style={{ color: sale.payment_status === "Full Payment" ? "green" : "orange" }}>
-                        {sale.payment_status}
-                      </span>
-                    </td>
-                    <td>{new Date(sale.created_at).toLocaleDateString('en-GB')}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
+    </div>  
   );
 };
+
 
 export default OverViewController;

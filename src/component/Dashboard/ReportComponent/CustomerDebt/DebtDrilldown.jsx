@@ -48,7 +48,7 @@ const DebtDrilldown = ({ customer, sales, recoveries, goBack }) => {
           {activeTab === "sales" && (
             <div className="userTable">
               <div className="table-wrap">
-                <table className="table" style={{ width: "100%" }}>
+                <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
                   <thead>
                     <tr>
                       <th>S/N</th>
@@ -86,13 +86,12 @@ const DebtDrilldown = ({ customer, sales, recoveries, goBack }) => {
           {activeTab === "recoveries" && (
             <div className="userTable">
               <div className="table-wrap">
-                <table className="table" style={{ width: "100%" }}>
+                <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
                   <thead>
                     <tr>
                       <th>S/N</th>
                       <th>Recovery ID</th>
                       <th>Amount</th>
-                      <th>Method</th>
                       <th>Date</th>
                     </tr>
                   </thead>
@@ -102,7 +101,6 @@ const DebtDrilldown = ({ customer, sales, recoveries, goBack }) => {
                         <td>{String((recoveryPage - 1) * itemsPerPage + idx + 1).padStart(2, '0')}</td>
                         <td>{r.recovery_unique_id}</td>
                         <td style={{ color: 'green' }}>{formatMoney(r.amount)}</td>
-                        <td>{r.payment?.payment_method || "N/A"}</td>
                         <td>{new Date(r.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}

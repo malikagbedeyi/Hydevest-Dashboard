@@ -82,7 +82,10 @@ const [location, setLocation] = useState(trip?.location || "");
 const [startDate, setStartDate] = useState(trip?.start_date || "");
 const [endDate, setEndDate] = useState(trip?.end_date || "");
 const [containerReloadKey, setContainerReloadKey] = useState(0);
-
+const [supplier , setSupplier] = useState(trip?.supplier || "")
+const [clearningAgent , setClearningAgent] = useState(trip?.clearning_agent || "")
+  const [editSupplier, setEditSupplier] = useState(false);
+  const [editClearningAgent, setEditClearningAgent] = useState(false);
 const originalRef = useRef(null);
 
 useEffect(() => {
@@ -94,6 +97,9 @@ useEffect(() => {
     location: trip.location || "",
     start_date: trip.start_date || "",
     end_date: trip.end_date || "",
+    // ✅ Add these two lines
+    supplier: trip.supplier || "",
+    clearing_agent: trip.clearing_agent || "", 
     progress: trip.progress || "NOT STARTED",
   };
 
@@ -104,13 +110,13 @@ useEffect(() => {
   setLocation(original.location);
   setStartDate(original.start_date);
   setEndDate(original.end_date);
+  setSupplier(original.supplier);
+  setClearningAgent(original.clearing_agent); 
   setStatus(mapProgressToUI(original.progress));
 }, [trip]);
 
-
 const hasChanges = () => {
   if (!originalRef.current) return false;
-
   const o = originalRef.current;
 
   return (
@@ -119,10 +125,11 @@ const hasChanges = () => {
     location !== o.location ||
     startDate !== o.start_date ||
     endDate !== o.end_date ||
+    supplier !== o.supplier ||
+    clearningAgent !== o.clearing_agent || 
     mapUIToProgress(status) !== o.progress
   );
 };
-
 
   /* ================== FINANCE DATA ================== */
   const {financeData,setFinanceData,avgContainerRate,loading: financeLoading,} = useTripFinance(trip?.trip_uuid);
@@ -479,25 +486,35 @@ const handleUpdate = async () => {
   }
   try {
     setLoading(true);
-const payload = {
-  trip_uuid: trip.trip_uuid,
-  title,
-  desc: description || "",
-  location: location || "",
-  start_date: startDate || "",
-  end_date: endDate || "",
-  status: 1,
-  progress: mapUIToProgress(status),
-};
-await TripServices.edit(payload);
+
+    const payload = {
+      trip_uuid: trip.trip_uuid,
+      title,
+      desc: description || "",
+      location: location || "",
+      start_date: startDate || "",
+      end_date: endDate || "",
+      supplier: supplier || "", 
+      clearing_agent: clearningAgent || "", 
+      status: 1,
+      progress: mapUIToProgress(status),
+    };
+
+    await TripServices.edit(payload);
+
     setMessageType("success");
     setMessage("Trip updated successfully");
+
+    // ✅ Update the reference to the new values
     originalRef.current = {
+      ...originalRef.current,
       title,
       description,
       location,
       start_date: startDate,
       end_date: endDate,
+      supplier,
+      clearing_agent: clearningAgent,
       progress: mapUIToProgress(status),
     };
   } catch (err) {
@@ -745,7 +762,44 @@ const handleCloseMessage = () => {
   </div>
 </div>
 </div>
+<div className="grid-2">
+       <div className="form-group">
+  <label>Supplier</label>
+  {!editSupplier && (
+    <Edit size={16} onClick={() => setEditSupplier(true)} />
+  )}
 
+  {editSupplier ? (
+    <input
+      type="text"
+      value={supplier}
+      autoFocus
+      onChange={(e) => setSupplier(e.target.value)}
+      onBlur={() => setEditSupplier(false)}
+    />
+  ) : (
+    <input type="text" value={supplier} readOnly />
+  )}
+</div>
+     <div className="form-group">
+  <label>Clearning Agent</label>
+  {!editClearningAgent && (
+    <Edit size={16} onClick={() => setEditClearningAgent(true)} />
+  )}
+
+  {editClearningAgent ? (
+    <input
+      type="text"
+      value={clearningAgent}
+      autoFocus
+      onChange={(e) => setClearningAgent(e.target.value)}
+      onBlur={() => setEditClearningAgent(false)}
+    />
+  ) : (
+    <input type="text" value={clearningAgent} readOnly />
+  )}
+</div>
+</div>
         <div className="grid-3 ">
          <div className="form-group">
   <label>Location</label>

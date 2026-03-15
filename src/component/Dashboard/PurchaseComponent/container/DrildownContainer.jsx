@@ -6,9 +6,10 @@
   import Comment from "./Comment";
   import ContainerLog from "./ContainerLog";
 import { usePopup } from "../../../../context/PopupContext";
+import { SupplierService } from "../../../../services/Account/SupplierService";
 
   const fundingOption = ["PARTNER", "ENTITY"];
-
+const sourceNationOptions = ["WET SALTED", "AIR DRIED"];
   const DrildownContainer = ({container = {},previous= () => {} ,goBack ,onUpdate,avgContainerRate,formatNumber,reloadTable, totalGeneralNGN = 0,totalContainerCount = 0,}) => {
 
     const { showMessage } = usePopup();
@@ -53,9 +54,11 @@ import { usePopup } from "../../../../context/PopupContext";
   const [entities, setEntities] = useState([]);
   const [entitySearch, setEntitySearch] = useState("");
   const [openEntityDrop, setOpenEntityDrop] = useState(false);
-
+const [openSourceNationDrop, setOpenSourceNationDrop] = useState(false);
   const [loading, setLoading] = useState(false);
-
+// ... existing states
+const [suppliers, setSuppliers] = useState([]);
+const [openSupplierDrop, setOpenSupplierDrop] = useState(false);
   const filteredFundingdrop = fundingOption.filter((opt) =>
     opt.toUpperCase().includes(fundingdrop.toUpperCase())
   );
@@ -67,7 +70,19 @@ import { usePopup } from "../../../../context/PopupContext";
   }, []);
 
 
-  
+  useEffect(() => {
+  const fetchSuppliers = async () => {
+    try {
+      const res = await SupplierService.list();
+      const records = res?.data?.record?.data || [];
+
+      setSuppliers(records);
+    } catch (err) {
+      console.error("Failed to fetch suppliers:", err);
+    }
+  };
+  fetchSuppliers();
+}, []);
 const rawAmountUsd = (Number(form.unitPrice) || 0) * (Number(form.unitpieces) || 0) + (Number(form.shipping_amount_usd) || 0);
   const rawTotalNgnValue = rawAmountUsd * avgContainerRate + (form.funding === "PARTNER" ? Number(form.surcharge || 0) : 0);
 
@@ -197,11 +212,10 @@ const handleUpdate = async () => {
     
     await ContainerServices.change_approval(approvalPayload);
 
-    // 4. Update the local UI state in the parent table
     const updatedDataForTable = {
       ...container,
       ...payload,
-      status: finalStatus, // Force the status into the object sent to the table
+      status: finalStatus, 
     };
 
     onUpdate(updatedDataForTable);
@@ -240,7 +254,7 @@ const handleUpdate = async () => {
 
   onUpdate({
     ...container,
-    status: newStatus, // 👈 THIS is what table reads
+    status: newStatus, 
   });
 
     } catch (err) {
@@ -325,13 +339,7 @@ useEffect(() => {
   >
     {loading ? "Approving..." : "Approve"}
   </button>
-//   <button
-//   className="primary"
-//   onClick={handleApprovalChange}
-//   disabled={loading}
-// >
-//   {loading ? "Approving..." : "Approve"}
-// </button>
+
 
               )}
                   <div className="status">
@@ -479,11 +487,42 @@ onChange={(e) => updateField("invoiceNumber", e.target.value)}/>
               onChange={(e) => updateField("trackingNumber", e.target.value)}/>
 
           </div>
-              <div className="form-group">
-              <label htmlFor="">Source Nation</label>
-              <input type="text" value={form.sourceNation}  placeholder="Enter Source Nation"
-              onChange={(e) =>  updateField( "sourceNation", e.target.value )}/>
-              </div>
+             {/* ================= SOURCE NATION DROPDOWN ================= */}
+<div className="form-group-select">
+  <label>Source Nation</label>
+  <div className="custom-select">
+    <div 
+      className="custom-select-drop" 
+      onClick={() => setOpenSourceNationDrop(!openSourceNationDrop)}
+    >
+      <div className="select-box">
+        {form.sourceNation ? (
+          <span>{form.sourceNation}</span>
+        ) : (
+          <span className="placeholder">Select Source Nation</span>
+        )}
+      </div>
+      <ChevronDown className={openSourceNationDrop ? "up" : "down"} />
+    </div>
+
+    {openSourceNationDrop && (
+      <div className="select-dropdown" style={{ zIndex: "99" }}>
+        {sourceNationOptions.map((opt) => (
+          <div
+            key={opt}
+            className="option-item"
+            onClick={() => {
+              updateField("sourceNation", opt);
+              setOpenSourceNationDrop(false);
+            }}
+          >
+            {opt}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
               <div className="form-group">
               <label htmlFor="">Source Port</label>
               <input type="text" value={form.sourcePort}  placeholder="Enter Source Port"
@@ -524,12 +563,46 @@ onChange={(e) => updateField("invoiceNumber", e.target.value)}/>
 
                 </div>
               </div>
-              <div className="form-group">
-              <label htmlFor="">Supplier Code</label>
-              <input type="text" value={form.supplyCode} name="supplyCode" 
-               placeholder="Enter Supply Code"
-               onChange={(e) =>  updateField( "supplyCode", e.target.value )}/>
-              </div>
+            {/* ================= SUPPLIER CODE DROPDOWN ================= */}
+<div className="form-group-select">
+  <label>Supplier Code</label>
+  <div className="custom-select">
+    <div
+      className="custom-select-drop"
+      onClick={() => setOpenSupplierDrop(!openSupplierDrop)}
+    >
+      <div className="select-box">
+        {form.supplyCode ? (
+          <span>{form.supplyCode}</span>
+        ) : (
+          <span className="placeholder">Select Supplier Code</span>
+        )}
+      </div>
+      <ChevronDown className={openSupplierDrop ? "up" : "down"} />
+    </div>
+
+    {openSupplierDrop && (
+      <div className="select-dropdown" style={{ zIndex: 99 }}>
+        {suppliers.length === 0 ? (
+          <div className="option-item">No suppliers found</div>
+        ) : (
+          suppliers.map((sup) => (
+            <div
+              key={sup.user_uuid || sup.id}
+              className="option-item"
+              onClick={() => {
+                updateField("supplyCode", sup.supplier_data?.code_name || "—");
+                setOpenSupplierDrop(false);
+              }}
+            >
+              {sup.supplier_data?.code_name}
+            </div>
+          ))
+        )}
+      </div>
+    )}
+  </div>
+</div>
 
               </div>
                 </div>

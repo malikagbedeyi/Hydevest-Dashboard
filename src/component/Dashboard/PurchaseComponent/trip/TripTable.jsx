@@ -8,17 +8,20 @@ import "../../../../assets/Styles/dashboard/table.scss";
     return (
       <div className="userTable">
         <div className="table-wrap">
-          <table className="table" style={{width:"100%" , maxWidth:"100%",minWidth:"100%"}}>
+          <table className="table" style={{width:"120%",minWidth:"120%",maxWidth:"120%"}}>
             <thead>
               <tr>
                 <th>S/N</th>
                 <th>Title</th>
                 <th>description</th>
                 <th>Location</th>
+                <th>Supplier</th>
+                <th>Clearing Agent</th>
                 <th>Start</th>
                 <th>End</th>
                 <th>Created by</th>
                 <th>Status</th>
+
                 {/* <th>Action</th> */}
               </tr>
             </thead>
@@ -35,6 +38,8 @@ import "../../../../assets/Styles/dashboard/table.scss";
                     <td>{trip.title}</td>
                     <td>{trip.desc}</td>
                     <td>{trip.location}</td>
+                    <td>{trip.supplier}</td>
+                    <td>{trip.clearing_agent}</td>
                     <td>{trip.start_date}</td>
                     <td>{trip.end_date}</td>
                     <td>{trip?.creator_info.firstname} {trip?.creator_info.lastname}</td>

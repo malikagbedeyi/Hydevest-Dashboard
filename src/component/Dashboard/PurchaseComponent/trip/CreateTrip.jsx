@@ -17,6 +17,9 @@ const CreateTrip = ({ onSuccess, setView ,data}) => {
     desc: "",
     start_date: "",
     end_date: "",
+    clearing_agent:"",
+    Supplier:"",
+
   });
 const isApproved = status === 1;
 
@@ -136,6 +139,28 @@ const handleCreate = async () => {
 />
 
           </div>
+               <div className="form-group">
+  <label>Supplier </label>
+  <div className="input-box">
+<input
+placeholder="Enter Supplier"
+  type="text"
+  value={form.Supplier}
+  onChange={(e) => updateForm("supplier", e.target.value)}
+/>
+  </div>
+</div>
+          <div className="form-group">
+            <label>Clearing Agent</label>
+            <div className="input-box">
+            <input
+  type="text"
+  placeholder="Enter Clearing Agent"
+  value={form.clearing_agent}
+  onChange={(e) => updateForm("clearing_agent", e.target.value)}
+/>
+            </div>
+          </div>
           <div className="form-group">
   <label>Start Date</label>
   <div className="input-box">
@@ -146,7 +171,6 @@ const handleCreate = async () => {
 />
   </div>
 </div>
-
           <div className="form-group">
             <label>End Date</label>
             <div className="input-box">

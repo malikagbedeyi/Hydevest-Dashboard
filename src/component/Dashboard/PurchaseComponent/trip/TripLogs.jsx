@@ -25,31 +25,27 @@ const fetchLogs = async (pageValue = page) => {
       page: pageValue,
       from_date: filters.from_date,
       to_date: filters.to_date,
-      // Pass trip_uuid if searching specifically for a trip ID
       trip_uuid: filters.entity_id || "", 
       user_uuid: filters.user_uuid || "", 
     };
 
     const res = await TripServices.log(params);
     let rawData = res.data?.record.data || [];
-
-    // IMPROVED CLIENT-SIDE FILTERING
+    console.log("Trip Log",res.data)
     if (search) {
       const s = search.toLowerCase();
       
       rawData = rawData.filter(log => {
-        // 1. Check Trip ID (Handles "6", "06", and "Trip 06")
         const idAsString = String(log.entity_id);
         const tripLabel = `trip 0${log.entity_id}`.toLowerCase();
         const tripShortLabel = `trip ${log.entity_id}`.toLowerCase();
         
-        // 2. Check Personnel
+
         const fullName = `${log.creator?.firstname || ""} ${log.creator?.lastname || ""}`.toLowerCase();
         
-        // 3. Check Field Names (what_changed)
+
         const fieldsChanged = Object.keys(log.what_changed || {}).join(" ").toLowerCase();
 
-        // RETURN TRUE IF ANY MATCH
         return (
           idAsString.includes(s) || 
           tripLabel.includes(s) || 
