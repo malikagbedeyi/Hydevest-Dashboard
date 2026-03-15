@@ -18,45 +18,53 @@ const SaleCustomer = ({ onCustomerResolved }) => {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePhoneSearch = async (e) => {
-    const value = e.target.value.trim();
-    setPhone(value);
+const handleCustomerSearch = async (e) => {
+  const value = e.target.value.trim();
+  setPhone(value);
 
-    // ✅ Clear previous data when searching a new number
-    setFoundCustomer(null);
-    setForm({ customerName: "", customerEmail: "", customerAddress: "" });
+  setFoundCustomer(null);
+  setForm({ customerName: "", customerEmail: "", customerAddress: "" });
 
-    if (!value) {
-      setShowAddCustomerFields(false);
+  if (!value) {
+    setShowAddCustomerFields(false);
+    return;
+  }
+
+  try {
+    const res = await CustomerService.list();
+    const customers = res.data?.record?.data || [];
+
+    const search = value.toLowerCase();
+
+    const customer = customers.find(c =>
+      String(c.phone_no).includes(search) ||
+      `${c.firstname} ${c.lastname}`.toLowerCase().includes(search) ||
+      c.firstname?.toLowerCase().includes(search) ||
+      c.lastname?.toLowerCase().includes(search)
+    );
+
+    if (!customer) {
+      setShowAddCustomerFields(true);
       return;
     }
 
-    try {
-      const res = await CustomerService.list();
-      const customers = res.data?.record?.data || [];
-      const customer = customers.find(c => String(c.phone_no) === String(value));
+    const mapped = {
+      id: customer.id,
+      user_uuid: customer.user_uuid,
+      name: `${customer.firstname} ${customer.lastname}`.trim(),
+      email: customer.email,
+      phone: customer.phone_no,
+      address: customer.address,
+    };
 
-      if (!customer) {
-        setShowAddCustomerFields(true);
-        return;
-      }
+    setFoundCustomer(mapped);
+    setShowAddCustomerFields(false);
+    onCustomerResolved(mapped);
 
-      const mapped = {
-        id: customer.id,
-        user_uuid: customer.user_uuid,
-        name: `${customer.firstname} ${customer.lastname}`.trim(),
-        email: customer.email,
-        phone: customer.phone_no,
-        address: customer.address,
-      };
-
-      setFoundCustomer(mapped);
-      setShowAddCustomerFields(false);
-      onCustomerResolved(mapped);
-    } catch (err) {
-      setShowAddCustomerFields(true);
-    }
-  };
+  } catch (err) {
+    setShowAddCustomerFields(true);
+  }
+};
 
   const handleAddCustomer = async () => {
     if (!phone || !form.customerName || !form.customerEmail || !form.customerAddress) {
@@ -86,7 +94,7 @@ const SaleCustomer = ({ onCustomerResolved }) => {
       const backendMessage = err.response?.data?.message || "";
       if (backendMessage.toLowerCase().includes("taken") || backendMessage.toLowerCase().includes("exists")) {
         setMessage("Customer already exists. Fetching details...");
-        handlePhoneSearch({ target: { value: phone } });
+        handleCustomerSearch({ target: { value: phone } });
       } else {
         setMessage(backendMessage || "Failed to create customer");
       }
@@ -131,7 +139,7 @@ const SaleCustomer = ({ onCustomerResolved }) => {
 
       <div className="grid-4" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "20px" }}>
         <div className="form-group" style={{ flex: "4", position: "relative" }}>
-          <input placeholder="Enter customer phone number" value={phone} onChange={handlePhoneSearch} />
+<input placeholder="Search customer by phone or name"value={phone}onChange={handleCustomerSearch}/>
           {phone && (
             <X size={16} style={{ position: 'absolute', right: '30px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: 'red' }}
               onClick={() => {

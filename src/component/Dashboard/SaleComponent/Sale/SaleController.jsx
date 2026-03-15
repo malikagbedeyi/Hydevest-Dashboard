@@ -174,12 +174,7 @@ const fetchSaleDetails = async (sale_uuid, saleMasterData) => {
 
   try {
     const res = await SaleServices.details({ sale_uuid });
-    const saleRecords = res?.data?.record || [];
-    if (!saleRecords.length) {
-      setSelectedSale(null);
-      setView("table");
-      return;
-    }
+  const saleRecords = res?.data?.record || [];
 
     const saleMaster = saleMasterData;
 
@@ -311,6 +306,7 @@ const handleSearchChange = (e) => {
 
   /* ===================== DRILLDOWN ===================== */
 const handleRowClick = (sale) => {
+
   if (!sale?.sale_uuid) return;
   fetchSaleDetails(sale.sale_uuid, sale);
 };

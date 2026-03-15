@@ -201,26 +201,40 @@ const buildCreatePayload = (customer) => {
   if (!selectedContainer) throw new Error("Container is required");
 
   const presale = presaleByContainerId[selectedContainer.id];
-  if (!presale?.pre_sale_uuid) throw new Error(`Pre-sale not found for container ${selectedContainer.name}`);
+  if (!presale?.pre_sale_uuid) {
+    throw new Error(`Pre-sale not found for container ${selectedContainer.name}`);
+  }
 
   const containerData = containerSales[selectedContainer.id];
-  if (!containerData?.pallets?.length) throw new Error("No pallets added");
 
-  const purchase_prices = containerData.pallets.map(p => Number(p.purchasePrice));
-  const pallets_purchased = containerData.pallets.map(p => Number(p.noOfPallets));
-  const pallet_uuids = containerData.pallets.map(p => p.pallet_uuid);
-  const pallet_pieces = containerData.pallets.map(p => p.palletOption);
+  const saleOption = (presale?.sale_option || "").toLowerCase().trim();
+  const isBoxSale = saleOption === "box sale";
+
+  if (!isBoxSale && !containerData?.pallets?.length) {
+    throw new Error("No pallets added");
+  }
+
+  const purchase_prices = containerData?.pallets?.map(p => Number(p.purchasePrice)) || [];
+  const pallets_purchased = containerData?.pallets?.map(p => Number(p.noOfPallets)) || [];
+  const pallet_uuids = containerData?.pallets?.map(p => p.pallet_uuid) || [];
+  const pallet_pieces = containerData?.pallets?.map(p => p.palletOption) || [];
 
   return {
     container_uuid: selectedContainer.container_uuid,
     pre_sale_uuid: presale.pre_sale_uuid,
     customer_uuid: customer.user_uuid,
-    purchase_prices: purchase_prices.join(","),      
-    pallets_purchased: pallets_purchased.join(","),  
-    pallet_uuids: pallet_uuids.join(","),            
-    pallet_pieces: pallet_pieces.join(","),         
+
+    purchase_prices: purchase_prices.join(","),
+    pallets_purchased: pallets_purchased.join(","),
+    pallet_uuids: pallet_uuids.join(","),
+    pallet_pieces: pallet_pieces.join(","),
+
     amount_paid: Number(amountPaid) || 0,
-    total_sale_amount: containerData.pallets.reduce((sum, p) => sum + Number(p.total || 0), 0) - discount,
+
+    total_sale_amount: isBoxSale
+      ? Number(form.totalSaleAmount || 0) - discount
+      : containerData.pallets.reduce((sum, p) => sum + Number(p.total || 0), 0) - discount,
+
     discount,
     payment_method: paymentMethod || "NO payment method selected",
     balance,

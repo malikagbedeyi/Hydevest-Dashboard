@@ -363,35 +363,26 @@ const handleDeleteSaleItem = (palletId, containerId) => {
 
       <div className="drill-summary-grid">
         <div className="drill-summary">
-
           <div className="summary-item">
-            <p>Total Sale Amount</p>
+            <p className="small"> Total Sale Amount</p>
             <h2>{formatCurrency(editableData.totalSaleAmount)}</h2>
           </div>
                <div className="summary-item">
-            <p>Discount</p>
+            <p className="small"> Discount</p>
             <h2>{formatCurrency(editableData.discount)}</h2>
           </div>
           <div className="summary-item">
-            <p>Amount Paid</p>
+            <p  className="small">Amount Paid</p>
             <h2>{formatCurrency(editableData.amountPaid)}</h2>
           </div>
 
           <div className="summary-item">
-            <p>OutStanding Balance</p>
-<h2>
-  {editableData.balance === 0 ? (
-    <span style={{ color: "green", fontWeight: "600" }}>
-      Fully Paid
-    </span>
-  ) : (
-    formatCurrency(editableData.balance)
-  )}
-</h2>
+            <p  className="small">OutStanding Balance</p>
+            <h2>{editableData.balance === 0 ? (  <span style={{ color: "green", fontWeight: "600" }}>
+               Fully Paid</span>) : (formatCurrency(editableData.balance))}</h2>
           </div>
-
           <div className="summary-item">
-            <p>Total Pallets</p>
+            <p  className="small">Total Pallets</p>
             <h2>{editableData.noOfPallets}</h2>
           </div>
 
