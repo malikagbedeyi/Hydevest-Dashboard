@@ -3,7 +3,7 @@ import logo from '../../assets/Images/Logo/LogoMain.png';
 import '../../assets/Styles/dashboard/sidebar.scss';
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import { ChevronDown, Activity, CreditCard, BarChart2, Users, Tag, TrendingUp, FileText, UserCheck, Shield, Settings, ChevronRight, ChevronLeft, Mail,} from 'lucide-react';
+import { ChevronDown, Activity, CreditCard, BarChart2, Users, Tag, TrendingUp, FileText, UserCheck, Shield, ChevronRight, ChevronLeft, Mail,} from 'lucide-react';
 
 const Sidebar = ({ collapsed, onToggle, openSidebarMenu }) => {
   const location = useLocation();
@@ -22,10 +22,8 @@ const Sidebar = ({ collapsed, onToggle, openSidebarMenu }) => {
         }
       );
     } catch (err) {
-      // Backend failure should NOT block logout
       console.warn("Logout API failed:", err.response);
     } finally {
-      // ✅ ALWAYS clear auth data
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 

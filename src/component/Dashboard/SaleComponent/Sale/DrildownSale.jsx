@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Printer, Download } from "lucide-react";
 import "../../../../assets/Styles/dashboard/drilldown.scss";
 import "../../../../assets/Styles/dashboard/Sale/addSale.scss";
 import EditableField from "./EditableField";
@@ -7,6 +8,7 @@ import { X } from "lucide-react";
 import AddSaleItem from "./AddSaleItem";
 import { usePresaleHelpers } from "./hooks/usePresaleHelpers";
 import { SaleServices } from "../../../../services/Sale/sale";
+import SaleInvoice from "./SaleInvoice";
 
 const DrilldownSale = ({ data, goBack, onUpdate, sales,preSales }) => {
 
@@ -14,6 +16,7 @@ const DrilldownSale = ({ data, goBack, onUpdate, sales,preSales }) => {
   const [editingField, setEditingField] = useState(null);
   const [salePop, setSalePop] = useState(false);
   const [form, setForm] = useState({ pallets: [] });
+  const [showInvoice, setShowInvoice] = useState(false)
   const [activeContainerId, setActiveContainerId] = useState(null);
   const [openPalletDropdowns, setOpenPalletDropdowns] = useState({});
 const [palletOptionsByContainer, setPalletOptionsByContainer] = useState({});
@@ -347,7 +350,15 @@ const handleDeleteSaleItem = (palletId, containerId) => {
 
   return (
     <div className="drilldown">
-
+<div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+        <button 
+          className="create" 
+          onClick={() => setShowInvoice(true)}
+        >
+          <Printer size={18} /> Generate Invoice
+        </button>
+      </div>
+      
       {/* ===== SUMMARY ===== */}
 
       <div className="drill-summary-grid">
@@ -492,6 +503,22 @@ const handleDeleteSaleItem = (palletId, containerId) => {
     isPurchasePriceLowerThanPresale={isPurchasePriceLowerThanPresale}
   />
 )}
+
+{showInvoice && (
+        <div className="modal-overlay" style={{ zIndex: 1000 }}>
+          <div className="modal-content invoice-modal" style={{ width: '850px', maxWidth: '95%', padding: '0', background: '#f9f9f9', overflowY: 'auto', maxHeight: '90vh' }}>
+             <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px' }}>
+                <X className="close-icon" onClick={() => setShowInvoice(false)} style={{ cursor: 'pointer' }} />
+             </div>
+             <SaleInvoice
+                data={editableData} 
+                customer={sales.customer} 
+                items={saleItems} 
+                close={() => setShowInvoice(false)}
+             />
+          </div>
+        </div>
+      )}
       {/* ===== FOOTER ===== */}
 
       <div className="btn-row">

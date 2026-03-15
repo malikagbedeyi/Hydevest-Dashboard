@@ -164,21 +164,32 @@ const FileAttachment = ({ expense_uuid }) => {
                 </>
               ) : (
                 <>
-                  <span>{item.file_name}</span>
-                  <div className="icons">
-                    <Edit
-                      size={16}
-                      onClick={() => {
-                        setEditingFileId(item.attachment_uuid);
-                        setEditFileName(item.file_name);
-                        setEditDesc(item.desc || "");
-                        setEditFile(null);
-                      }}
-                    />
-                    <Trash2 size={16} />
-                  </div>
-                </>
-              )}
+     <span>{item.file_name}</span>
+    <div className="icons">
+      <Eye
+        size={16}
+        style={{ cursor: "pointer" }}
+        onClick={() => {
+          if (item.file) {
+            window.open(item.file, "_blank", "noopener,noreferrer");
+          } else {
+            alert("File path not found in the record");
+          }
+        }}
+      />
+      <Edit
+        size={16}
+        onClick={() => {
+          setEditingFileId(item.attachment_uuid);
+          setEditFileName(item.file_name);
+          setEditDesc(item.desc || "");
+          setEditFile(null);
+        }}
+      />
+      {/* <Trash2 size={16} /> */}
+    </div>
+  </>
+)}
             </div>
           ))
         )}

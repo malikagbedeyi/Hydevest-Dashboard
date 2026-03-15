@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, Paperclip, Trash2 } from "lucide-react";
+import { ChevronDown, Eye, Paperclip, Trash2 } from "lucide-react";
 import { ExpenseServices } from "../../../../../services/Trip/expense";
 
 const typeOptions = ["Expense"];
@@ -40,8 +40,13 @@ const [form, setForm] = useState({
   amountNGN: 0,
   attachments: [],
   comment: "",
-  is_container_payment: 0, // default General Payment
+  is_container_payment: 0, 
 });
+
+const handleViewLocalFile = (file) => {
+    const fileURL = URL.createObjectURL(file);
+    window.open(fileURL, "_blank");
+  };
 
   /** ---------- handlers ---------- */
   
@@ -245,7 +250,7 @@ const handleClosePopup = () => {
               <label>Comment</label>
               <textarea name="comment" value={form.comment} onChange={handleChange} />
             </div>
-            <section className="attachments">
+           <section className="attachments">
               <div className="grid-3">
                 <div className="form-group upload-box">
                   <label>Upload</label>
@@ -282,13 +287,24 @@ const handleClosePopup = () => {
                           <div className="small-muted">{f.name}</div>
                           <small>{(f.size / 1024).toFixed(1)} KB</small>
                         </div>
-                        <Trash2
-                          size={16}
-                          style={{ cursor: "pointer" }}
-                          onClick={() =>
-                            setForm((prev) => ({ ...prev, attachments: prev.attachments.filter((a) => a.id !== f.id) }))
-                          }
-                        />
+                        {/* Action Icons Wrapper */}
+                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                          <Eye
+                            size={16}
+                            style={{ cursor: "pointer", color: "#581aae" }}
+                            onClick={() => handleViewLocalFile(f.file)}
+                          />
+                          <Trash2
+                            size={16}
+                            style={{ cursor: "pointer", color: "#ff4d4f" }}
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                attachments: prev.attachments.filter((a) => a.id !== f.id),
+                              }))
+                            }
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>

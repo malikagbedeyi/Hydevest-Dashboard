@@ -91,7 +91,6 @@ const ResetPasswordModal = ({ onClose }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-             {/* {error && <p style={{ color: "red" }}>{error}</p>} */}
             <button onClick={requestResetToken} disabled={loading}>
               Send Reset Token
             </button>

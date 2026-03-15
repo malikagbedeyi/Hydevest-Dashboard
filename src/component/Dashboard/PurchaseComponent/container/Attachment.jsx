@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Paperclip, Eye, Trash2, Edit } from "lucide-react";
+import { Paperclip, Eye, Trash2, Edit } from "lucide-react"; // Eye is imported
 import { ContainerServices } from "../../../../services/Trip/container";
 
 const Attachment = ({ container_uuid }) => {
-
   const [files, setFiles] = useState([]);
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
@@ -30,6 +29,12 @@ const Attachment = ({ container_uuid }) => {
   };
 
   const displayedFiles = showAll ? files : files.slice(0, 3);
+
+  // Helper for viewing local/temporary files before upload
+  const handleViewLocalFile = (fileObj) => {
+    const url = URL.createObjectURL(fileObj);
+    window.open(url, "_blank");
+  };
 
   const handleUpload = async () => {
     if (!file || !fileName) return;
@@ -83,7 +88,7 @@ const Attachment = ({ container_uuid }) => {
     <div className="attachment">
       <div className="attach-head">
         <h4>Attachment</h4>
-        <label className="attach-btn" style={{cursor:"pointer"}}>
+        <label className="attach-btn" style={{ cursor: "pointer" }}>
           <Paperclip size={16} /> Attach File
           <input
             type="file"
@@ -112,17 +117,20 @@ const Attachment = ({ container_uuid }) => {
                 onChange={(e) => setDesc(e.target.value)}
               />
             </div>
-          <div className="footer-btns">
+          </div>
+          <div className="footer-btns mb-4">
+            {/* Added an Eye icon here so you can preview what you are uploading */}
+            <button className="preview" type="button" onClick={() => handleViewLocalFile(file)}>
+              <Eye size={14} /> Preview
+            </button>
             <button
-              className="create mt-3"
+              className="create"
               onClick={handleUpload}
               disabled={loading}
             >
               {loading ? "Uploading..." : "Upload"}
             </button>
           </div>
-           </div>
-
         </>
       )}
 
@@ -130,46 +138,54 @@ const Attachment = ({ container_uuid }) => {
         <p>Recent Files Attached</p>
 
         {files.length === 0 ? (
-          <p>No attachments yet</p>
+          <p className="small-muted">No attachments yet</p>
         ) : (
           displayedFiles.map((item) => (
             <div key={item.attachment_uuid} className="edit file-row">
               {editingFileId === item.attachment_uuid ? (
-                <>
-                <div className="">
-                <div className="grid-2">
-                <div className="form-group">
-                    <label >File Name</label>
-                  <input  type="text"  value={editFileName}  onChange={(e) => setEditFileName(e.target.value)}  />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor=""> Description</label>
-                  <input type="text"value={editDesc}onChange={(e) => setEditDesc(e.target.value)} placeholder=" Enter Description" />
-                  </div>
-                  <div className="form-group">
-                    <label ></label>
-                  <input type="file" onChange={(e) => setEditFile(e.target.files[0])} />
-                  </div>
-                  </div>
-                  <div className="footer-btns mb-3">
-                  <button className="create"
-                    onClick={() => handleEditSave(item.attachment_uuid)}  disabled={loading}   >  Save
-                  </button>
-                  <button className="preview"
-                    onClick={() => setEditingFileId(null)}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
+                <div className="edit-attachment-form">
+                  <div className="grid-2">
+                    <div className="form-group">
+                      <label>File Name</label>
+                      <input type="text" value={editFileName} onChange={(e) => setEditFileName(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label>Description</label>
+                      <input type="text" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label>Update File</label>
+                      <input type="file" onChange={(e) => setEditFile(e.target.files[0])} />
                     </div>
                   </div>
-                </>
+                  <div className="footer-btns mb-3">
+                    <button className="create" onClick={() => handleEditSave(item.attachment_uuid)} disabled={loading}>
+                      Save
+                    </button>
+                    <button className="preview" onClick={() => setEditingFileId(null)} disabled={loading}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <>
                   <span>{item.file_name}</span>
                   <div className="icons">
+                    {/* ✅ VIEW ICON: This opens the file property from the backend */}
+                    <Eye
+                      size={16}
+                      style={{ cursor: "pointer", color: "#581aae" }}
+                      onClick={() => {
+                        if (item.file) {
+                          window.open(item.file, "_blank", "noopener,noreferrer");
+                        } else {
+                          alert("File URL not found");
+                        }
+                      }}
+                    />
                     <Edit
                       size={16}
+                      style={{ cursor: "pointer" }}
                       onClick={() => {
                         setEditingFileId(item.attachment_uuid);
                         setEditFileName(item.file_name);
@@ -177,7 +193,7 @@ const Attachment = ({ container_uuid }) => {
                         setEditFile(null);
                       }}
                     />
-                    <Trash2 size={16} />
+                    {/* <Trash2 size={16} style={{ cursor: "pointer", color: "#ff4d4f" }} /> */}
                   </div>
                 </>
               )}
@@ -199,4 +215,4 @@ const Attachment = ({ container_uuid }) => {
   );
 };
 
-export default Attachment
+export default Attachment;

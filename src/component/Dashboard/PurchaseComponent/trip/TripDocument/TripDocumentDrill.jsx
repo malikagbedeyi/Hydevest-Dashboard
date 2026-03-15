@@ -121,6 +121,10 @@ const scrollToTop = () => {
               </span>
           </div>
           {activeTab === "comments" &&  (
+            <div className=""></div>
+          )}
+
+          {/* {activeTab === "comments" &&  (
              <div className="">
           <div className="comment-box">
             <textarea placeholder="Add your comment"></textarea>
@@ -141,7 +145,7 @@ const scrollToTop = () => {
             <p className="text">Review the list of users with access to privileged functions</p>
           </div>
     </div>
-          )}
+          )} */}
            {activeTab === "activity" &&  (
             <div className="">
 

@@ -14,6 +14,8 @@ import TripDocumentTable from "./TripDocument/TripDocumentTable";
 import TripLog from "./TripLog";
 import { TripServices } from "../../../../services/Trip/trip";
 import { useTripFinance } from "./hook/useTripFinance";
+import { SupplierService } from "../../../../services/Account/SupplierService";
+import { ClearingAgentService } from "../../../../services/Account/ClearingAgentService";
 const statusOption = ["Not Started", "Intransit", "Completed"];
 
 const mapProgressToUI = (progress) => {
@@ -86,50 +88,70 @@ const [supplier , setSupplier] = useState(trip?.supplier || "")
 const [clearningAgent , setClearningAgent] = useState(trip?.clearning_agent || "")
   const [editSupplier, setEditSupplier] = useState(false);
   const [editClearningAgent, setEditClearningAgent] = useState(false);
-const originalRef = useRef(null);
+const [suppliers, setSuppliers] = useState([]);
+  const [clearingAgents, setClearingAgents] = useState([]);
+  const [openSupplierDrop, setOpenSupplierDrop] = useState(false);
+  const [openClearingDrop, setOpenClearingDrop] = useState(false);
+
+  const originalRef = useRef(null);
+
 
 useEffect(() => {
-  if (!trip) return;
+    const fetchDropdownData = async () => {
+      try {
+        const [supRes, clearRes] = await Promise.all([
+          SupplierService.list(),
+          ClearingAgentService.list(),
+        ]);
+        setSuppliers(supRes?.data?.record?.data || []);
+        setClearingAgents(clearRes?.data?.record?.data || []);
+      } catch (err) {
+        console.error("Failed to fetch dropdown data:", err);
+      }
+    };
+    fetchDropdownData();
+  }, []);
 
-  const original = {
-    title: trip.title || "",
-    description: trip.desc || "",
-    location: trip.location || "",
-    start_date: trip.start_date || "",
-    end_date: trip.end_date || "",
-    // ✅ Add these two lines
-    supplier: trip.supplier || "",
-    clearing_agent: trip.clearing_agent || "", 
-    progress: trip.progress || "NOT STARTED",
+  // ✅ 2. Fixed Initialization Effect
+  useEffect(() => {
+    if (!trip) return;
+    const original = {
+      title: trip.title || "",
+      description: trip.desc || "",
+      location: trip.location || "",
+      start_date: trip.start_date || "",
+      end_date: trip.end_date || "",
+      supplier: trip.supplier || "", 
+      clearing_agent: trip.clearing_agent || "",
+      progress: trip.progress || "NOT STARTED",
+    };
+    originalRef.current = original;
+
+    setTitle(original.title);
+    setDescription(original.description);
+    setLocation(original.location);
+    setStartDate(original.start_date);
+    setEndDate(original.end_date);
+    setSupplier(original.supplier);
+    setClearningAgent(original.clearing_agent);
+    setStatus(mapProgressToUI(original.progress));
+  }, [trip]);
+
+  const hasChanges = () => {
+    if (!originalRef.current) return false;
+    const o = originalRef.current;
+    return (
+      title !== o.title ||
+      description !== o.description ||
+      location !== o.location ||
+      startDate !== o.start_date ||
+      endDate !== o.end_date ||
+      supplier !== o.supplier ||
+      clearningAgent !== o.clearing_agent ||
+      mapUIToProgress(status) !== o.progress
+    );
   };
 
-  originalRef.current = original;
-
-  setTitle(original.title);
-  setDescription(original.description);
-  setLocation(original.location);
-  setStartDate(original.start_date);
-  setEndDate(original.end_date);
-  setSupplier(original.supplier);
-  setClearningAgent(original.clearing_agent); 
-  setStatus(mapProgressToUI(original.progress));
-}, [trip]);
-
-const hasChanges = () => {
-  if (!originalRef.current) return false;
-  const o = originalRef.current;
-
-  return (
-    title !== o.title ||
-    description !== o.description ||
-    location !== o.location ||
-    startDate !== o.start_date ||
-    endDate !== o.end_date ||
-    supplier !== o.supplier ||
-    clearningAgent !== o.clearing_agent || 
-    mapUIToProgress(status) !== o.progress
-  );
-};
 
   /* ================== FINANCE DATA ================== */
   const {financeData,setFinanceData,avgContainerRate,loading: financeLoading,} = useTripFinance(trip?.trip_uuid);
@@ -478,52 +500,39 @@ const handleContainerRowClick = (container) => {
   };
 
 
-const handleUpdate = async () => {
-  if (!hasChanges()) {
-    setMessageType("error");
-    setMessage("No changes detected");
-    return;
-  }
-  try {
-    setLoading(true);
+ const handleUpdate = async () => {
+    if (!hasChanges()) {
+      setMessageType("error");
+      setMessage("No changes detected");
+      return;
+    }
+    try {
+      setLoading(true);
+      const payload = {
+        trip_uuid: trip.trip_uuid,
+        title,
+        desc: description || "",
+        location: location || "",
+        start_date: startDate || "",
+        end_date: endDate || "",
+        supplier: supplier || "", 
+        clearing_agent: clearningAgent || "", 
+        status: 1,
+        progress: mapUIToProgress(status),
+      };
 
-    const payload = {
-      trip_uuid: trip.trip_uuid,
-      title,
-      desc: description || "",
-      location: location || "",
-      start_date: startDate || "",
-      end_date: endDate || "",
-      supplier: supplier || "", 
-      clearing_agent: clearningAgent || "", 
-      status: 1,
-      progress: mapUIToProgress(status),
-    };
-
-    await TripServices.edit(payload);
-
-    setMessageType("success");
-    setMessage("Trip updated successfully");
-
-    // ✅ Update the reference to the new values
-    originalRef.current = {
-      ...originalRef.current,
-      title,
-      description,
-      location,
-      start_date: startDate,
-      end_date: endDate,
-      supplier,
-      clearing_agent: clearningAgent,
-      progress: mapUIToProgress(status),
-    };
-  } catch (err) {
-    setMessageType("error");
-    setMessage(err.response?.data?.message || "Update failed");
-  } finally {
-    setLoading(false);
-  }
-};
+      await TripServices.edit(payload);
+      setMessageType("success");
+      setMessage("Trip updated successfully");
+      
+      originalRef.current = { ...payload, progress: mapUIToProgress(status) };
+    } catch (err) {
+      setMessageType("error");
+      setMessage(err.response?.data?.message || "Update failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /* ================== DRILLDOWN ================== */
   const currentBreadcrumb = breadcrumb[breadcrumb.length - 1];
@@ -763,43 +772,40 @@ const handleCloseMessage = () => {
 </div>
 </div>
 <div className="grid-2">
-       <div className="form-group">
-  <label>Supplier</label>
-  {!editSupplier && (
-    <Edit size={16} onClick={() => setEditSupplier(true)} />
-  )}
+        <div className="form-group" style={{ position: 'relative' }}>
+          <label>Supplier</label>
+          <div className="input-box" onClick={() => setOpenSupplierDrop(!openSupplierDrop)} style={{background:"#fff", alignItems:"center", cursor: 'pointer', display: 'flex', justifyContent: 'space-between',paddingRight:"1vw", }}>
+            <input style={{border:"none"}} type="text" value={supplier} readOnly placeholder="Select Supplier" />
+            <ChevronDown size={16} />
+          </div>
+          {openSupplierDrop && (
+            <div className="custom-select-dropdown" style={{ position: 'absolute', top: '100%', zIndex: 10, width: '100%', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', borderRadius: '8px' }}>
+              {suppliers.map(sup => (
+                <div key={sup.id} className="option-item" onClick={() => { setSupplier(`${sup.firstname} ${sup.lastname}`); setOpenSupplierDrop(false); }} style={{ padding: '10px', cursor: 'pointer' }}>
+                  {sup.firstname} {sup.lastname}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-  {editSupplier ? (
-    <input
-      type="text"
-      value={supplier}
-      autoFocus
-      onChange={(e) => setSupplier(e.target.value)}
-      onBlur={() => setEditSupplier(false)}
-    />
-  ) : (
-    <input type="text" value={supplier} readOnly />
-  )}
-</div>
-     <div className="form-group">
-  <label>Clearning Agent</label>
-  {!editClearningAgent && (
-    <Edit size={16} onClick={() => setEditClearningAgent(true)} />
-  )}
-
-  {editClearningAgent ? (
-    <input
-      type="text"
-      value={clearningAgent}
-      autoFocus
-      onChange={(e) => setClearningAgent(e.target.value)}
-      onBlur={() => setEditClearningAgent(false)}
-    />
-  ) : (
-    <input type="text" value={clearningAgent} readOnly />
-  )}
-</div>
-</div>
+        <div className="form-group" style={{ position: 'relative' }}>
+          <label>Clearing Agent</label>
+          <div className="input-box" onClick={() => setOpenClearingDrop(!openClearingDrop)} style={{background:"#fff", alignItems:"center", cursor: 'pointer', display: 'flex', justifyContent: 'space-between',paddingRight:"1vw", }}>
+            <input style={{border:"none"}} type="text" value={clearningAgent} readOnly placeholder="Select Agent" />
+            <ChevronDown size={16} />
+          </div>
+          {openClearingDrop && (
+            <div className="custom-select-dropdown" style={{ position: 'absolute', top: '100%', zIndex: 10, width: '100%', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', borderRadius: '8px' }}>
+              {clearingAgents.map(agent => (
+                <div key={agent.id} className="option-item" onClick={() => { setClearningAgent(`${agent.firstname} ${agent.lastname}`); setOpenClearingDrop(false); }} style={{ padding: '.7vw', cursor: 'pointer' }}>
+                  {agent.firstname} {agent.lastname}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
         <div className="grid-3 ">
          <div className="form-group">
   <label>Location</label>
@@ -871,8 +877,8 @@ const handleCloseMessage = () => {
               <span  className={activeTab === "container" ? "active" : ""}
                 onClick={() => setActiveTab("container")}  >  Container  </span>
 
-              <span className={activeTab === "tripFile" ? "active" : ""}
-                onClick={() => setActiveTab("tripFile")} >Trip Document</span>
+              {/* <span className={activeTab === "tripFile" ? "active" : ""}
+                onClick={() => setActiveTab("tripFile")} >Trip Document</span> */}
 
               {/* <span className={activeTab === "log" ? "active" : ""}
               onClick={() => setActiveTab("log")}>Activity Log</span> */}

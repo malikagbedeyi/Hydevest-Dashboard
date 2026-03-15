@@ -1,11 +1,13 @@
 import React, { useRef, useState } from "react";
 import "../../../../assets/Styles/dashboard/Sale/drilldownpresale.scss";
 import { X, Edit, Check, File } from "lucide-react";
+import { Printer } from "lucide-react";
+import RecoveryInvoice from "./RecoveryInvolce";
 
 const DrillDownRecovery = ({ data, goBack, onUpdate }) => {
   const [editingField, setEditingField] = useState(null);
   const [editableData, setEditableData] = useState({ ...data });
-//   const [approved, setApproved] = useState(false);
+const [showInvoice, setShowInvoice] = useState(false);
 const isApproved = editableData.status === "Approved";
 
   const scrollRef = useRef(null);
@@ -46,8 +48,20 @@ const isApproved = editableData.status === "Approved";
     <div className="drilldown-wrapper" ref={scrollRef}>
       <div className="detail-body">
         {/* HEADER */}
-        <div className="drilldown-header">
+        
+       <div className="drilldown-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <X onClick={goBack} className="icon-drilldown" />
+          
+          {/* ✅ New Print Button */}
+          <button 
+            onClick={() => setShowInvoice(true)}
+            style={{ 
+                display: 'flex', alignItems: 'center', gap: '5px', 
+            }}
+            className="create"
+          >
+            <Printer size={16} /> Receipt
+          </button>
         </div>
 
         {/* ACTIONS */}
@@ -79,7 +93,7 @@ const isApproved = editableData.status === "Approved";
         </div> */}
 
         <div className="drilldown-title">
-          <h2>Recovery Details</h2>
+          <h2 style={{color:"#581aae"}}>Recovery Details</h2>
         </div>
 
         {/* BODY */}
@@ -160,23 +174,22 @@ const isApproved = editableData.status === "Approved";
           </div>
         </div>
 
-        {/* FOOTER */}
         <div className="drill-footer">
           <button className="btn outline" onClick={goBack}>
             Previous
           </button>
-          {/* <button
-  className="btn primary"
-  onClick={() => {
-    scrollToTop();
-    if (onUpdate) onUpdate(editableData);
-    goBack(); // ✅ ONLY HERE
-  }}
->
-  Update
-</button> */}
-
         </div>
+
+        {showInvoice && (
+          <div className="modal-overlay" style={{ zIndex: 1000 }}>
+            <div className="modal-content" style={{ width: '800px', background: '#fff', padding: 0 }}>
+              <div style={{ textAlign: 'right', padding: '10px' }}>
+                <X style={{ cursor: 'pointer' }} onClick={() => setShowInvoice(false)} />
+              </div>
+              <RecoveryInvoice data={editableData} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

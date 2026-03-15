@@ -91,9 +91,9 @@ const SignUp = () => {
             <img src={Logo} alt="Hydevest Logo" />
             <h1>Hydevest</h1>
             </div>
-            <div className="registerSidebartext">
-                <h1>Login to open account</h1>
-                <p>Welcome to Hydevest lorem jsjkodvn aocnkcnol</p>
+            <div  style={{marginTop:"-20%"}} className="registerSidebartext">
+                <h1>Login </h1>
+                <p  style={{fontSize:"1vw"}}>Welcome to Hydevest </p>
             </div>
         </div>
             <div className="registerChild col-lg-9 col-md-9 col-sm-9">
