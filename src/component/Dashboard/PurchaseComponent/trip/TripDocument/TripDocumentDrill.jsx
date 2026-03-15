@@ -106,7 +106,7 @@ const scrollToTop = () => {
 
         {/* Activity / Comments */}
         <div className="activity">
-          <div className="tabs">
+          {/* <div className="tabs">
              <span
                 className={activeTab === "comments" ? "active" : ""}
                 onClick={() => setActiveTab("comments")}
@@ -119,38 +119,11 @@ const scrollToTop = () => {
               >
                 Activity Log
               </span>
-          </div>
-          {activeTab === "comments" &&  (
-            <div className=""></div>
-          )}
-
+          </div> */}
           {/* {activeTab === "comments" &&  (
-             <div className="">
-          <div className="comment-box">
-            <textarea placeholder="Add your comment"></textarea>
-            <button><SendHorizontal size={16}/></button>
-          </div>
-          <div className="recent">
-            <p className="recent-title">Recent</p>
-            <div className="user">
-              <strong>Joel Kay</strong>
-              <span>02:30 pm</span>
-            </div>
-            <p className="text">Review the list of users with access to privileged functions</p>
-          </div>
-          <div className="recent">
-            <div className="user">
-              <strong>Joel Kay</strong>
-            </div>
-            <p className="text">Review the list of users with access to privileged functions</p>
-          </div>
-    </div>
+            <div className=""></div>
           )} */}
-           {activeTab === "activity" &&  (
-            <div className="">
 
-            </div>
-           )}
         </div>
  <div className="footer-btns">
           <button onClick={()=>goBack(true)} className="preview">Preview</button>

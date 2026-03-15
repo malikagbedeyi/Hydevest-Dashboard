@@ -193,7 +193,7 @@ const Attachment = ({ container_uuid }) => {
                         setEditFile(null);
                       }}
                     />
-                    {/* <Trash2 size={16} style={{ cursor: "pointer", color: "#ff4d4f" }} /> */}
+                    <Trash2 size={16} style={{ cursor: "pointer", color: "#ff4d4f" }} />
                   </div>
                 </>
               )}

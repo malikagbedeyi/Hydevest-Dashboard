@@ -186,7 +186,7 @@ const FileAttachment = ({ expense_uuid }) => {
           setEditFile(null);
         }}
       />
-      {/* <Trash2 size={16} /> */}
+      <Trash2 size={16} />
     </div>
   </>
 )}

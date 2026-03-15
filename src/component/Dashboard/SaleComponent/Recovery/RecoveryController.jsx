@@ -13,7 +13,7 @@ const API_URL = "/api/recoveries";
 const RecoveryController = ({}) => {
   const [data, setData] = useState([]);
   const [sales, setSales] = useState([]);
-  const [view, setView] = useState("empty");
+  const [view, setView] = useState("table");
   const [selectedRecovery, setSelectedRecovery] = useState(null);
   const [activeTab, setActiveTab] = useState("table");
   const [page, setPage] = useState(1);
@@ -139,6 +139,8 @@ const enrichedRecoveries = Array.isArray(data)
         ...rec,
         sn: (pagination.page - 1) * pagination.limit + idx + 1,
         saleUniqueId: rec?.sale?.sale_unique_id || "",
+        saleAmount:rec?.sale?.total_sale_amount || "",
+          salePaid:rec?.sale?.amount_paid || "",
         customerName: `${rec.customer?.firstname || ""} ${rec.customer?.lastname || ""}`,
         customerPhone: rec.customer?.phone_no || "",
         amountPaid: Number(rec.amount) || 0,

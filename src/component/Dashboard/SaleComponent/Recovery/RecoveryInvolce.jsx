@@ -58,6 +58,23 @@ const RecoveryInvoice = ({ data }) => {
             fontSize: '28px',
             fontWeight: 'bold',
             pointerEvents: 'none'
+        },
+         signatureArea: {
+
+            marginTop: '2vw',
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '50px',
+            width: '100%'
+        },
+        sigBox: {
+            textAlign: 'center',
+            width: '200px'
+        },
+        sigLine: {
+            borderBottom: '1px solid #333',
+            height: '40px',
+            marginBottom: '8px'
         }
     };
 
@@ -96,15 +113,21 @@ const RecoveryInvoice = ({ data }) => {
                         <tr>
                             <th style={styles.th}>Payment Description</th>
                             <th style={styles.th}>Sale ID</th>
-                            <th style={{ ...styles.th, textAlign: 'right' }}>Amount</th>
+                             <th style={styles.th}> Sale Amount</th>
+                            <th style={{ ...styles.th, textAlign: 'right' }}>Amount Paid</th>
+                            <th style={{ ...styles.th, textAlign: 'right' }}>Outstanding</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td style={styles.td}>Debt Recovery Payment</td>
                             <td style={styles.td}>{data.saleUniqueId}</td>
+                             <td style={styles.td}>{formatCurrency(data.saleAmount)}</td>
                             <td style={{ ...styles.td, textAlign: 'right', fontWeight: 'bold' }}>
                                 {formatCurrency(data.amountPaid)}
+                            </td>
+                             <td style={{ ...styles.td, textAlign: 'right', fontWeight: 'bold' }}>
+                                {formatCurrency(data.saleAmount - data.salePaid )}
                             </td>
                         </tr>
                     </tbody>
@@ -113,14 +136,25 @@ const RecoveryInvoice = ({ data }) => {
                 <div style={styles.summary}>
                     <div style={styles.totalBox}>
                         <span style={{ fontSize: '14px', color: '#666' }}>Total Amount Paid:</span>
-                        <h2 style={{ margin: '5px 0', color: '#581aae' }}>{formatCurrency(data.amountPaid)}</h2>
+                        <h2 style={{ margin: '5px 0', color: '#581aae' }}>{formatCurrency(data.salePaid)}</h2>
+                        
                     </div>
                 </div>
 
                 <div style={{ marginTop: '50px' }}>
-                    <p style={styles.infoText}><strong>Payment Status:</strong> {data.paymentStatus}</p>
-                    <p style={styles.infoText}><strong>Comment:</strong> {data.comment || "N/A"}</p>
+                    <p style={styles.infoText}><strong>Payment Status:</strong> {data.payment_status}</p>
                 </div>
+
+                <div id="customer-section"  style={styles.signatureArea}>
+                        <div style={styles.sigBox}>
+                            <div style={styles.sigLine}></div>
+                            <p style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Authorized Signatory</p>
+                        </div>
+                        <div style={styles.sigBox}>
+                            <div style={styles.sigLine}></div>
+                            <p style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Customer Signature</p>
+                        </div>
+                    </div>
 
                 <div style={{ marginTop: '80px', textAlign: 'center', borderTop: '1px solid #eee', paddingTop: '20px' }}>
                     <p style={{ fontSize: '12px', color: '#aaa' }}>This is a computer-generated receipt and requires no signature.</p>

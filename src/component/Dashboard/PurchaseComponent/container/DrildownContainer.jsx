@@ -564,45 +564,6 @@ onChange={(e) => updateField("invoiceNumber", e.target.value)}/>
                 </div>
               </div>
             {/* ================= SUPPLIER CODE DROPDOWN ================= */}
-<div className="form-group-select">
-  <label>Supplier Code</label>
-  <div className="custom-select">
-    <div
-      className="custom-select-drop"
-      onClick={() => setOpenSupplierDrop(!openSupplierDrop)}
-    >
-      <div className="select-box">
-        {form.supplyCode ? (
-          <span>{form.supplyCode}</span>
-        ) : (
-          <span className="placeholder">Select Supplier Code</span>
-        )}
-      </div>
-      <ChevronDown className={openSupplierDrop ? "up" : "down"} />
-    </div>
-
-    {openSupplierDrop && (
-      <div className="select-dropdown" style={{ zIndex: 99 }}>
-        {suppliers.length === 0 ? (
-          <div className="option-item">No suppliers found</div>
-        ) : (
-          suppliers.map((sup) => (
-            <div
-              key={sup.user_uuid || sup.id}
-              className="option-item"
-              onClick={() => {
-                updateField("supplyCode", sup.supplier_data?.code_name || "—");
-                setOpenSupplierDrop(false);
-              }}
-            >
-              {sup.supplier_data?.code_name}
-            </div>
-          ))
-        )}
-      </div>
-    )}
-  </div>
-</div>
 
               </div>
                 </div>

@@ -45,12 +45,12 @@ const SaleInvoice = ({ data, customer, items, close }) => {
         },
         header: { display: 'flex', justifyContent: 'space-between', marginBottom: '40px' },
         brand: { fontSize: '28px', fontWeight: '800', color: '#581aae', margin: 0, letterSpacing: '-1px' },
-        subText: { margin: '2px 0', color: '#666', fontSize: '14px' },
+        subText: { margin: '2px 0 0', color: '#666', fontSize: '14px' },
         invoiceLabel: { fontSize: '32px', fontWeight: '300', color: '#333', margin: 0 },
-        table: { width: '100%', borderCollapse: 'collapse', marginTop: '30px' },
-        th: { textAlign: 'left', padding: '15px', background: '#581aae', color: '#fff', fontSize: '13px', textTransform: 'uppercase' },
-        td: { padding: '15px', borderBottom: '1px solid #eee', fontSize: '14px', color: '#444' },
-        summarySection: { display: 'flex', justifyContent: 'flex-end', marginTop: '30px' },
+        table: { width: '100%', borderCollapse: 'collapse', marginTop: '-1vw' },
+        th: { textAlign: 'left', padding: '10px', background: '#581aae', color: '#fff', fontSize: '13px', textTransform: 'uppercase' },
+        td: { padding: '5px', borderBottom: '1px solid #eee', fontSize: '14px', color: '#444' },
+        summarySection: { display: 'flex', justifyContent: 'flex-end', marginTop: '10px' },
         summaryBox: { width: '320px' },
         summaryRow: { display: 'flex', justifyContent: 'space-between', padding: '10px 0', fontSize: '14px' },
         totalRow: { 
@@ -74,6 +74,23 @@ const SaleInvoice = ({ data, customer, items, close }) => {
             fontWeight: 'bold',
             opacity: 0.2,
             pointerEvents: 'none'
+        },
+        signatureArea: {
+
+            marginTop: '2vw',
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '50px',
+            width: '100%'
+        },
+        sigBox: {
+            textAlign: 'center',
+            width: '200px'
+        },
+        sigLine: {
+            borderBottom: '1px solid #333',
+            height: '40px',
+            marginBottom: '8px'
         }
     };
 
@@ -81,9 +98,7 @@ const SaleInvoice = ({ data, customer, items, close }) => {
 
     return (
         <div style={invoiceStyles.container}>
-            {/* Top Action Bar - Hidden during print via media query */}
             <div className="no-print" style={invoiceStyles.actionBar}>
-                {/* <h3 style={{ margin: 0, color: '#333' }}>Invoice Management</h3> */}
                 <h3></h3>
                 <div style={{ display: 'flex', gap: '10px' }}>
                     <button onClick={handlePrint} style={invoiceStyles.printBtn}>
@@ -92,7 +107,6 @@ const SaleInvoice = ({ data, customer, items, close }) => {
                 </div>
             </div>
 
-            {/* Printable Paper Area */}
             <div id="printable-invoice" style={invoiceStyles.paper}>
                 
                 {/* Status Stamp */}
@@ -107,7 +121,6 @@ const SaleInvoice = ({ data, customer, items, close }) => {
                 {/* Header Section */}
                 <div style={invoiceStyles.header}>
                     <div>
-                        {/* <h1 style={invoiceStyles.brand}>HYDEVEST</h1> */}
                         <img style={{width:"40%",marginBottom:"1vw"}} src={logo} alt="" />
                         <p style={invoiceStyles.subText}>Premium Container Services</p>
                         <p style={invoiceStyles.subText}>Lagos, Nigeria</p>
@@ -129,26 +142,26 @@ const SaleInvoice = ({ data, customer, items, close }) => {
 
                 {/* Items Table */}
                 <table style={invoiceStyles.table}>
-                    <thead>
+                    <thead id='thead'>
                         <tr>
-                            <th style={{ ...invoiceStyles.th, borderRadius: '8px 0 0 0' }}>Container</th>
-                            <th style={invoiceStyles.th}>Qty (Pallets)</th>
-                            <th style={invoiceStyles.th}>Purchase Price</th>
-                            <th style={invoiceStyles.th}>Pallets Distribution</th>
-                            <th style={{ ...invoiceStyles.th, textAlign: 'right', borderRadius: '0 8px 0 0' }}>Total</th>
+                            <th id='th' style={{ ...invoiceStyles.th, borderRadius: '8px 0 0 0' }}>Container</th>
+                            <th id='th' style={invoiceStyles.th}>Qty (Pallets)</th>
+                            <th id='th' style={invoiceStyles.th}>Purchase Price</th>
+                            <th id='th' style={invoiceStyles.th}>Pallets Distribution</th>
+                            <th id='th' style={{ ...invoiceStyles.th, textAlign: 'right', borderRadius: '0 8px 0 0' }}>Total</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id='tbody'>
                         {items.map((item, idx) => (
                             <tr key={idx}>
-                                <td style={invoiceStyles.td}>
+                                <td id='td' style={invoiceStyles.td}>
                                     <strong>{item.containerName}</strong><br/>
                                     <span style={{ fontSize: '11px', color: '#888' }}>Presale ID: {item.PresaleID}</span>
                                 </td>
-                                <td style={invoiceStyles.td}>{item.noOfPallets}</td>
-                                <td style={invoiceStyles.td}>{formatCurrency(item.purchasePrice)}</td>
-                                <td style={invoiceStyles.td}>{formatCurrency(item.palletOption)}</td>
-                                <td style={{ ...invoiceStyles.td, textAlign: 'right', fontWeight: '600' }}>
+                                <td id='td' style={invoiceStyles.td}>{item.noOfPallets}</td>
+                                <td id='td' style={invoiceStyles.td}>{formatCurrency(item.purchasePrice)}</td>
+                                <td id='td' style={invoiceStyles.td}>{formatCurrency(item.palletOption)}</td>
+                                <td id='td' style={{ ...invoiceStyles.td, textAlign: 'right', fontWeight: '600' }}>
                                     {formatCurrency(item.total)}
                                 </td>
                             </tr>
@@ -160,10 +173,10 @@ const SaleInvoice = ({ data, customer, items, close }) => {
                 <div style={invoiceStyles.summarySection}>
                     <div style={invoiceStyles.summaryBox}>
                         <div style={invoiceStyles.summaryRow}>
-                            <span style={{ color: '#666' }}>Subtotal</span>
+                            <span style={{ color: '#666',margin:"0" }}>Subtotal</span>
                             <span>{formatCurrency(data.totalSaleAmount + (data.discount || 0))}</span>
                         </div>
-                        <div style={{ ...invoiceStyles.summaryRow, color: '#ff4d4f' }}>
+                        <div style={{ ...invoiceStyles.summaryRow, color: '#ff4d4f',margin:"0" }}>
                             <span>Discount</span>
                             <span>- {formatCurrency(data.discount)}</span>
                         </div>
@@ -172,13 +185,13 @@ const SaleInvoice = ({ data, customer, items, close }) => {
                             <span style={{ color: '#581aae' }}>{formatCurrency(data.totalSaleAmount)}</span>
                         </div>
                         <div style={invoiceStyles.summaryRow}>
-                            <span style={{ color: '#666' }}>Amount Paid</span>
-                            <span style={{ color: '#22c55e', fontWeight: '600' }}>{formatCurrency(data.amountPaid)}</span>
+                            <span style={{ color: '#666', marginTop: '-10px' }}>Amount Paid</span>
+                            <span style={{ color: '#22c55e', fontWeight: '600', marginTop: '-10px' }}>{formatCurrency(data.amountPaid)}</span>
                         </div>
                         <div style={{ 
                             ...invoiceStyles.summaryRow, 
                             fontWeight: 'bold', 
-                            marginTop: '10px', 
+                            marginTop: '5px', 
                             padding: '12px 10px', 
                             background: isPaid ? '#f0fdf4' : '#fff7ed',
                             borderRadius: '8px'
@@ -188,11 +201,23 @@ const SaleInvoice = ({ data, customer, items, close }) => {
                                 {isPaid ? 'PAID IN FULL' : formatCurrency(data.balance)}
                             </span>
                         </div>
+
                     </div>
                 </div>
 
+<div id="customer-section"  style={invoiceStyles.signatureArea}>
+                        <div style={invoiceStyles.sigBox}>
+                            <div style={invoiceStyles.sigLine}></div>
+                            <p style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Authorized Signatory</p>
+                        </div>
+                        <div style={invoiceStyles.sigBox}>
+                            <div style={invoiceStyles.sigLine}></div>
+                            <p style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Customer Signature</p>
+                        </div>
+                    </div>
+
                 {/* Footer Notes */}
-                <div style={{ marginTop: '80px', borderTop: '1px solid #eee', paddingTop: '20px', textAlign: 'center' }}>
+                <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px', textAlign: 'center' }}>
                     <p style={{ fontSize: '12px', color: '#999', margin: '5px 0' }}>
                         Please make all payments to Hydevest Official Accounts.
                     </p>
@@ -202,45 +227,43 @@ const SaleInvoice = ({ data, customer, items, close }) => {
                 </div>
             </div>
 
-            {/* Print Logic */}
             <style>
                 {`
-                   @media print {
+                @media print {
 
-  body * {
-    visibility: hidden;
-    background: #fff !important;
-  }
-
-  #printable-invoice,
-  #printable-invoice * {
-    visibility: visible;
-  }
-
-  #printable-invoice {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    border: none;
-    padding: 10px;
+  body {
+    margin: 0;
   }
 
   .no-print {
     display: none !important;
-  }
-
-  table, tr, td, th {
-    page-break-inside: avoid;
+    margin:0;
   }
 
   #printable-invoice {
-    page-break-after: avoid;
+    width: 100%;
+    padding: 20px;
+    margin: -15% 0 0 0;
   }
+
+#table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+
+  }
+
+  #customer-section {
+    page-break-inside: avoid;
+  }
+
+}
+
 @page {
   size: A4;
   margin: 10mm;
-}
 }
                 `}
             </style>

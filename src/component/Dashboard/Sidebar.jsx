@@ -4,33 +4,39 @@ import '../../assets/Styles/dashboard/sidebar.scss';
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { ChevronDown, Activity, CreditCard, BarChart2, Users, Tag, TrendingUp, FileText, UserCheck, Shield, ChevronRight, ChevronLeft, Mail,} from 'lucide-react';
+import useAutoLogout from '../../hooks/useAutoLogout';
 
 const Sidebar = ({ collapsed, onToggle, openSidebarMenu }) => {
+  const [submenu, setSubmenu] = useState(null);
+
+
+
   const location = useLocation();
   const navigate = useNavigate();
-  const [submenu, setSubmenu] = useState(null);
 
   const logout = async () => {
     try {
-      await api.post(
-        "/auth/logout",
-        null,
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
+      await api.post("/auth/logout", null, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
     } catch (err) {
       console.warn("Logout API failed:", err.response);
     } finally {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-
-      // ✅ Redirect to login
       navigate("/login", { replace: true });
     }
-  }
+  };
+
+  useAutoLogout(logout, 300000); 
+ 
+ 
+ 
+
+
+
   const sidemenu = [
     {
       path: "/dashboard/overview",
