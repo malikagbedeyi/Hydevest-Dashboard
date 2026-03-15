@@ -140,7 +140,7 @@ const fetchContainerPreSales = async () => {
 
 const normalizedContainers = containerPreSales.map(item => ({
   id: item.id, // use numeric ID
-  container_uuid: item.container_uuid, // keep UUID separate
+  container_uuid: item.container_uuid, 
   name: item.title,
   trackingNumber: item.tracking_number,
 }));
@@ -175,9 +175,7 @@ const fetchSaleDetails = async (sale_uuid, saleMasterData) => {
   try {
     const res = await SaleServices.details({ sale_uuid });
   const saleRecords = res?.data?.record || [];
-
     const saleMaster = saleMasterData;
-
     /* ================= GROUP CONTAINERS ================= */
 
     const containersMap = {};
@@ -263,6 +261,11 @@ const container = saleMaster.container?.title || "—"
       balance,
       paymentStatus,
       noOfPallets: totalPalletsCount,
+      saleOption: saleMaster.presale?.sale_option,
+      pricePerPiece: saleMaster.presale?.price_per_piece,
+     containerName: saleMaster.container?.title,
+      presaleId: saleMaster.presale?.pre_sale_unique_id ,
+      wcPieces: saleMaster.presale?.wc_pieces ,
     });
 
     setView("drilldown");
@@ -306,7 +309,7 @@ const handleSearchChange = (e) => {
 
   /* ===================== DRILLDOWN ===================== */
 const handleRowClick = (sale) => {
-
+  
   if (!sale?.sale_uuid) return;
   fetchSaleDetails(sale.sale_uuid, sale);
 };

@@ -176,13 +176,13 @@ const isBoxSale = saleOptionType === "box sale";
 const isSplitOrMixedSale = ["split sale", "mixed sale"].includes(saleOptionType);
 
 const computedTotalSaleAmountFinal = isBoxSale
-  ? Number(form.totalSaleAmount || 0) - discount
-  : computedTotalSaleAmount - discount;
+  ? Number(form.totalSaleAmount || 0)
+  : computedTotalSaleAmount;
 
 const balance =
-  amountPaid >= computedTotalSaleAmountFinal
+  computedTotalSaleAmountFinal - discount - amountPaid <= 0
     ? 0
-    : computedTotalSaleAmountFinal - amountPaid;
+    : computedTotalSaleAmountFinal - discount - amountPaid;
   // ---------------------- CUSTOMER / PAYMENTS ----------------------
   const handleClick = () => {
     if (!selectedCustomer) {
@@ -232,8 +232,8 @@ const buildCreatePayload = (customer) => {
     amount_paid: Number(amountPaid) || 0,
 
     total_sale_amount: isBoxSale
-      ? Number(form.totalSaleAmount || 0) - discount
-      : containerData.pallets.reduce((sum, p) => sum + Number(p.total || 0), 0) - discount,
+  ? Number(form.totalSaleAmount || 0)
+  : containerData.pallets.reduce((sum, p) => sum + Number(p.total || 0), 0),
 
     discount,
     payment_method: paymentMethod || "NO payment method selected",
@@ -682,10 +682,10 @@ useEffect(() => {
 <input
   type="text"
   readOnly={!isBoxSale}
-  value={
+value={
   isBoxSale
-    ? formatMoneyNGN(form.totalSaleAmount - discount)
-    : formatMoneyNGN(computedTotalSaleAmount - discount)
+    ? formatMoneyNGN(form.totalSaleAmount)
+    : formatMoneyNGN(computedTotalSaleAmount)
 }
   onChange={(e) => {
     if (!isBoxSale) return;

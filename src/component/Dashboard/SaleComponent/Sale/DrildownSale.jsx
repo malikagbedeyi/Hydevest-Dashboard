@@ -68,101 +68,40 @@ return editableData.containers.flatMap((c) =>
     }));
   };
 
-  /* =========================================
-      TOTAL PALLET COUNT
-  ========================================= */
-
-  const totalPalletsCount = useMemo(() => {
-    if (!editableData?.containers) return 0;
-
-    return editableData.containers.reduce(
-      (sum, c) => sum + c.pallets.length,
-      0
-    );
-  }, [editableData]);
 
   /* =========================================
       RECALCULATE SALE
   ========================================= */
 
-  const recalculateSale = (sale) => {
+ const recalculateSale = (sale) => {
 
-    const allPallets = sale.containers.flatMap((c) => c.pallets);
+  const allPallets = sale.containers.flatMap((c) => c.pallets);
 
-const newTotalSaleAmount = allPallets.reduce(
-  (sum, p) => sum + (Number(p.sale_amount) || 0),
-  0
-);
-
-   const amountPaid = Number(sale.amountPaid) || 0;
-const balance = Math.max(newTotalSaleAmount - amountPaid, 0);
-
-return {
-  ...sale,
-  totalSaleAmount: newTotalSaleAmount,
-  noOfPallets: allPallets.length,
-  balance,
-  paymentStatus: balance === 0 ? "Fully Paid" : "Outstanding",
-};
-  };
-
-  /* =========================================
-      EDIT SALE ITEM
-  ========================================= */
-
-const handleEditSaleItem = async (palletId, containerId) => {
-
-  const container = editableData.containers.find(
-    (c) => c.containerId === containerId
+  const palletsTotal = allPallets.reduce(
+    (sum, p) => sum + (Number(p.sale_amount) || 0),
+    0
   );
 
-  if (!container) return;
+  const newTotalSaleAmount = sale.totalSaleAmount ?? palletsTotal;
 
-  const pallet = container.pallets.find((p) => p.id === palletId);
+  const amountPaid = Number(sale.amountPaid) || 0;
 
-  if (!pallet) return;
+  const balance = Math.max(newTotalSaleAmount - amountPaid, 0);
 
-  setForm({
-    pallets: [
-      {
-        ...pallet,
-        containerId,
-        purchasePrice: pallet.purchase_price,
-        noOfPallets: pallet.pallet_purchased,
-        palletOption: pallet.pallet_pieces,
-      },
-    ],
-  });
 
-  setActiveContainerId(containerId);
+console.log("Backend Total:", newTotalSaleAmount || 0);
+console.log("Pallet Total:", palletsTotal || 0);
 
-  /* FETCH PALLETS FOR THIS CONTAINER */
-  if (!palletOptionsByContainer[containerId]) {
-    try {
-      const presale = presaleByContainerId[containerId];
-      if (!presale?.pre_sale_uuid) return;
-
-      const res = await SaleServices.getPallets({
-        pre_sale_uuid: presale.pre_sale_uuid,
-      });
-
-      const pallets = res?.data?.pallets || [];
-
-      setPalletOptionsByContainer((prev) => ({
-        ...prev,
-        [containerId]: pallets.map((p) => ({
-          pallet_uuid: p.pallet_uuid,
-          pallet_pieces: Number(p.pallet_pieces) || 0,
-          remaining_no_of_pallets: Number(p.remaining_no_of_pallets) || 0,
-        })),
-      }));
-    } catch (err) {
-      console.error("Failed to fetch pallet options", err);
-    }
-  }
-
-  setSalePop(true);
+  return {
+    ...sale,
+    totalSaleAmount: newTotalSaleAmount,
+    noOfPallets: allPallets.length,
+    balance,
+    paymentStatus: balance === 0 ? "Fully Paid" : "Outstanding",
+  };
 };
+
+
   /* =========================================
       PALLET CHANGE
   ========================================= */
@@ -412,7 +351,7 @@ const handleDeleteSaleItem = (palletId, containerId) => {
           <div className="grid-2">
             <EditableField
               label="Total Sale Amount"
-              value={editableData.totalSaleAmount}
+              value={editableData.totalSaleAmount} 
               field="totalSaleAmount"
               editingField={editingField}
               setEditingField={setEditingField}
@@ -444,15 +383,26 @@ const handleDeleteSaleItem = (palletId, containerId) => {
               readOnly={true}
             />
             <EditableField
-              label="No. of Pallets"
-              field="noOfPallets"
-              value={editableData.noOfPallets}
-              editingField={editingField}
-              setEditingField={setEditingField}
-              onChange={handleChange}
-              type="number"
-              readOnly={true}
-            />
+  label={editableData.saleOption === "BOX SALE" ? "WC Pieces" : "No. of Pallets"}
+  field="noOfPallets"
+  value={formatNumber(editableData.saleOption === "BOX SALE" ? editableData.wcPieces : editableData.noOfPallets)}
+  editingField={editingField}
+  setEditingField={setEditingField}
+  onChange={handleChange}
+  type="number"
+  readOnly={true}
+/>
+<EditableField
+  label="Discount"
+  field="discount"
+  value={editableData.discount}
+  editingField={editingField}
+  setEditingField={setEditingField}
+  onChange={handleChange}
+  type="number"
+  format={formatCurrency}
+  readOnly={true}
+/>
 
           </div>
 
@@ -466,8 +416,7 @@ const handleDeleteSaleItem = (palletId, containerId) => {
             items={saleItems}
             formatNumber={formatNumber}
             readOnly={true}
-            // onEdit={handleEditSaleItem}
-            // onDelete={handleDeleteSaleItem}
+
           />
 
         </section>

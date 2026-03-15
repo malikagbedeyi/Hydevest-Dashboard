@@ -6,13 +6,34 @@ const SaleInvoice = ({ data, customer, items, close }) => {
     const handlePrint = () => {
         window.print();
     };
-
+const isBoxSale =
+  (data?.saleOption || "").toLowerCase().trim() === "box sale";
     const formatCurrency = (v) =>
         new Intl.NumberFormat("en-NG", {
             style: "currency",
             currency: "NGN",
             maximumFractionDigits: 0
         }).format(v || 0);
+
+        const formatNumber = (v) =>
+        new Intl.NumberFormat("en-NG", {
+            // style: "currency",
+            // currency: "NGN",
+            maximumFractionDigits: 0
+        }).format(v || 0);
+
+        const invoiceItems = isBoxSale
+  ? [
+      {
+        containerName: data.containerName,
+        PresaleID: data.presaleId,
+        noOfPallets: data.noOfPallets || 1,
+        purchasePrice: data.pricePerPiece,
+        palletOption: data.wcPieces,
+        total: data.totalSaleAmount + data.discount,
+      },
+    ]
+  : items;
 
     const invoiceStyles = {
         container: { padding: '40px', background: '#fff', borderRadius: '12px' },
@@ -147,33 +168,46 @@ const SaleInvoice = ({ data, customer, items, close }) => {
                             <th id='th' style={{ ...invoiceStyles.th, borderRadius: '8px 0 0 0' }}>Container</th>
                             <th id='th' style={invoiceStyles.th}>Qty (Pallets)</th>
                             <th id='th' style={invoiceStyles.th}>Purchase Price</th>
-                            <th id='th' style={invoiceStyles.th}>Pallets Distribution</th>
+                            <th id='th' style={invoiceStyles.th}>{data.saleOption === "BOX SALE" ? "WC Pieces" : "Pallets Distribution"}</th>
                             <th id='th' style={{ ...invoiceStyles.th, textAlign: 'right', borderRadius: '0 8px 0 0' }}>Total</th>
                         </tr>
                     </thead>
-                    <tbody id='tbody'>
-                        {items.map((item, idx) => (
-                            <tr key={idx}>
-                                <td id='td' style={invoiceStyles.td}>
-                                    <strong>{item.containerName}</strong><br/>
-                                    <span style={{ fontSize: '11px', color: '#888' }}>Presale ID: {item.PresaleID}</span>
-                                </td>
-                                <td id='td' style={invoiceStyles.td}>{item.noOfPallets}</td>
-                                <td id='td' style={invoiceStyles.td}>{formatCurrency(item.purchasePrice)}</td>
-                                <td id='td' style={invoiceStyles.td}>{formatCurrency(item.palletOption)}</td>
-                                <td id='td' style={{ ...invoiceStyles.td, textAlign: 'right', fontWeight: '600' }}>
-                                    {formatCurrency(item.total)}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
+                    <tbody id="tbody">
+  {invoiceItems.map((item, idx) => (
+    <tr key={idx}>
+      <td id="td" style={invoiceStyles.td}>
+        <strong>{item.containerName}</strong>
+        <br />
+        <span style={{ fontSize: "11px", color: "#888" }}>
+          Presale ID: {item.PresaleID || "-"}
+        </span>
+      </td>
+
+      <td id="td" style={invoiceStyles.td}>{item.noOfPallets}</td>
+
+      <td id="td" style={invoiceStyles.td}>
+        {formatCurrency(item.purchasePrice)}
+      </td>
+      <td id="td" style={invoiceStyles.td}>
+        {item.palletOption === "-" ? "-" : formatNumber(item.palletOption)}
+      </td>
+
+      <td
+        id="td"
+        style={{ ...invoiceStyles.td, textAlign: "right", fontWeight: "600" }}
+      >
+        {formatCurrency(item.total)}
+      </td>
+    </tr>
+  ))}
+</tbody>
                 </table>
 
                 {/* Summary Section */}
                 <div style={invoiceStyles.summarySection}>
                     <div style={invoiceStyles.summaryBox}>
                         <div style={invoiceStyles.summaryRow}>
-                            <span style={{ color: '#666',margin:"0" }}>Subtotal</span>
+                            <span style={{ color: '#666',margin:"0" }}>Total Sale Amount</span>
                             <span>{formatCurrency(data.totalSaleAmount + (data.discount || 0))}</span>
                         </div>
                         <div style={{ ...invoiceStyles.summaryRow, color: '#ff4d4f',margin:"0" }}>
@@ -181,8 +215,8 @@ const SaleInvoice = ({ data, customer, items, close }) => {
                             <span>- {formatCurrency(data.discount)}</span>
                         </div>
                         <div style={invoiceStyles.totalRow}>
-                            <span>Total Sale Amount</span>
-                            <span style={{ color: '#581aae' }}>{formatCurrency(data.totalSaleAmount)}</span>
+                            <span>Total </span>
+                            <span style={{ color: '#581aae' }}>{formatCurrency(data.totalSaleAmount) }</span>
                         </div>
                         <div style={invoiceStyles.summaryRow}>
                             <span style={{ color: '#666', marginTop: '-10px' }}>Amount Paid</span>
@@ -196,7 +230,7 @@ const SaleInvoice = ({ data, customer, items, close }) => {
                             background: isPaid ? '#f0fdf4' : '#fff7ed',
                             borderRadius: '8px'
                         }}>
-                            <span>Balance Due</span>
+                            <span>OutStanding Balance </span>
                             <span style={{ color: isPaid ? '#22c55e' : '#f97316' }}>
                                 {isPaid ? 'PAID IN FULL' : formatCurrency(data.balance)}
                             </span>
