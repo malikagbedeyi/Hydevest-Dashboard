@@ -52,8 +52,8 @@ function App() {
     <PopupProvider>
     <HashRouter>
       <Routes>
+        <Route path="/" element={<SignUp />} />
         <Route path="/login" element={<SignUp />} />
-
         {/* DASHBOARD LAYOUT */}
         <Route
   path="/dashboard"
