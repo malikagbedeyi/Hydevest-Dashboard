@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Plus, X, Edit, Trash2, ChevronDown, ChevronUp, Paperclip } from "lucide-react";
 import { ContainerServices } from '../../../../../services/Trip/container';
+import { ExpenseServices } from '../../../../../services/Trip/expense';
 
 const TripContainerData = ({ containerData, setContainerData, handleContainerRowClick, handleDeleteContainer, avgContainerRate, tripUuid, reloadKey}) => {
 
@@ -10,7 +11,8 @@ const TripContainerData = ({ containerData, setContainerData, handleContainerRow
       const [pagination,setPagination] = useState({})
     const [selectedData, setSelectedData] = useState(null);
     const [loading, setLoading] = useState(false);
-    
+    const [generalShare, setGeneralShare] = useState(0);
+
     const currentPage = pagination.current_page || 1;
 const totalPages = pagination.last_page || 1;
 
@@ -43,34 +45,40 @@ const formatMoneyUSd = (value) =>
           .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
           .replace(/ /g, "-")
       : "-";
+const fetchData = async (pageNum = page) => {
+    if (!tripUuid) return;
+    try {
+      setLoading(true);
+      
+      const [res, expRes] = await Promise.all([
+        ContainerServices.list({ trip_uuid: tripUuid, title: search, page: pageNum }),
+        ExpenseServices.list({ trip_uuid: tripUuid })
+      ]);
 
-      const fetchData = async (pageNum = page) => {
-        if (!tripUuid) return; 
+      const containers = res.data?.record?.data || [];
+      const expenses = expRes.data?.record?.data || [];
       
-        try {
-          setLoading(true);
-          const res = await ContainerServices.list({
-            trip_uuid: tripUuid,
-            status: '', 
-            title: search,
-            container_unique_id: '', 
-             date_created: '',
-            from_date: '',
-            to_date: '', 
-            page: pageNum,
-          });
-          setContainerData(res.data?.record?.data || []);
-          setPagination(res.data?.record || {});
-        } catch (err) {
-          console.error("Error fetching expenses:", err);
-        } finally {
-          setLoading(false);
-        }
-      };
+      const totalGeneralNGN = expenses.reduce((sum, item) => {
+        return Number(item.is_container_payment) === 0 ? sum + Number(item.total_amount || 0) : sum;
+      }, 0);
+
+      const totalCount = res.data?.record?.total || containers.length;
+      const share = totalCount > 0 ? (totalGeneralNGN / totalCount) : 0;
       
-useEffect(() => {
-  fetchData(page);
-}, [page, reloadKey]);
+      setGeneralShare(share);
+      setContainerData(containers);
+      setPagination(res.data?.record || {});
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData(page);
+  }, [page, reloadKey, search]);
+
 
 useEffect(() => {
   const timer = setTimeout(() => {
@@ -110,6 +118,10 @@ const calculateQuotedContainerNGN = (item, rate) => {
   const surcharge = Number(item.surcharge_ngn || 0);
   return usd * (Number(rate) || 0) + surcharge;
 };
+const calculateLandingCost = (item, rate) => {
+    return calculateContainerNGN(item, rate) + generalShare;
+  };
+
   return (
     <div>
       <div className="userTable">
@@ -127,6 +139,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
                <th>Unit Price ($)</th>
                <th>Shipping Amount ($)</th>
                <th>Surcharge (₦)</th>
+               <th style={{ color: "#581aae", fontWeight: "bold" }}>Landing Cost (₦)</th>
                <th>Amount ($)</th>
                <th>Amount (₦)</th>
                <th>Quoted Amount ($)</th>
@@ -157,6 +170,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
                   <td>${formatMoneyUSd(item.unit_price_usd || 0)}</td>
                   <td>${formatMoneyUSd(Number(item.shipping_amount_usd) || 0)}</td>
                   <td>₦{formatMoney(Number(item.surcharge_ngn || 0))}</td>
+                  <td style={{ fontWeight: "600" }}>₦{formatMoney(calculateLandingCost(item, avgContainerRate))}</td>
                   <td>${formatMoneyUSd(calculateContainerUSD(item))}</td>
                   <td>₦{formatMoney(calculateContainerNGN(item, avgContainerRate))}</td>
                   <td>${formatMoneyUSd(calculateQuotedContainerUSD(item))}</td>
