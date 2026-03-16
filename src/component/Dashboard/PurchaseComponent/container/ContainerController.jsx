@@ -36,6 +36,7 @@ useEffect(() => {
 const [filters, setFilters] = useState({
   status: "",
   title: "",
+  tracking_number:"",
   container_unique_id: "",
   date_created: "",
   from_date: "",
@@ -93,7 +94,7 @@ const fetchContainersWithFinance = async (pageNum = page) => {
       } catch (err) { console.error("Map failed", err); }
     }
 
-    setTripRates(financeMap); // Now stores both rate and share
+    setTripRates(financeMap); 
     setContainers(containerData);
     setPagination(containerRes.data?.record || {});
   } catch (err) { console.error(err); } finally { setLoading(false); }
@@ -208,6 +209,13 @@ const formatMoneyUSD = (value) =>
   }).format(Number(value || 0));
 
 
+  const searchFields = [
+  { label: "Tracking No", value: "tracking_number" },
+  { label: "Container ID", value: "container_unique_id" },
+  { label: "Title", value: "title" },
+  { label: "Date Created", value: "date_created" }
+];
+
   /* =========================
      UI
   ========================= */
@@ -252,31 +260,35 @@ const formatMoneyUSD = (value) =>
                 <div className="right-wrapper-input">
                   <Search className="input-icon" />
 <input
-  placeholder="Search"
+placeholder={
+  searchField === "all"
+    ? "Search by Tracking Number"
+    : `Search by ${searchFields.find(f => f.value === searchField)?.label}`
+}
   value={search}
   onChange={(e) => {
-    const value = e.target.value;
+  const value = e.target.value;
 
-    setSearch(value);
+  setSearch(value);
 
-    setFilters((prev) => {
-      const updated = {
-        ...prev,
-        title: "",
-        container_unique_id: "",
-        date_created: ""
-      };
+  setFilters((prev) => {
+    const updated = {
+      ...prev,
+      title: "",
+      tracking_number: "",
+      container_unique_id: "",
+      date_created: ""
+    };
 
-      if (searchField === "all") {
-        updated.title = value;
-        updated.container_unique_id = value;
-      } else {
-        updated[searchField] = value;
-      }
+    if (searchField === "all") {
+      updated.tracking_number = value;
+    } else {
+      updated[searchField] = value;
+    }
 
-      return updated;
-    });
-  }}
+    return updated;
+  });
+}}
 />
                 </div>
                 <div className="select-input">
@@ -294,43 +306,44 @@ const formatMoneyUSD = (value) =>
       onClick={() => setOpenFieldSelect(!openFieldSelect)}
     >
       <div className="select-box">
-        <span>
-          {searchField === "all"
-            ? "All Field"
-            : searchField.charAt(0).toUpperCase() +
-              searchField.slice(1)}
-        </span>
+       <span>
+  {searchField === "all"
+    ? "All Field"
+    : searchFields.find(f => f.value === searchField)?.label}
+</span>
       </div>
 
       <ChevronDown className={openFieldSelect ? "up" : "down"} />
     </div>
 
-    {openFieldSelect && (
-      <div className="custom-select-dropdown">
-        {["all", "title","container ID","date_created"].map(
-          (field) => (
-            <div
-              key={field}
-              className="option-item"
-              onClick={() => {
-                setSearchField(field);
-                setOpenFieldSelect(false);
-              }}
-            >
-              {field === "all"
-                ? "All Field"
-                : field.replace("_", " ")}
-            </div>
-          )
-        )}
+  {openFieldSelect && (
+  <div className="custom-select-dropdown">
+    <div
+      className="option-item"
+      onClick={() => {
+        setSearchField("all");
+        setOpenFieldSelect(false);
+      }}
+    >
+      All Field
+    </div>
+
+    {searchFields.map((field) => (
+      <div
+        key={field.value}
+        className="option-item"
+        onClick={() => {
+          setSearchField(field.value);
+          setOpenFieldSelect(false);
+        }}
+      >
+        {field.label}
       </div>
-    )}
+    ))}
+  </div>
+)}
   </div>
 </div>
-  <div className="import-input">
-                    <p>Import</p>
-                  </div>
-
                   <div
                     className="import-input"
                     onClick={() => setView("export")}
