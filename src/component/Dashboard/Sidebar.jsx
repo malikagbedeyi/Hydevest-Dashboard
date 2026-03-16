@@ -30,7 +30,7 @@ const Sidebar = ({ collapsed, onToggle, openSidebarMenu }) => {
     }
   };
 
-  useAutoLogout(logout, 300000); 
+  useAutoLogout(logout, 600000); 
  
  
  
