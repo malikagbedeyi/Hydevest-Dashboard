@@ -72,8 +72,8 @@ const Sidebar = ({ collapsed, onToggle, openSidebarMenu }) => {
       submenu: [
         { path: "/dashboard/finance", label: "Finance" },
         { path: "/dashboard/payroll", label: "PayRoll" },
-        { path: "/dashboard/partner_payment", label: "Partner Payment" },
-       { path: "/dashboard/bank_record", label: "Bank Record" },
+        { path: "/dashboard/partner_payment", label: "Partner Pay " },
+       { path: "/dashboard/bank_record", label: "Bank Recon" },
       ],
     },
   
@@ -151,21 +151,20 @@ const Sidebar = ({ collapsed, onToggle, openSidebarMenu }) => {
   
   const handleParentClick = (item) => {
     if (item.submenu) {
-      // toggle submenu open/close
+      
       setSubmenu(prev => prev === item.path ? null : item.path);
   
-      // force navigation to first submenu item if no parent page
+        
       if (!item.isModulePage && item.submenu.length > 0) {
         navigate(item.submenu[0].path, { state: { reset: Date.now() } });
         return;
       }
     }
   
-    // force navigation for parent page
+  
     navigate(item.path, { state: { reset: Date.now() } });
   };
-  
-  // For submenu click
+   
   const handleSubmenuClick = (subItem) => {
     navigate(subItem.path, { state: { reset: Date.now() } });
   };
