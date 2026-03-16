@@ -73,6 +73,7 @@ const Sidebar = ({ collapsed, onToggle, openSidebarMenu }) => {
         { path: "/dashboard/finance", label: "Finance" },
         { path: "/dashboard/payroll", label: "PayRoll" },
         { path: "/dashboard/partner_payment", label: "Partner Payment" },
+       { path: "/dashboard/bank_record", label: "Bank Record" },
       ],
     },
   

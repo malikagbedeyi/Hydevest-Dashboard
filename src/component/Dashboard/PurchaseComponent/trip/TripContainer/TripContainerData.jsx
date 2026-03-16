@@ -137,9 +137,9 @@ const calculateLandingCost = (item, rate) => {
                <th>Average Weight</th>
                <th>Max Weight</th>
                <th>Unit Price ($)</th>
-               <th>Shipping Amount ($)</th>
-               <th>Surcharge (₦)</th>
                <th style={{ color: "#581aae", fontWeight: "bold" }}>Landing Cost (₦)</th>
+                <th>Shipping Amount ($)</th>
+                 <th>Surcharge (₦)</th>
                <th>Amount ($)</th>
                <th>Amount (₦)</th>
                <th>Quoted Amount ($)</th>
@@ -168,9 +168,9 @@ const calculateLandingCost = (item, rate) => {
                   <td>{formatMoney(item.average_weight)}</td>
                   <td>{formatMoney(item.max_weight)}</td>
                   <td>${formatMoneyUSd(item.unit_price_usd || 0)}</td>
-                  <td>${formatMoneyUSd(Number(item.shipping_amount_usd) || 0)}</td>
-                  <td>₦{formatMoney(Number(item.surcharge_ngn || 0))}</td>
                   <td style={{ fontWeight: "600" }}>₦{formatMoney(calculateLandingCost(item, avgContainerRate))}</td>
+                <td>${formatMoneyUSd(Number(item.shipping_amount_usd) || 0)}</td>
+                  <td>₦{formatMoney(Number(item.surcharge_ngn || 0))}</td>
                   <td>${formatMoneyUSd(calculateContainerUSD(item))}</td>
                   <td>₦{formatMoney(calculateContainerNGN(item, avgContainerRate))}</td>
                   <td>${formatMoneyUSd(calculateQuotedContainerUSD(item))}</td>

@@ -422,15 +422,15 @@ useEffect(() => {
 }, [financeData]);
 
 
-// Total Container Payment NGN (approved only)
+
 const totalContainerPaymentNGN = financeData.reduce((sum, item) => {
   if (Number(item.is_container_payment) === 1 )
-    // && Number(item.status) === 1)
    {
     return sum + Number(item.total_amount || 0);
   }
   return sum;
 }, 0);
+
 
 
 // Total Quoted Amount NGN
@@ -625,15 +625,15 @@ const handleCloseMessage = () => {
     <div className="drill-summary-grid">
       <div className="drill-summary">
  <div className="summary-item">
-  <p className="small">Total Amount (₦)</p>
+  <p className="small">Total Landing Amount (₦)</p>
   <h2>{"₦" + formatNumber(summaryNGN) }</h2>
 </div>
 
   <div className="summary-item">
     <p className="small">
       {activeTab === "container"
-        ? "Total Amount ($)" // Changed from Average Expense
-        : "Total Amount ($)"}
+        ? "Total Amount ($)" 
+        : "Total Container Payment ($)"}
     </p>
     <h2>{formatNumber(summaryUSD)}</h2>
   </div>
@@ -646,11 +646,16 @@ const handleCloseMessage = () => {
 
   <div className="summary-item">
     <p className="small">
-      {activeTab === "finance" ? "Total Container Payment" : "Total Quoted Amount"}
+      {activeTab === "finance" ? "Total Container Payment ＄" : "Total Quoted Amount"}
     </p>
     <h2>{"₦" + dynamicMetricValue.toLocaleString("en-NG")}</h2>
   </div>
-
+   {activeTab === "finance" && (
+  <div className="summary-item">
+    <p className="small">Other Expenses</p>
+    <h2>{formatNumber(totalGeneralPaymentNGN)}</h2>
+  </div>
+  )}
     <div className="summary-item">
   <p className="small">Average Fx Rate</p>
   <h2>{Number(avgContainerRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
