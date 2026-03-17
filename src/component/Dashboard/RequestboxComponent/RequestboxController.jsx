@@ -6,101 +6,70 @@ import RequestboxTable from "./RequestboxTable";
 
 const REQUESTBOX_KEY = "requestbox_data";
 
-const RequestboxController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }) => {
-  const [view, setView] = useState(() => {
-    const saved = JSON.parse(localStorage.getItem(REQUESTBOX_KEY)) || [];
-    return saved.length ? "table" : "empty";
-  });
-  
+const RequestboxController = ({ autoOpenCreate, setAutoOpenCreate }) => {
   const [data, setData] = useState(() => {
     return JSON.parse(localStorage.getItem(REQUESTBOX_KEY)) || [];
   });
-  useEffect(() => {
-    localStorage.setItem(REQUESTBOX_KEY, JSON.stringify(data));
-  
-    if (data.length === 0) {
-      setView("empty");
-    } else if (view === "empty") {
-      setView("table");
-    }
-  }, [data]);
-  
+
+  const [view, setView] = useState("table");
 
   useEffect(() => {
-  if (autoOpenCreate) {
-    setView("create");
-    setAutoOpenCreate(false); 
-  }
-}, [autoOpenCreate]);
+    localStorage.setItem(REQUESTBOX_KEY, JSON.stringify(data));
+    if (data.length === 0 && view !== "create") {
+      setView("empty");
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (autoOpenCreate) {
+      setView("create");
+      setAutoOpenCreate(false);
+    }
+  }, [autoOpenCreate]);
+
+  const handleCreate = (newItem) => {
+    setData((prev) => [newItem, ...prev]);
+    setView("table");
+  };
 
   return (
     <div className="emptyAccount">
       <div className="emptyAccount-container">
         <div className="emptyAccount-content">
-          {/* TOP BAR */}
           {(view === "empty" || view === "table") && (
             <div className="top-content">
               <div className="top-content-wrapper">
-                <div className="left-wrapper" />
-
+                <div className="left-wrapper">
+                </div>
                 <div className="right-wrapper">
                   <div className="right-wrapper-input">
                     <Search className="input-icon" />
-                    <input type="text" placeholder="Search" />
+                    <input type="text" placeholder="Search requests..." />
                   </div>
-
-                  <div className="select-input">
-                    <div className="filter">
-                      <span>Add Filter</span>
-                      <Filter />
-                    </div>
-                  </div>
-
-                  <div className="select-input">
-                    <div className="select-input-field">
-                      <span>All Field</span>
-                      <ChevronDown />
-                    </div>
-                  </div>
-
-                  <div className="import-input">
-                    <p>Import</p>
-                  </div>
-
-                  <div onClick={() => setView("export")} className="import-input">
-                    <p>Export</p>
-                  </div>
-
-                  <button onClick={() => setView("create")}> Request  </button>
+                  {/* <button onClick={() => setView("create")}>New Request</button> */}
                 </div>
               </div>
             </div>
           )}
 
-          {/* MAIN CONTENT */}
           <div className="main-content">
-            {/* Empty State */}
             {data.length === 0 && view === "empty" && (
               <div className="main-content-image">
                 <div className="main-content-image-text">
-                  <p>No Data Created Yet</p>
-                  <span>A Data created would be saved here automatically</span>
+                  <p>Your request box is empty</p>
+                  <span>Create a request to get started</span>
                 </div>
               </div>
             )}
 
-            {/* Table */}
-            {data.length > 0 && (view === "table" || view === "empty") && (
-              <RequestboxTable  data={data} />
+            {data.length > 0 && view === "table" && (
+              <RequestboxTable data={data} />
             )}
 
-            {/* Create User Form */}
             {view === "create" && (
-              <CreateRequestbox
-                data={data}
-                setData={setData}
-                setView={setView}
-                openSubmenu={openSubmenu}
+              <CreateRequestbox 
+                onCreate={handleCreate} 
+                setView={setView} 
               />
             )}
           </div>
@@ -110,4 +79,4 @@ const RequestboxController = ({ openSubmenu ,autoOpenCreate, setAutoOpenCreate }
   );
 };
 
-export default RequestboxController
+export default RequestboxController;

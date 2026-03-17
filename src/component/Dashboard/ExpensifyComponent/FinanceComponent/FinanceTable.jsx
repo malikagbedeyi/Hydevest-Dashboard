@@ -75,7 +75,6 @@ const FinanceTable = ({ data = [], onDelete, onUpdate }) => {
             <thead>
               <tr>
                 <th>S/N</th>
-                <th>Trip ID</th>
                 <th>Title</th>
                 <th>Description</th>
                 <th>Type</th>
@@ -100,7 +99,6 @@ const FinanceTable = ({ data = [], onDelete, onUpdate }) => {
                 currentData.map((item, idx) => (
                   <tr key={item.id} onClick={() => handleRowClick(item)}>
                     <td>{startIndex + idx + 1}</td>
-                    <th>{(item.tripID || startIndex + idx + 1 )}</th>
                     <td>{item.title}</td>
                     <td>{item.description}</td>
                     <td>{item.type}</td>

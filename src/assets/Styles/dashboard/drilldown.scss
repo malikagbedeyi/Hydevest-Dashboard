@@ -1410,7 +1410,37 @@
           color: #581aae;
         }
   }
+.modal-overlay{
+  position: fixed;
+  inset:0;
+  background: rgba(0,0,0,0.35);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
 
+.modal-card{
+  background:#fff;
+  width:60vw;
+  padding:3vw;
+  border-radius:.8vw;
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:1.4vw;
+}
+
+.file-upload{
+  border:1px dashed #ccc;
+  padding:1vw;
+  display:flex;
+  align-items:center;
+  gap:1vw;
+}
 
   }
   

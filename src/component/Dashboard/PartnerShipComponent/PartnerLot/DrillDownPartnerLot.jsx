@@ -1,6 +1,8 @@
 import React, { useState,useRef, useEffect, useMemo } from "react";
 import "../../../../assets/Styles/dashboard/drilldown.scss";
 import {ChevronLeft,ChevronDown, ChevronUp, Paperclip, Download,  Edit,  Trash2,  X,  Eye,  File,  Plus, Calendar, SendHorizontal} from "lucide-react";
+import WithdrawalRequestModel from "./WithdrawalRequestModel";
+import ContainerRequestModel from "./ContainerRequestModel";
 
 const fundingOption = ["partner" ," entity "]
 
@@ -11,9 +13,10 @@ const DrillDownPartnerLot = ({ data,onCancel }) => {
     const [showProfit, setShowProfit] = useState(true);
     const [showRemittance, setShowRemittance] = useState(true);
     const allocationRows = data.allocations || [];
-    const [activeTab, setActiveTab] = useState("details"); // default tab
+    const [activeTab, setActiveTab] = useState("details"); 
     const [tableTab, setTableTab] = useState("container");
-    
+    const [showContainerModal, setShowContainerModal] = useState(false);
+const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 const derived = useMemo(() => {
   const totalContainers = allocationRows.length;
 
@@ -32,6 +35,15 @@ const createdYear = useMemo(() => {
   if (!data.createdAt) return "—";
   return new Date(data.createdAt).getFullYear();
 }, [data.createdAt]);
+
+const handleAddContainerReq = (newItem) => {
+        // Here you would push to your API or local data array
+        console.log("New Container Req:", newItem);
+    };
+
+    const handleAddWithdrawReq = (newItem) => {
+        console.log("New Withdrawal Req:", newItem);
+    };
 
   return (
   <div className="drilldown" >
@@ -284,12 +296,11 @@ const createdYear = useMemo(() => {
         <div className="section-grid-content">
         <section className="section details">
         <header className="section-head">
-        <h3>Request </h3>
         </header>
-        <div className="btn-row" style={{display:"flex",justifyContent:"flex-end"}}>
-        <button  className="cancel">Request For Container</button>
-        <button className="create">Request For Withdraw</button>
-      </div>
+        <div className="btn-row" style={{display:"flex",justifyContent:"flex-end", gap: '10px'}}>
+                        <button className="cancel" onClick={() => setShowContainerModal(true)}>Request For Container</button>
+                        <button className="create"onClick={() => setShowWithdrawModal(true)}>Request For Withdraw</button>
+                    </div>
       <section>
       <div className="userTable">
       <div className="table-wrap">
@@ -369,6 +380,25 @@ const createdYear = useMemo(() => {
 
         </table>
         )}
+      {showContainerModal && (
+  <ContainerRequestModel
+    onClose={() => setShowContainerModal(false)}
+    onSubmit={(data) => {
+      console.log("Container Request:", data);
+      setShowContainerModal(false);
+    }}
+  />
+)}
+
+{showWithdrawModal && (
+  <WithdrawalRequestModel
+    onClose={() => setShowWithdrawModal(false)}
+    onSubmit={(data) => {
+      console.log("Withdraw Request:", data);
+      setShowWithdrawModal(false);
+    }}
+  />
+)}
       </div>
     </div>
       </section>

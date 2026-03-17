@@ -199,7 +199,35 @@
               max-width: 100px;
           }
         }
+// Priority Colors
+.priority-text {
+  &.urgent { color: #ff4d4f; font-weight: bold; }
+  &.high { color: #faad14; font-weight: bold; }
+  &.normal { color: #52c41a; }
+}
 
+// Status Badges
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+
+  &.approved {
+    background: #f6ffed;
+    color: #52c41a;
+    border: 1px solid #b7eb8f;
+  }
+  &.declined {
+    background: #fff1f0;
+    color: #ff4d4f;
+    border: 1px solid #ffa39e;
+  }
+  &.pending {
+    background: #e6f7ff;
+    color: #1890ff;
+    border: 1px solid #91d5ff;
+  }
+}
         /* =====================
             EDIT BUTTON (NEW)
         ===================== */

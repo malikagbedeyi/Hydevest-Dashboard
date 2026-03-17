@@ -240,7 +240,6 @@ const handleUpdate = async () => {
       setLoading(true);
 
       const newStatus = approved ? 1: 0;
-      // const newStatus = approved ? 0 : 1;
 
       const payload = {
         container_id: container.id, 
@@ -489,7 +488,7 @@ onChange={(e) => updateField("invoiceNumber", e.target.value)}/>
           </div>
              {/* ================= SOURCE NATION DROPDOWN ================= */}
 <div className="form-group-select">
-  <label>Source Nation</label>
+  <label>Hide Type</label>
   <div className="custom-select">
     <div 
       className="custom-select-drop" 
@@ -499,7 +498,7 @@ onChange={(e) => updateField("invoiceNumber", e.target.value)}/>
         {form.sourceNation ? (
           <span>{form.sourceNation}</span>
         ) : (
-          <span className="placeholder">Select Source Nation</span>
+          <span className="placeholder">Select Hide Type</span>
         )}
       </div>
       <ChevronDown className={openSourceNationDrop ? "up" : "down"} />
