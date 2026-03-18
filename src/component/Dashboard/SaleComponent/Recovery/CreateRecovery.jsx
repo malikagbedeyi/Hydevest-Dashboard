@@ -49,42 +49,46 @@ useEffect(() => {
     setCustomers([]);
     return;
   }
+const fetchCustomers = async () => {
+  try {
+    setLoadingCustomer(true);
+    const res = await RecoveryServices.getCustomer(debouncedSearch);
+    
+    // Check all possible data locations from your API
+    const rawData = res?.data?.customer || res?.data?.record || [];
+    
+    let customerList = [];
 
-  const fetchCustomers = async () => {
-    try {
-      setLoadingCustomer(true);
-      const res = await RecoveryServices.getCustomer(debouncedSearch);
-      
-      const rawData = res?.data?.customer || res?.data?.record || [];
-      
-      let customerList = [];
-
-      if (Array.isArray(rawData)) {
-        customerList = rawData.map(c => ({
-          uuid: c.user_uuid,
-          name: `${c.firstname} ${c.lastname}`,
-          phone: c.phone_no
-        }));
-      } else if (rawData && typeof rawData === 'object') {
-        customerList = [{
-          uuid: rawData.user_uuid,
-          name: `${rawData.firstname} ${rawData.lastname}`,
-          phone: rawData.phone_no
-        }];
-      }
-
-      setCustomers(customerList);
-
-    } catch (err) {
-      console.error("Customer fetch failed", err);
-      setCustomers([]);
-    } finally {
-      setLoadingCustomer(false);
+    // If it's an array (Multiple results)
+    if (Array.isArray(rawData)) {
+      customerList = rawData.map(c => ({
+        uuid: c.user_uuid,
+        name: `${c.firstname} ${c.lastname}`,
+        phone: c.phone_no
+      }));
+    } 
+    // If it's a single object (The JSON you showed me)
+    else if (rawData && typeof rawData === 'object' && rawData.user_uuid) {
+      customerList = [{
+        uuid: rawData.user_uuid,
+        name: `${rawData.firstname} ${rawData.lastname}`,
+        phone: rawData.phone_no
+      }];
     }
-  };
 
+    setCustomers(customerList);
+    setHighlightIndex(0); 
+
+  } catch (err) {
+    console.error("Customer fetch failed", err);
+    setCustomers([]);
+  } finally {
+    setLoadingCustomer(false);
+  }
+};
   fetchCustomers();
-}, [debouncedSearch]); // ✅ Only depend on the debounced value
+}, [debouncedSearch]); 
+
 
 useEffect(() => {
   if (!selectedSale?.sale_uuid) return;

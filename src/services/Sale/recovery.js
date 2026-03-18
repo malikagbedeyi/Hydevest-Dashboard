@@ -3,10 +3,16 @@ import api from "../api";
 export const RecoveryServices = {
 
   /* ================= GET CUSTOMER BY PHONE ================= */
-  getCustomer: (phone_no) =>
-    api.get(`/systemuser/sales/recovery/getCustomer`, {
-      params: { phone_no }
-    }),
+getCustomer: (search) => {
+  const isNumber = /^[0-9]+$/.test(search);
+
+  return api.get(`/systemuser/sales/recovery/getCustomer`, {
+    params: {
+      phone_no: isNumber ? search : "",
+      search_fullname: !isNumber ? search : ""
+    }
+  });
+},
 
   /* ================= GET CUSTOMER SALES ================= */
   getCustomerSales: (customer_uuid) =>
