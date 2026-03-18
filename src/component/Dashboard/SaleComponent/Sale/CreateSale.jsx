@@ -245,12 +245,10 @@ const handleCreate = async (customer) => {
   try {
     const payload = buildCreatePayload(customer);
 
-    // Show loader while saving
     setSuccessMessage("Saving sale...");
     
     const message = await onCreate(payload); 
     setSuccessMessage(message);             
-    // Reset form after success
     setForm({ ...form, pallets: [], totalSaleAmount: "" });
     setSelectedContainer(null);
     setAmountPaid("");

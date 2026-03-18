@@ -70,7 +70,7 @@ const confirmDelete = () => {
                 <th>Customer Name</th>
                 <th>Customer Phone</th> 
                 <th>Total Sale Amount</th>
-                <th>Discount</th>
+                <th>Tota Discount</th>
                 <th>Total Amount Paid</th>
                  <th>Outstanding Balance</th>
                  <th>Created By</th>

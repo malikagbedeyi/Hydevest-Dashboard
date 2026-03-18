@@ -578,7 +578,8 @@ const totalBalance= sales.reduce(
   sales={selectedSale}
   goBack={() => setView("table")}
    preSales={normalizedPreSales}
-  onUpdate={async () => {
+   selectedSale={selectedSale}
+  onUpdate={async () => { 
     await fetchSales();
     setView("table");
   }}

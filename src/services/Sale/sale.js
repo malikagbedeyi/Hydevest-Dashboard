@@ -11,7 +11,6 @@ export const SaleServices = {
   getPallets: (params) =>
     api.get("/systemuser/sales/getPallets", { params }),
 
-  // 🔹 Create sale
   create: (payload) => {
     const formData = new URLSearchParams();
 
@@ -28,32 +27,45 @@ export const SaleServices = {
     });
   },
 
-  // 🔹 List sales
   list: (params) =>
     api.get("/systemuser/sales/list", { params }),
 
-  // 🔹 Sale details
   details: (params) =>
     api.get("/systemuser/sales/saleDetails", { params }),
 
-  // 🔹 Sale payments
   payments: (params) =>
     api.get("/systemuser/sales/salePayments", { params }),
 
-  // 🔹 Delete sale
+  ExtendDiscount: (payload) => {
+    const formDate = new URLSearchParams()
+
+    formDate.append("sale_uuid",payload.sale_uuid);
+    formDate.append('discount',payload.discount);
+    formDate.append('desc' , payload.desc)
+  return api.post(
+    "/systemuser/sales/extenddiscount",
+    formDate.toString(),
+    {
+      headers:{
+        "Content-Type": "application/x-www-form-urlencoded",
+    },
+    }
+
+  );
+},
+
   delete: (sale_uuid) => {
   return api.post(
     "/systemuser/sales/delete",
-    { sale_uuid }, // JSON body
+    { sale_uuid }, 
     {
       headers: {
-        "Content-Type": "application/json", // <-- important
+        "Content-Type": "application/json",
       },
     }
   );
 },
 
-  // 🔹 Logs
   logs: (params) =>
     api.get("/systemuser/sales/logs", { params }),
 };

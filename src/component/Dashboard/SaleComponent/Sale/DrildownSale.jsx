@@ -10,7 +10,7 @@ import { usePresaleHelpers } from "./hooks/usePresaleHelpers";
 import { SaleServices } from "../../../../services/Sale/sale";
 import SaleInvoice from "./SaleInvoice";
 
-const DrilldownSale = ({ data, goBack, onUpdate, sales,preSales }) => {
+const DrilldownSale = ({ data, goBack, onUpdate, sales,preSales,selectedSale }) => {
 
   const [editableData, setEditableData] = useState({});
   const [editingField, setEditingField] = useState(null);
@@ -102,7 +102,7 @@ console.log("Pallet Total:", palletsTotal || 0);
 };
 
 
-  /* =========================================
+  /* ========================================
       PALLET CHANGE
   ========================================= */
 
@@ -268,6 +268,22 @@ const handleDeleteSaleItem = (palletId, containerId) => {
     goBack();
   };
 
+  const ExtendDiscount = async () => {
+    try{
+      const payload = {
+        sale_uuid : selectedSale.sale_uuid,
+        discount: editableData.discount,
+        desc:editableData.desc
+      }
+
+      const res = await SaleServices.ExtendDiscount(payload)
+      onUpdate?.()
+       goBack();
+
+    }catch(err){
+console.error(err.response?.data || err);
+    }
+  }
   /* =========================================
       RENDER
   ========================================= */
@@ -401,7 +417,7 @@ const handleDeleteSaleItem = (palletId, containerId) => {
   onChange={handleChange}
   type="number"
   format={formatCurrency}
-  readOnly={true}
+  // readOnly={true}
 />
 
           </div>
@@ -466,9 +482,9 @@ const handleDeleteSaleItem = (palletId, containerId) => {
           Previous
         </button>
 
-        {/* <button className="create" onClick={handleSave}>
-          Save Changes
-        </button> */}
+        <button className="create" onClick={ExtendDiscount}>
+          Update Changes
+        </button>
       </div>
 
     </div>
