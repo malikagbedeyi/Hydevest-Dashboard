@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../../../../assets/Styles/dashboard/create.scss";
-import { ChevronDown, Paperclip, Trash2 } from "lucide-react";
+import { ChevronDown, Eye, Paperclip, Trash2, View } from "lucide-react";
 import { RecoveryServices } from "../../../../services/Sale/recovery";
 import { SaleServices } from "../../../../services/Sale/sale";
 
@@ -633,36 +633,37 @@ if (type === "success") {
                     No attachments added
                   </small>
                 )}
+{attachments.map((f) => {
+  const fileUrl = URL.createObjectURL(f.file);
 
-                {attachments.map((f) => (
+  return (
+    <div key={f.id} className="file-row">
+      <div>
+        <div className="small-muted">{f.name}</div>
+        <small>{(f.size / 1024).toFixed(1)} KB</small>
 
-                  <div key={f.id} className="file-row">
+      </div>
 
-                    <div>
-
-                      <div className="small-muted">{f.name}</div>
-
-                      <small>{(f.size / 1024).toFixed(1)} KB</small>
-
-                    </div>
-
-                    <div className="file-actions">
-
-                      <Trash2
-                        size={16}
-                        style={{ cursor: "pointer" }}
-                        onClick={() =>
-                          setAttachments((prev) =>
-                            prev.filter((a) => a.id !== f.id)
-                          )
-                        }
-                      />
-
-                    </div>
-
-                  </div>
-
-                ))}
+      <div className="file-actions">
+         <a  href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#581aae", fontSize: "12px" }}>
+        <Eye />
+        </a>
+        <Trash2
+          size={16}
+          style={{ cursor: "pointer",color:"red" }}
+          onClick={() =>
+            setAttachments((prev) =>
+              prev.filter((a) => a.id !== f.id)
+            )
+          }
+        />
+      </div>
+    </div>
+  );
+})}
 
               </div>
 
