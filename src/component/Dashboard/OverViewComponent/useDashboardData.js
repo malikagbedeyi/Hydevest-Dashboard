@@ -27,7 +27,6 @@ export const useDashboardData = (activeFilters) => {
       setLoading(true);
       const apiToDate = `${activeFilters.to} 23:59:59`;
 
-      // 1. Parallel Data Fetching with high limits for stats accuracy
       const [salesRes, recoveryRes, containerRes, presaleRes, tripRes] = await Promise.all([
         SaleServices.list({ from_date: activeFilters.from, to_date: apiToDate }),
         RecoveryServices.list({ from_date: activeFilters.from, to_date: apiToDate }),
@@ -72,11 +71,12 @@ export const useDashboardData = (activeFilters) => {
         landingCostMap[cont.id] = (amountUSD * fxRate) + surcharge + overheadShare;
       });
 
-/* ================= 3. TIME-SERIES BUCKETS (REARRANGED) ================= */
+/* ================= 3. TIME-SERIES BUCKETS (FIXED & ALIGNED) ================= */
 const start = new Date(activeFilters.from);
 const end = new Date(activeFilters.to);
 const chartBase = [];
 
+// Initialize buckets
 let currentBucketDate = new Date(start.getFullYear(), start.getMonth(), 1);
 while (currentBucketDate <= end) {
   const label = currentBucketDate.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
@@ -84,40 +84,49 @@ while (currentBucketDate <= end) {
   currentBucketDate.setMonth(currentBucketDate.getMonth() + 1);
 }
 
-// FIRST: Populate all values into chartBase
+// Map Presales by ID for faster lookup
+const presaleMap = {};
+presalesRaw.forEach(p => {
+  presaleMap[p.container_one_id] = p;
+  if(p.container_two_id) presaleMap[p.container_two_id] = p;
+});
+
+// A. Calculate Actual Profit (Revenue - Cost)
 salesRaw.forEach(sale => {
   const label = new Date(sale.created_at).toLocaleString('en-GB', { month: 'short', year: 'numeric' });
   const bucket = chartBase.find(b => b.name === label);
+  
   if (bucket) {
     const totalSale = Number(sale.total_sale_amount || 0);
     const paid = Number(sale.amount_paid || 0);
+    
     bucket.Sales += totalSale;
     bucket.Debt += Math.max(totalSale - paid, 0);
     bucket.recovered += paid;
-    bucket.ActProfit += (totalSale - (landingCostMap[sale.container_id] || 0));
+
+    // RULE: Only calculate profit if Presale exists for this container
+    if (presaleMap[sale.container_id]) {
+      const cost = landingCostMap[sale.container_id] || 0;
+      bucket.ActProfit += (totalSale - cost);
+    }
   }
 });
 
+// B. Calculate Expected Profit (Target Revenue - Cost)
 presalesRaw.forEach(pre => {
   const label = new Date(pre.created_at).toLocaleString('en-GB', { month: 'short', year: 'numeric' });
   const bucket = chartBase.find(b => b.name === label);
-  if (bucket) {
-    bucket.ExpProfit += (Number (landingCostMap[pre.container_one_id] || 0) - (pre.expected_sales_revenue || 0) );
+  
+  if (bucket && pre.container_one_id) {
+    const expectedRev = Number(pre.expected_sales_revenue || 0);
+    const cost = landingCostMap[pre.container_one_id] || 0;
+    
+    // Aligned with Report Logic: Only add if cost > 0 to avoid skewed data
+    if (cost > 0) {
+      bucket.ExpProfit += (expectedRev - cost);
+    }
   }
 });
-
-// SECOND: Only NOW create the cumulative data for the UI
-let runningDebt = 0, runningRecovered = 0;
-const finalChartData = chartBase.map(bucket => {
-  runningDebt += bucket.Debt;
-  runningRecovered += bucket.recovered;
-  return { 
-    ...bucket, 
-    Debt: runningDebt, 
-    recovered: runningRecovered ,
- recovered: runningRecovered };
-      });
-
       /* ================= 4. PIE CHART AGGREGATIONS ================= */
       
       // I. Sale Method (Presales)
@@ -169,20 +178,25 @@ const finalChartData = chartBase.map(bucket => {
       /* ================= 6. DATA STATE UPDATE ================= */
       const totalRev = salesRaw.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
       const totalRec = salesRaw.reduce((sum, s) => sum + Number(s.amount_paid || 0), 0);
+    const filteredActProfit = chartBase.reduce((sum, b) => sum + b.ActProfit, 0);
+const filteredRevenue = chartBase.reduce((sum, b) => sum + b.Sales, 0);
 
-      setData({
-        totalContainer: containersRaw.length,
-        inTransitCount,
-        debtorsCount,
-        totalSales: salesRes?.data?.record?.total || salesRaw.length,
-        totalRevenue: totalRev,
-        totalRecovered: totalRec,
-        pendingBalance: Math.max(totalRev - totalRec, 0),
-        chartData: finalChartData,
-        pieData,
-        sourceNationPie,
-        supplierPie
-      });
+const netMargin = filteredRevenue > 0 ? (filteredActProfit / filteredRevenue) * 100 : 0;
+
+setData({
+  totalContainer: containersRaw.length,
+  inTransitCount,
+  debtorsCount,
+  totalSales: salesRes?.data?.record?.total || salesRaw.length,
+  totalRevenue: filteredRevenue,
+  totalRecovered: totalRec,
+  netMargin: netMargin,
+  pendingBalance: Math.max(filteredRevenue - totalRec, 0),
+  chartData: chartBase.map(b => ({...b})), 
+  pieData,
+  sourceNationPie,
+  supplierPie
+});
     } catch (err) { 
       console.error("Dashboard Hook Logic Error:", err); 
     } finally { 

@@ -51,65 +51,81 @@ const ContainerProfitController = ({ goBack }) => {
 
   useEffect(() => { fetchData(); }, []);
 
-  /* ================= PROFIT AGGREGATION LOGIC ================= */
-  const profitReportData = useMemo(() => {
-    let data = containers;
+/* ================= PROFIT AGGREGATION LOGIC ================= */
+const profitReportData = useMemo(() => {
+  let data = containers;
 
-    if (dateRange.from || dateRange.to) {
-      data = containers.filter(container => {
-        const tripEndDate = new Date(container.trip?.end_date);
-        const fromDate = dateRange.from ? new Date(dateRange.from) : null;
-        const toDate = dateRange.to ? new Date(dateRange.to) : null;
+  // ... Date filtering logic remains the same ...
+  if (dateRange.from || dateRange.to) {
+    data = containers.filter(container => {
+      const tripEndDate = new Date(container.trip?.end_date);
+      const fromDate = dateRange.from ? new Date(dateRange.from) : null;
+      const toDate = dateRange.to ? new Date(dateRange.to) : null;
+      if (fromDate && tripEndDate < fromDate) return false;
+      if (toDate && tripEndDate > toDate) return false;
+      return true;
+    });
+  }
 
-        if (fromDate && tripEndDate < fromDate) return false;
-        if (toDate && tripEndDate > toDate) return false;
-        return true;
-      });
-    }
+  return data.map((container) => {
+    // 1. First, check if this container has a presale
+    const presale = presales.find(p => 
+      p.container_one_id === container.id || p.container_two_id === container.id
+    );
 
-    return data.map((container) => {
-      const tripUuid = container.trip?.trip_uuid;
-      
-      const tripExps = expenses.filter(e => e.trip_uuid === tripUuid || Number(e.trip_id) === Number(container.trip_id));
-      const tripContainersCount = containers.filter(c => c.trip_id === container.trip_id).length;
+    // 2. Determine Landing Cost (Used for both scenarios)
+    const tripUuid = container.trip?.trip_uuid;
+    const tripExps = expenses.filter(e => e.trip_uuid === tripUuid || Number(e.trip_id) === Number(container.trip_id));
+    const tripContainersCount = containers.filter(c => c.trip_id === container.trip_id).length;
 
-      const finance = tripExps.reduce((acc, item) => {
-        if (Number(item.is_container_payment) === 1) {
-          acc.purchaseNgn += Number(item.total_amount || 0);
-          acc.purchaseUsd += Number(item.amount || 0);
-        } else {
-          acc.generalOverhead += Number(item.total_amount || 0);
-        }
-        return acc;
-      }, { purchaseNgn: 0, purchaseUsd: 0, generalOverhead: 0 });
+    const finance = tripExps.reduce((acc, item) => {
+      if (Number(item.is_container_payment) === 1) {
+        acc.purchaseNgn += Number(item.total_amount || 0);
+        acc.purchaseUsd += Number(item.amount || 0);
+      } else {
+        acc.generalOverhead += Number(item.total_amount || 0);
+      }
+      return acc;
+    }, { purchaseNgn: 0, purchaseUsd: 0, generalOverhead: 0 });
 
-      const fxRate = finance.purchaseUsd > 0 ? finance.purchaseNgn / finance.purchaseUsd : 0;
-      const overheadShare = tripContainersCount > 0 ? finance.generalOverhead / tripContainersCount : 0;
+    const fxRate = finance.purchaseUsd > 0 ? finance.purchaseNgn / finance.purchaseUsd : 0;
+    const overheadShare = tripContainersCount > 0 ? finance.generalOverhead / tripContainersCount : 0;
 
-      const amountUSD = (Number(container.unit_price_usd || 0) * Number(container.pieces || 0)) + Number(container.shipping_amount_usd || 0);
-      const surcharge = container.funding?.toLowerCase() === "partner" ? Number(container.surcharge_ngn || 0) : 0;
-      const landingCost = (amountUSD * fxRate) + surcharge + overheadShare;
+    const amountUSD = (Number(container.unit_price_usd || 0) * Number(container.pieces || 0)) + Number(container.shipping_amount_usd || 0);
+    const surcharge = container.funding?.toLowerCase() === "partner" ? Number(container.surcharge_ngn || 0) : 0;
+    const landingCost = (amountUSD * fxRate) + surcharge + overheadShare;
 
-      const presale = presales.find(p => p.container_one_id === container.id || p.container_two_id === container.id);
-      const expectedRevenue = Number(presale?.expected_sales_revenue || 0);
-
-      const actualSales = sales.filter(s => s.container_id === container.id);
-      const actualRevenue = actualSales.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
-
+    // 3. APPLY YOUR RULE: Only calculate profit if Presale exists
+    if (!presale) {
       return {
         ...container,
         landingCost,
-        expectedRevenue,
-        expectedProfit: landingCost -  expectedRevenue ,
-        actualRevenue,
-        actualProfit: landingCost -  actualRevenue ,
-        presaleRecord: presale,
-        saleRecords: actualSales
+        expectedRevenue: 0,
+        expectedProfit: 0,
+        actualRevenue: 0,
+        actualProfit: 0,
+        presaleRecord: null,
+        saleRecords: []
       };
-    });
-  }, [containers, expenses, presales, sales, dateRange]); 
+    }
 
+    // 4. Calculate for containers WITH Presale
+    const expectedRevenue = Number(presale?.expected_sales_revenue || 0);
+    const actualSales = sales.filter(s => s.container_id === container.id);
+    const actualRevenue = actualSales.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
 
+    return {
+      ...container,
+      landingCost,
+      expectedRevenue,
+      expectedProfit: expectedRevenue - landingCost, 
+      actualRevenue,
+      actualProfit: actualRevenue - landingCost,
+      presaleRecord: presale,
+      saleRecords: actualSales
+    };
+  });
+}, [containers, expenses, presales, sales, dateRange]);
   const masterMetrics = useMemo(() => {
     return profitReportData.reduce((acc, curr) => ({
       landing: acc.landing + curr.landingCost,
