@@ -47,11 +47,28 @@ const SaleLog = ({ filters, search }) => {
     return () => clearTimeout(timer);
   }, [page, filters, search]);
 
-  const formatMoney = (value) =>
-    new Intl.NumberFormat("en-NG", {
+const formatMoney = (value) => {
+    let numericValue = 0;
+    if (value && typeof value === 'object') {
+      numericValue = value.total_sale_amount || value.amount || value.amount_paid || 0;
+    } else {
+      numericValue = value || 0;
+    }
+    return new Intl.NumberFormat("en-NG", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(Number(value || 0));
+    }).format(Number(numericValue));
+  };
+
+  const renderWhatChanged = (val) => {
+    if (!val) return "System Update";
+    if (typeof val === "string") return val;
+    
+    if (typeof val === "object") {
+      return Object.keys(val).map(key => key.replace(/_/g, ' ')).join(", ");
+    }
+    return "Update";
+  };
 
   return (
     <div className="userTable">
@@ -74,32 +91,53 @@ const SaleLog = ({ filters, search }) => {
 
           <tbody>
             {loading ? (
-              <tr><td colSpan="9" style={{ textAlign: "center" }}>Loading...</td></tr>
+              <tr><td colSpan="10" style={{ textAlign: "center" }}>Loading...</td></tr>
             ) : logs.length === 0 ? (
-              <tr><td colSpan="9" style={{ textAlign: "center" }}>No logs found</td></tr>
+              <tr><td colSpan="10" style={{ textAlign: "center" }}>No logs found</td></tr>
             ) : (
               logs.map((log, i) => {
+                const saleInfo = log.before?.sale || log.after?.sale || log.before || {};
+
                 const fieldsToShow = [
-                  { label: "Total Sale Amount", before: log.before?.sale?.total_sale_amount, after: log.after?.sale?.total_sale_amount },
-                  { label: "Total Amount Paid", before: log.before?.sale?.amount_paid, after: log.after?.sale?.amount_paid },
-                  { label: "Recovery Amount", before: log.before?.recovery?.amount, after: log.after?.recovery?.amount }
+                  { 
+                    label: "Total Sale Amount", 
+                    before: log.before?.sale?.total_sale_amount ?? log.before?.total_sale_amount, 
+                    after: log.after?.sale?.total_sale_amount ?? log.after?.total_sale_amount
+                  },
+                  { 
+                    label: "Total Amount Paid", 
+                    before: log.before?.sale?.amount_paid ?? log.before?.amount_paid, 
+                    after: log.after?.sale?.amount_paid ?? log.after?.amount_paid
+                  },
+                  { 
+                    label: "Discount", 
+                    before: log.before?.sale?.discount ?? log.before?.discount, 
+                    after: log.after?.sale?.discount ?? log.after?.discount
+                  }
                 ];
 
-                const changedFields = fieldsToShow.filter(f => f.before !== f.after);
-                const displayRows = changedFields.length > 0 ? changedFields : [fieldsToShow[0]];
+                const changedFields = log.action === "delete" || log.action === "create" 
+                  ? [fieldsToShow[0]] 
+                  : fieldsToShow.filter(f => f.before !== f.after);
+
+                const displayRows = changedFields.length > 0 ? changedFields : [{label: "N/A", before: 0, after: 0}];
 
                 return displayRows.map((f, index) => (
                   <tr key={`${log.log_uuid}-${index}`}>
                     <td>{index === 0 ? (page - 1) * 10 + i + 1 : ""}</td>
-                    <td>{index === 0 ? log?.before.sale?.sale_unique_id : ""} </td>
-                    <td className={`log-action ${log.action}`}>{index === 0 ? log.action : ""}</td>
+                    <td>{index === 0 ? (saleInfo.sale_unique_id || "N/A") : ""} </td>
+                    <td className={`log-action ${log.action}`}>{index === 0 ? log.action.replace(/_/g, ' ') : ""}</td>
                     <td>{index === 0 ? log.entity : ""}</td>
-                    <td>{index === 0 ? (log.what_changed || "System Update") : ""}</td>
+                    
+                    <td>{index === 0 ? renderWhatChanged(log.what_changed) : ""}</td>
+                    
                     <td><strong>{f.label}</strong></td>
                     <td>₦{formatMoney(f.before)}</td>
-                    <td>₦{formatMoney(f.after)}</td>
+                    <td>
+                      {log.action === "delete" ? <span style={{color: 'red'}}>REMOVED</span> : `₦${formatMoney(f.after)}`}
+                    </td>
                     <td>{index === 0 ? (log.creator ? `${log.creator.firstname} ${log.creator.lastname}` : "System") : ""}</td>
-                    <td>{index === 0 ? new Date(log.created_at).toLocaleString() : ""}</td>
+                    <td>{index === 0 ? (log.created_at ? new Date(log.created_at).toLocaleString() : "") : ""}</td>
                   </tr>
                 ));
               })

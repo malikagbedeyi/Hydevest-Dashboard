@@ -53,7 +53,6 @@ const ContainerProfitController = ({ goBack }) => {
 
   /* ================= PROFIT AGGREGATION LOGIC ================= */
   const profitReportData = useMemo(() => {
-    // ✅ 2. Filter data based on Trip End Date if filter is set
     let data = containers;
 
     if (dateRange.from || dateRange.to) {
@@ -101,9 +100,9 @@ const ContainerProfitController = ({ goBack }) => {
         ...container,
         landingCost,
         expectedRevenue,
-        expectedProfit: expectedRevenue - landingCost,
+        expectedProfit: landingCost -  expectedRevenue ,
         actualRevenue,
-        actualProfit: actualRevenue - landingCost,
+        actualProfit: landingCost -  actualRevenue ,
         presaleRecord: presale,
         saleRecords: actualSales
       };
@@ -147,8 +146,8 @@ const ContainerProfitController = ({ goBack }) => {
             data={profitReportData} 
             onRowClick={setSelectedItem} 
             goBack={goBack} 
-            dateRange={dateRange} // Pass down
-            setDateRange={setDateRange} // Pass down
+            dateRange={dateRange}
+            setDateRange={setDateRange} 
           />
         </>
       ) : (

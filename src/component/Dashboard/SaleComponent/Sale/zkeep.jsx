@@ -16,7 +16,14 @@ const SaleController = () => {
    const [activeTab, setActiveTab] = useState("table");
  const [containerPreSales, setContainerPreSales] = useState([]);
 const [page, setPage] = useState(1);
+const [allSales, setAllSales] = useState([]);
 const { autoOpenCreate, setAutoOpenCreate } = useOutletContext();
+
+const [totals, setTotals] = useState({
+  sumSale: 0,
+  sumPaid: 0,
+  sumBalance: 0
+});
 
 useEffect(() => {
     if (autoOpenCreate) {
@@ -63,25 +70,61 @@ const fetchSales = async (pageNum = page) => {
   setLoading(true);
 
   try {
-   const res = await SaleServices.list({
-  ...filters,
-  page: pageNum
-});
-
+   const res = await SaleServices.list({ ...filters, page: pageNum});
     const record = res?.data?.record;
-
-    const records = record?.data || [];
-    setSales(records);
-
+setSales(record?.data || []);
     setPagination({
       currentPage: record?.current_page ?? 1,
       lastPage: record?.last_page ?? 1,
       total: record?.total ?? 0
     });
+  let allData = [];
+let currentPage = 1;
+let lastPage = 1;
 
+do {
+  const res = await SaleServices.list({ ...filters, page: currentPage });
+  const record = res?.data?.record;
+
+  const pageData = record?.data || [];
+
+  allData = [...allData, ...pageData];
+
+  lastPage = record?.last_page || 1;
+  currentPage++;
+
+} while (currentPage <= lastPage);
+
+    const totalSale = allData.reduce((sum, r) => {
+  const value = r.total_sale_amount;
+
+  if (typeof value === "object") {
+    return sum + Number(value?.total_sale_amount || 0);
+  }
+
+  return sum + Number(value || 0);
+}, 0);
+const totalPaid = allData.reduce((sum, r) => {
+  const value = r.amount_paid;
+
+  if (typeof value === "object") {
+    return sum + Number(value?.amount || 0);
+  }
+
+  return sum + Number(value || 0);
+}, 0);
+
+setAllSales(allData);
+    setTotals({
+      sumSale: totalSale,
+      sumPaid: totalPaid,
+      sumBalance: totalSale - totalPaid
+    });
+
+    console.log("ALL DATA 👉", allData);
 setView((prevView) => {
       if (prevView === "create") return "create"; 
-      return records.length ? "table" : "empty";
+return record?.data?.length ? "table" : "empty";
     });
 
   } catch (err) {
@@ -321,24 +364,11 @@ const handleRowClick = (sale) => {
     currency: "NGN",
   }).format(value || 0);
 
-const totalSale = sales.length;
+
 
 const totalContainer = new Set(
-  sales.map((rec) => rec.container?.title)
+  allSales.map((rec) => rec.container?.title)
 ).size;
-
-const totalRecoveryAmount = sales.reduce(
-  (sum, rec) => sum + Number(rec.amount_paid || 0),
-  0
-);
-const totalSaleAmount= sales.reduce(
-  (sum, rec) => sum + Number(rec.total_sale_amount || 0),
-  0
-);
-const totalBalance= sales.reduce(
-  (sum, rec) => sum + Number(rec.total_sale_amount - rec.amount_paid || 0),
-  0
-);
 
   return (
     <div className="controller">
@@ -353,19 +383,20 @@ const totalBalance= sales.reduce(
               <p className="small"> sales Record</p>
               <h2>{totalSale}</h2>
             </div>
-            <div className="summary-item">
-              <p className="small">Total Sale Amount (₦)</p>
-              <h2>{formatCurrency(totalSaleAmount)}</h2>
-            </div>
+           <div className="summary-item">
+  <p className="small">Total Sale Amount (₦)</p>
+  <h2>{formatCurrency(totals.sumSale)}</h2>
+</div>
 
-            <div className="summary-item">
-              <p className="small">Total Recovery Amount (₦)</p>
-              <h2>{formatCurrency(totalRecoveryAmount)}</h2>
-            </div>
-            <div className="summary-item">
-              <p className="small">Outstanding Balance (₦)</p>
-              <h2>{formatCurrency(totalBalance)}</h2>
-            </div>
+<div className="summary-item">
+  <p className="small">Total Recovery Amount (₦)</p>
+  <h2>{formatCurrency(totals.sumPaid)}</h2>
+</div>
+
+<div className="summary-item">
+  <p className="small">Outstanding Balance (₦)</p>
+  <h2>{formatCurrency(totals.sumBalance)}</h2>
+</div>
 <div className="summary-item">
               <p className="small">Total Container</p>
               <h2>{totalContainer}</h2>

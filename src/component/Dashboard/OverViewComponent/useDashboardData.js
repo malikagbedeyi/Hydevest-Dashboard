@@ -102,7 +102,7 @@ presalesRaw.forEach(pre => {
   const label = new Date(pre.created_at).toLocaleString('en-GB', { month: 'short', year: 'numeric' });
   const bucket = chartBase.find(b => b.name === label);
   if (bucket) {
-    bucket.ExpProfit += (Number(pre.expected_sales_revenue || 0) - (landingCostMap[pre.container_one_id] || 0));
+    bucket.ExpProfit += (Number (landingCostMap[pre.container_one_id] || 0) - (pre.expected_sales_revenue || 0) );
   }
 });
 
