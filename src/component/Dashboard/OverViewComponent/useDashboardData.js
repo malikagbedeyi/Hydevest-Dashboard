@@ -71,12 +71,11 @@ export const useDashboardData = (activeFilters) => {
         landingCostMap[cont.id] = (amountUSD * fxRate) + surcharge + overheadShare;
       });
 
-/* ================= 3. TIME-SERIES BUCKETS (FIXED & ALIGNED) ================= */
+/* ================= 3. TIME-SERIES BUCKETS (RE-ALIGNED TO REPORT) ================= */
 const start = new Date(activeFilters.from);
 const end = new Date(activeFilters.to);
 const chartBase = [];
 
-// Initialize buckets
 let currentBucketDate = new Date(start.getFullYear(), start.getMonth(), 1);
 while (currentBucketDate <= end) {
   const label = currentBucketDate.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
@@ -84,52 +83,80 @@ while (currentBucketDate <= end) {
   currentBucketDate.setMonth(currentBucketDate.getMonth() + 1);
 }
 
-// Map Presales by ID for faster lookup
-const presaleMap = {};
-presalesRaw.forEach(p => {
-  presaleMap[p.container_one_id] = p;
-  if(p.container_two_id) presaleMap[p.container_two_id] = p;
-});
+const validPresaleContainerIds = new Set([
+  ...presalesRaw.map(p => p.container_one_id),
+  ...presalesRaw.map(p => p.container_two_id)
+].filter(Boolean));
 
-// A. Calculate Actual Profit (Revenue - Cost)
-salesRaw.forEach(sale => {
-  const label = new Date(sale.created_at).toLocaleString('en-GB', { month: 'short', year: 'numeric' });
-  const bucket = chartBase.find(b => b.name === label);
-  
-  if (bucket) {
-    const totalSale = Number(sale.total_sale_amount || 0);
-    const paid = Number(sale.amount_paid || 0);
-    
-    bucket.Sales += totalSale;
-    bucket.Debt += Math.max(totalSale - paid, 0);
-    bucket.recovered += paid;
 
-    // RULE: Only calculate profit if Presale exists for this container
-    if (presaleMap[sale.container_id]) {
-      const cost = landingCostMap[sale.container_id] || 0;
-      bucket.ActProfit += (totalSale - cost);
-    }
+const containerSalesMap = {};
+
+salesRaw.forEach((sale) => {
+  if (!validPresaleContainerIds.has(sale.container_id)) return;
+
+  const id = sale.container_id;
+
+ if (!containerSalesMap[id]) {
+  containerSalesMap[id] = {
+    revenue: 0,
+    paid: 0,
+    created_at: sale.created_at
+  };
+} else {
+  if (new Date(sale.created_at) > new Date(containerSalesMap[id].created_at)) {
+    containerSalesMap[id].created_at = sale.created_at;
   }
+}
+
+  containerSalesMap[id].revenue += Number(sale.total_sale_amount || 0);
+  containerSalesMap[id].paid += Number(sale.amount_paid || 0);
 });
 
-// B. Calculate Expected Profit (Target Revenue - Cost)
+Object.entries(containerSalesMap).forEach(([containerId, data]) => {
+  const label = new Date(data.created_at).toLocaleString('en-GB', {
+    month: 'short',
+    year: 'numeric'
+  });
+
+  const bucket = chartBase.find(b => b.name === label);
+  if (!bucket) return;
+
+  const lcost = landingCostMap[containerId] || 0;
+
+  const revenue = data.revenue;
+  const paid = data.paid;
+
+  bucket.Sales += revenue;
+  bucket.Debt += Math.max(revenue - paid, 0);
+  bucket.recovered += paid;
+
+  bucket.ActProfit += (revenue - lcost);
+});
+
 presalesRaw.forEach(pre => {
-  const label = new Date(pre.created_at).toLocaleString('en-GB', { month: 'short', year: 'numeric' });
+  const label = new Date(pre.created_at).toLocaleString('en-GB', {
+    month: 'short',
+    year: 'numeric'
+  });
+
   const bucket = chartBase.find(b => b.name === label);
-  
-  if (bucket && pre.container_one_id) {
-    const expectedRev = Number(pre.expected_sales_revenue || 0);
-    const cost = landingCostMap[pre.container_one_id] || 0;
-    
-    // Aligned with Report Logic: Only add if cost > 0 to avoid skewed data
-    if (cost > 0) {
-      bucket.ExpProfit += (expectedRev - cost);
-    }
-  }
+  if (!bucket) return;
+
+  const expectedRev = Number(pre.expected_sales_revenue || 0);
+
+  const containerIds = [
+    pre.container_one_id,
+    pre.container_two_id
+  ].filter(Boolean);
+
+  const totalLandingCost = containerIds.reduce((sum, id) => {
+    return sum + (landingCostMap[id] || 0);
+  }, 0);
+
+  bucket.ExpProfit += (expectedRev - totalLandingCost);
 });
       /* ================= 4. PIE CHART AGGREGATIONS ================= */
       
-      // I. Sale Method (Presales)
       const pieData = presalesRaw.reduce((acc, curr) => {
         const opt = curr.sale_option?.toUpperCase().trim();
         if (['BOX SALE', 'SPLIT SALE'].includes(opt)) {
@@ -139,7 +166,6 @@ presalesRaw.forEach(pre => {
         return acc;
       }, []);
 
-      // II. Source Nation Ratio (Containers)
       const sourceNationPie = containersRaw.reduce((acc, curr) => {
         const val = curr.source_nation?.toUpperCase().trim() || "UNSPECIFIED";
         const existing = acc.find(i => i.name === val);
@@ -148,7 +174,6 @@ presalesRaw.forEach(pre => {
         return acc;
       }, []);
 
-      // III. Supplier Distribution Ratio (Containers)
       const supplierPie = containersRaw.reduce((acc, curr) => {
         const val = curr.supplier_code?.trim() || "NO CODE";
         const existing = acc.find(i => i.name === val);
@@ -159,11 +184,9 @@ presalesRaw.forEach(pre => {
 
       /* ================= 5. METRICS & COUNTS ================= */
       
-      // In Transit Check
       const inTransitTripIds = tripsRaw.filter(t => t.progress === "INTRANSIT").map(t => t.id);
       const inTransitCount = containersRaw.filter(c => inTransitTripIds.includes(c.trip_id)).length;
 
-      // Debtor Count Check
       const debtorMap = {};
       salesRaw.forEach(sale => {
         const custId = sale.customer?.user_uuid || sale.customer?.id;
@@ -175,24 +198,22 @@ presalesRaw.forEach(pre => {
       });
       const debtorsCount = Object.values(debtorMap).filter(c => c.total > c.paid).length;
 
-      /* ================= 6. DATA STATE UPDATE ================= */
-      const totalRev = salesRaw.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
-      const totalRec = salesRaw.reduce((sum, s) => sum + Number(s.amount_paid || 0), 0);
-    const filteredActProfit = chartBase.reduce((sum, b) => sum + b.ActProfit, 0);
+const filteredActProfit = chartBase.reduce((sum, b) => sum + b.ActProfit, 0);
 const filteredRevenue = chartBase.reduce((sum, b) => sum + b.Sales, 0);
+const filteredRecovered = chartBase.reduce((sum, b) => sum + b.recovered, 0);
 
 const netMargin = filteredRevenue > 0 ? (filteredActProfit / filteredRevenue) * 100 : 0;
 
 setData({
-  totalContainer: containersRaw.length,
+  totalContainer: validPresaleContainerIds.size, 
   inTransitCount,
   debtorsCount,
-  totalSales: salesRes?.data?.record?.total || salesRaw.length,
+totalSales: Object.keys(containerSalesMap).length,
   totalRevenue: filteredRevenue,
-  totalRecovered: totalRec,
+  totalRecovered: filteredRecovered,
   netMargin: netMargin,
-  pendingBalance: Math.max(filteredRevenue - totalRec, 0),
-  chartData: chartBase.map(b => ({...b})), 
+  pendingBalance: Math.max(filteredRevenue - filteredRecovered, 0),
+  chartData: chartBase, 
   pieData,
   sourceNationPie,
   supplierPie
