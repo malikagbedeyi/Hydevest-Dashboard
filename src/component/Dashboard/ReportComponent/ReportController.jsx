@@ -36,7 +36,7 @@ const ReportController = () => {
 useEffect(() => {
     if (autoOpenCreate) {
       setActiveReport(autoOpenCreate);
-      setAutoOpenCreate(false);
+      setAutoOpenCreate(null);
     }
 
     const timer = setTimeout(() => setIsTransitioning(false), 300);

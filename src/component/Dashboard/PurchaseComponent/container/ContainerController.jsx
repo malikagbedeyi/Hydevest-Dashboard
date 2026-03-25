@@ -113,7 +113,8 @@ useEffect(() => {
 /* =========================
    CALCULATE DRILL SUMMARY
 ========================= */
-const totalContainers = containers.length;
+// const totalContainers = containers.length;
+ const totalContainers = pagination.total; 
 
 
 /* =========================

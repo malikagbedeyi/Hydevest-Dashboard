@@ -53,6 +53,23 @@ export const SaleServices = {
 
   );
 },
+  extendExcess: (payload) => {
+    const formDate = new URLSearchParams()
+
+    formDate.append("sale_uuid",payload.sale_uuid);
+    formDate.append('excess',payload.excess);
+    formDate.append('excess_comment' , payload.excess_comment)
+  return api.post(
+    "/systemuser/sales/extendexcess",
+    formDate.toString(),
+    {
+      headers:{
+        "Content-Type": "application/x-www-form-urlencoded",
+    },
+    }
+
+  );
+},
 
   delete: (sale_uuid) => {
   return api.post(

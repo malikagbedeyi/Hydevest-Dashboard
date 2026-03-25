@@ -284,6 +284,23 @@ const handleDeleteSaleItem = (palletId, containerId) => {
 console.error(err.response?.data || err);
     }
   }
+
+  const extendExcess = async () => {
+    try{
+      const payload = {
+        sale_uuid : selectedSale.sale_uuid,
+        excess: editableData.excess,
+        desc:editableData.desc
+      }
+
+      const res = await SaleServices.extendExcess(payload)
+      onUpdate?.()
+       goBack();
+
+    }catch(err){
+console.error(err.response?.data || err);
+    }
+  }
   /* =========================================
       RENDER
   ========================================= */
@@ -475,6 +492,7 @@ console.error(err.response?.data || err);
           </div>
         </div>
       )}
+      
       {/* ===== FOOTER ===== */}
 
       <div className="btn-row">

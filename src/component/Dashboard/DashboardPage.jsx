@@ -9,7 +9,7 @@ import ProfilePopup from "../ProfilePopup";
 const DashboardPage = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [openSidebarMenu, setOpenSidebarMenu] = useState(null);
-  const [autoOpenCreate, setAutoOpenCreate] = useState(false);
+const [autoOpenCreate, setAutoOpenCreate] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
 
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const DashboardPage = () => {
   const openSubmenuFromChild = (parentId, path, action = null) => {
     setOpenSidebarMenu(parentId);
     navigate(path, { replace: false });
-    if (action === "create") setAutoOpenCreate(true);
+if (action) setAutoOpenCreate(action);
   };
 
   const handleLogout = () => {

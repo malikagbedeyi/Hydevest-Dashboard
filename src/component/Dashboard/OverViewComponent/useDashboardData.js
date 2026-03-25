@@ -17,9 +17,9 @@ export const useDashboardData = (activeFilters) => {
     inTransitCount: 0,
     debtorsCount: 0,
     chartData: [],
-    pieData: [],          // Sale Method (Box vs Split)
-    sourceNationPie: [],  // Source Nation (Wet vs Air)
-    supplierPie: []       // Supplier Distribution (Codes)
+    pieData: [],          
+    sourceNationPie: [], 
+    supplierPie: []      
   });
 
   const fetchData = async () => {

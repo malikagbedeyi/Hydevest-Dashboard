@@ -87,10 +87,12 @@ const OverViewController = () => {
           </div>
 
          {/* CONTAINERS IN TRANSIT */}
-          <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee', cursor: 'pointer' }} onClick={() => handleAction("/dashboard/purchase", "/dashboard/trip", "table")}>
+          <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee', }} 
+          // onClick={() => handleAction("/dashboard/purchase", "/dashboard/trip", "table")}
+           >
             <p className="small">Container In Transit</p>
             <h3 style={{ color: 'orange' }}>{dashboardData.inTransitCount}</h3>
-            <div style={{ color: '#581aae', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>Track Progress <ArrowRight size={12} /></div>
+            {/* <div style={{ color: '#581aae', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>Track Progress <ArrowRight size={12} /></div> */}
           </div>
 
           {/* TOTAL CONTAINERS */}

@@ -7,14 +7,12 @@ const SaleTable = ({ sales, page, lastPage, setPage, onDelete, handleRowClick })
 
 const currentData = sales;
 
-  const [selectedSale, setSelectedSale] = useState(null); // Track clicked sale
-
   // 🔴 delete popup state
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [saleToDelete, setSaleToDelete] = useState(null);
 
   useEffect(() => {
-    // setTableData(sales || []);
+
   }, [sales]);
 
 

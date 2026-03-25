@@ -12,21 +12,43 @@ const DebtController = ({ goBack }) => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [salesRes, recoveryRes] = await Promise.all([
-        SaleServices.list({ page: 1 }),
-        RecoveryServices.list()
-      ]);
-      setSales(salesRes?.data?.record?.data || []);
-      setRecoveries(recoveryRes?.data?.record?.data || []);
-    } catch (err) {
-      console.error("Error fetching debt data", err);
-    } finally {
-      setLoading(false);
+  const fetchAllSales = async () => {
+  let allSales = [];
+  let page = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    const res = await SaleServices.list({ page });
+    const records = res?.data?.record?.data || [];
+
+    allSales = [...allSales, ...records];
+
+    if (records.length === 0) {
+      hasMore = false;
+    } else {
+      page++;
     }
-  };
+  }
+
+  return allSales;
+};
+
+const fetchData = async () => {
+  setLoading(true);
+  try {
+    const [allSales, recoveryRes] = await Promise.all([
+      fetchAllSales(),
+      RecoveryServices.list()
+    ]);
+
+    setSales(allSales);
+    setRecoveries(recoveryRes?.data?.record?.data || []);
+  } catch (err) {
+    console.error("Error fetching debt data", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => { fetchData(); }, []);
 

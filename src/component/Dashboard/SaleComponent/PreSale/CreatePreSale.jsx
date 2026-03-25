@@ -11,7 +11,8 @@ export const saleType = [
 
 const CreatePreSale = ({ setDatas, setView, containersData, refreshTable }) => { 
   const [form, setForm] = useState({
-    saleOption: "",containerOption: "",wcAverageWeight: "", wcPieces: "",
+    saleOption: "",containerOption: "",wcAverageWeight: "", wcPieces: "", 
+    container_loaded_pieces:"",
     pricePerKg: "",pricePerPic: "",noOfPallets: "",pallets: [{ pieces: "", count: "" }],
   });
 
@@ -121,17 +122,8 @@ const toggleContainerDetails = (uuid) => {
     setForm((prev) => ({ ...prev, [name]: cleaned }));
   };
 
-
-
-
-
-  const handlePalletChange = (index, field, value) => {
-    const updated = [...form.pallets];
-    updated[index][field] = value;
-    setForm((prev) => ({ ...prev, pallets: updated }));
-  };
   const handlePalletNumberChange = (index, field, value) => {
-  // allow only numbers
+
   if (/^\d*$/.test(value)) {
     const updated = [...form.pallets];
     updated[index][field] = value;
@@ -142,21 +134,9 @@ const toggleContainerDetails = (uuid) => {
     }));
   }
 };
-const handleNumberChange = (e) => {
-  const { name, value } = e.target;
-
-  const cleaned = value.replace(/[^\d.]/g, ""); 
-
-  setForm((prev) => ({
-    ...prev,
-    [name]: cleaned,
-  }));
-};
-
   const addPallet = () => {
     setForm((prev) => ({ ...prev, pallets: [...prev.pallets, { pieces: "", count: "" }] }));
   };
-
   const removePallet = (index) => {
     const updated = form.pallets.filter((_, i) => i !== index);
     setForm((prev) => ({ ...prev, pallets: updated }));
@@ -190,7 +170,6 @@ const handleNumberChange = (e) => {
   };
   const palletCountEqual =
   maxPalletsAllowed > 0 && totalPalletCount === maxPalletsAllowed;
-
 const palletPiecesEqual =
   maxPiecesAllowed > 0 && totalPalletPieces === maxPiecesAllowed;
 
@@ -234,8 +213,6 @@ const handleCreate = async () => {
     return;
   }
 
-  // const selectedSale = selectedValues2[0]?.saleName;
-
   if (!selectedSale) {
     setPopupMessage("Select a sale option");
     setPopupType("error");
@@ -271,6 +248,7 @@ const handleCreate = async () => {
       payload = {
         container_uuid: selectedValues[0]?.container_uuid,
         wc_average_weight: Number(form.wcAverageWeight),
+        container_loaded_pieces:Number(form.container_loaded_pieces),
         wc_pieces: Number(form.wcPieces),
         price_per_kg: Number(form.pricePerKg),
         price_per_piece: Number(form.pricePerPic),
@@ -294,6 +272,7 @@ const handleCreate = async () => {
         wc_average_weight: Number(form.wcAverageWeight),
         wc_pieces: Number(form.wcPieces),
         price_per_kg: Number(form.pricePerKg),
+        container_loaded_pieces:Number(form.container_loaded_pieces),
         price_per_piece: Number(form.pricePerPic),
         total_no_of_pallets: Number(form.noOfPallets),
         pallet_pieces: form.pallets.map(p => p.pieces).join(","),
@@ -319,6 +298,7 @@ const handleCreate = async () => {
         wc_average_weight: Number(form.wcAverageWeight),
         wc_pieces: Number(form.wcPieces),
         price_per_kg: Number(form.pricePerKg),
+        container_loaded_pieces:Number(form.container_loaded_pieces),
         price_per_piece: Number(form.pricePerPic),
         total_no_of_pallets: Number(form.noOfPallets),
         pallet_pieces: form.pallets.map(p => p.pieces).join(","),
@@ -360,7 +340,6 @@ const handleCreate = async () => {
 
   const selectedSale = selectedValues2[0]?.saleName;
 
-// Determine if user has started filling in pallet distribution
 const hasStartedPalletDistribution = form.pallets.some(
   (p) => Number(p.count || 0) > 0 || Number(p.pieces || 0) > 0
 );
@@ -546,11 +525,10 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
 })}
             </div>
 
-            {/* Pre-sale details section */}
             <h4 className="mt-5 mb-4" style={{color:"#581aae"}}>Pre-sale Details</h4>
             {(selectedSale === "Split Sale" || selectedSale === "Mixed Sale") && (
               <div className="from-pallet-option">
-                <div className="grid-2">
+                <div className="grid-split-3">
                   <div className="form-group">
                     <label>WC Average Weight (kg)</label>
                     <input
@@ -560,7 +538,6 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                       placeholder="Enter WC Average Weight"
                     />
                   </div>
-
                   <div className="form-group">
                     <label>Total Number of Pallets</label>
                     <input
@@ -568,6 +545,15 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                       value={form.noOfPallets}
                       onChange={handleChange}
                       placeholder="Enter Total Number of Pallets"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label >Container Loaded Pieces</label>
+                     <input
+                      name="container_loaded_pieces"
+                      value={formatNumber(form.container_loaded_pieces)}
+                      onChange={handleChange}
+                      placeholder="Enter Container Loaded Pieces"
                     />
                   </div>
                 </div>
@@ -692,7 +678,7 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
             {/* Box Sale */}
             {selectedSale === "Box Sale" && (
               <div className="from-box-sale">
-                <div className="grid-2">
+                <div className="grid-split-3">
                   <div className="form-group">
                     <label>WC Average Weight (kg)</label>
                     <input
@@ -711,6 +697,15 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
                       placeholder="Enter Price Per KG"
                     />
                   </div>        
+                  <div className="form-group">
+                    <label >Container Loaded Pieces</label>
+                     <input
+                      name="container_loaded_pieces"
+                      value={formatNumber(form.container_loaded_pieces)}
+                      onChange={handleChange}
+                      placeholder="Enter Container Loaded Pieces"
+                    />
+                  </div>
                 </div>
                 <div className="grid-split-3">
                  
@@ -745,7 +740,6 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
               Cancel
               </button>
               <button className="create" onClick={handleCreate}
-              //  disabled={palletCountExceeded || palletPiecesExceeded}
               >
                 Create Pre-sale </button>
 

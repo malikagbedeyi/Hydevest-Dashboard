@@ -125,6 +125,7 @@ const handleSave = async () => {
         total_no_of_boxes: Number(editableData.total_no_of_boxes),
         price_per_piece: Number(editableData.price_per_piece),
         wc_pieces: Number(editableData.wc_pieces),
+         container_loaded_pieces: Number(editableData.container_loaded_pieces),
         expected_sales_revenue: expectedRevenue,
       });
     }
@@ -140,6 +141,7 @@ const handleSave = async () => {
         pre_sale_uuid: editableData.pre_sale_uuid,
         wc_average_weight: Number(editableData.wc_average_weight),
         wc_pieces: Number(editableData.wc_pieces),
+        container_loaded_pieces: Number(editableData.container_loaded_pieces),
         price_per_piece: Number(editableData.price_per_piece),
         price_per_kg: Number(editableData.price_per_kg),
         total_no_of_pallets: Number(editableData.total_no_of_pallets),
@@ -163,6 +165,7 @@ const handleSave = async () => {
         pre_sale_uuid: editableData.pre_sale_uuid,
         wc_average_weight: Number(editableData.wc_average_weight),
         wc_pieces: Number(editableData.wc_pieces),
+        container_loaded_pieces: Number(editableData.container_loaded_pieces),
         price_per_piece: Number(editableData.price_per_piece),
         price_per_kg: Number(editableData.price_per_kg),
         total_no_of_pallets: Number(editableData.total_no_of_pallets),
@@ -204,22 +207,19 @@ const handleSave = async () => {
 useEffect(() => {
   if (!editableData) return;
 
-  let totalPieces = editableData.wc_pieces ?? 0; // start with server value
+  let totalPieces = editableData.wc_pieces ?? 0; 
 
   if (editableData.sale_option === "SPLIT SALE" && editableData.pallets?.length) {
-    // sum from pallets
     totalPieces = editableData.pallets.reduce(
       (sum, p) => sum + (Number(p.no_of_pallets) * Number(p.pallet_pieces) || 0),
       0
     );
   } else if (editableData.sale_option === "MIXED SALE" && editableData.pallets?.length) {
-    // sum from pallets
     totalPieces = editableData.pallets.reduce(
       (sum, p) => sum + (Number(p.no_of_pallets) * Number(p.pallet_pieces) || 0),
       0
     );
   } else if (editableData.sale_option === "BOX SALE") {
-    // use total_no_of_boxes if present, otherwise fallback to server value
     totalPieces = Number(editableData.total_no_of_boxes ?? editableData.wc_pieces ?? 0);
   }
 
@@ -336,7 +336,15 @@ useEffect(() => {
   setEditingField={setEditingField}
   onChange={handleChange}
   type="number"
-  // readOnly={true} // prevents manual override
+/>
+              <EditableField
+  label="Container Loaded Pieces"
+  field="container_loaded_pieces"
+  value={editableData?.container_loaded_pieces}
+  editingField={editingField}
+  setEditingField={setEditingField}
+  onChange={handleChange}
+  type="number"
 />
 
               <EditableField

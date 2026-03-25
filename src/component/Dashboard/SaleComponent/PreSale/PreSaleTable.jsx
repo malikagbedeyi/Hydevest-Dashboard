@@ -105,6 +105,7 @@ const currentData = preSales;
                 <th>Tracking Number</th>
                 <th>WC Avg WT (kg)</th>
                 <th>WC Pieces</th>
+                <th>Container Loaded Pieces</th>
                 <th>Price per Pic (₦)</th>
                  <th>Expected Revenue (₦)</th>
                  <th>Status</th>
@@ -134,6 +135,7 @@ const currentData = preSales;
                     <td>TRN-{sale.container.tracking_number}</td>
                     <td>{formatNumber(sale.wc_average_weight)}</td>
                     <td>{formatNumber(sale.wc_pieces)}</td>
+                    <td>{formatNumber(sale.container_loaded_pieces)}</td>
                     <td>{formatMoneyNGN(sale.price_per_piece)}</td>
                       
                     <td>{formatMoneyNGN(sale.expected_sales_revenue)}</td>
