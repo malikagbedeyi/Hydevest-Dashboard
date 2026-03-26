@@ -33,7 +33,6 @@ const avgContainerRate = useMemo(() => {
 
   if (!containerPayments.length) return 0;
 
-  // Use reduce for cleaner, more precise accumulation
   const totals = containerPayments.reduce((acc, item) => {
     const usd = Number(item.amount) || 0;
     const rate = Number(item.rate) || 0;

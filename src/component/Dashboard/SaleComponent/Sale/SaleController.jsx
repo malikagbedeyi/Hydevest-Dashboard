@@ -246,6 +246,7 @@ const paymentStatus =
   amountPaid >= totalSaleAmount ? "Fully Paid" : "Outstanding";
 
     const discount = Number(saleMaster.discount) || 0
+     const excess = Number(saleMaster.excess) || 0
 
 const container = saleMaster.container?.title || "—"
 
@@ -258,6 +259,7 @@ const container = saleMaster.container?.title || "—"
       amountPaid,
       totalSaleAmount,
       discount,
+      excess,
       balance,
       paymentStatus,
       noOfPallets: totalPalletsCount,

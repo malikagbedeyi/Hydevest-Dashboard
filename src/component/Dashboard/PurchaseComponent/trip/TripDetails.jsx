@@ -218,10 +218,7 @@ const handleAddContainer = (container) => {
   const quotedNGN =
     quotedUSD * Number(avgContainerRate || 0) +
     (container.funding === "partner" ? Number(container.surcharge || 0): 0);
-    // const quotedNGN =
-    // quotedUSD * Number(avgContainerRate || 0) +
-    // (container.funding === "partner" ? Number(container.surcharge || 0) * Number(avgContainerRate || 0) : 0);
-
+    
   setContainerData((prev) => [
     ...prev,
     { ...container, amountUSD, amountNGN, quotedUSD, quotedNGN },
@@ -646,7 +643,7 @@ const handleCloseMessage = () => {
 
   <div className="summary-item">
     <p className="small">
-      {activeTab === "finance" ? "Total Container Payment ＄" : "Total Quoted Amount"}
+      {activeTab === "finance" ? "Total Container Payment ₦" : "Total Quoted Amount"}
     </p>
     <h2>{"₦" + dynamicMetricValue.toLocaleString("en-NG")}</h2>
   </div>

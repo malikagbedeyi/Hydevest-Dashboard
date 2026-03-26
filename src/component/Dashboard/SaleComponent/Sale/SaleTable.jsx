@@ -69,6 +69,7 @@ const confirmDelete = () => {
                 <th>Customer Phone</th> 
                 <th>Total Sale Amount</th>
                 <th>Total Discount</th>
+                <th>Excess</th>
                 <th>Total Amount Paid</th>
                  <th>Outstanding Balance</th>
                  <th>Created By</th>
@@ -94,6 +95,7 @@ const confirmDelete = () => {
                     <td>{sale.customer.phone_no || "—"}</td>
                     <td>{formatCurrency(sale.total_sale_amount + sale.discount || 0) } </td>
                     <td>{formatCurrency(sale.discount)}</td>
+                    <td>{formatCurrency(sale.excess)}</td>
                     <td>{formatCurrency(sale.amount_paid || 0)}</td>
                     <td>
   {sale.total_sale_amount - sale.amount_paid <= 0 ? (

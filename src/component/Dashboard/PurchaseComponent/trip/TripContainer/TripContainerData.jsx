@@ -100,7 +100,6 @@ const calculateContainerNGN = (item, rate) => {
   const usd = calculateContainerUSD(item);
   const surcharge = item.funding?.toLowerCase() === "partner" ? Number(item.surcharge_ngn || 0) : 0;
   
-  // Math happens with full decimals
   return (usd * Number(rate)) + surcharge; 
 };
 
@@ -118,6 +117,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
   const surcharge = Number(item.surcharge_ngn || 0);
   return usd * (Number(rate) || 0) + surcharge;
 };
+
 const calculateLandingCost = (item, rate) => {
     return calculateContainerNGN(item, rate) + generalShare;
   };

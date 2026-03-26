@@ -2,7 +2,7 @@ import React from 'react';
 import logo from '../../../../assets/Images/Logo/LogoMain.png'
 import { Printer, X } from "lucide-react";
 import Signature from '../../../../assets/Images/Dashboard/hydevestSignature.png'
-const SaleInvoice = ({ data, customer, items, close }) => {
+const SaleInvoice = ({ data, customer, items, close ,realData}) => {
     const handlePrint = () => {
         window.print();
     };
@@ -30,7 +30,7 @@ const isBoxSale =
         noOfPallets: data.noOfPallets || 1,
         purchasePrice: data.pricePerPiece,
         palletOption: data.wcPieces,
-        total: data.totalSaleAmount + data.discount,
+        total: data.totalSaleAmount + realData.discount,
       },
     ]
   : items;
@@ -116,7 +116,8 @@ const isBoxSale =
     };
 
     const isPaid = (data.balance || 0) <= 0;
-
+    const totalDiscount = Number(realData.discount) + Number( data.discount)
+    const newTotalSaleAmount = Number(data.totalSaleAmount) - Number( data.discount)
     return (
         <div style={invoiceStyles.container}>
             <div className="no-print" style={invoiceStyles.actionBar}>
@@ -130,7 +131,6 @@ const isBoxSale =
 
             <div id="printable-invoice" style={invoiceStyles.paper}>
                 
-                {/* Status Stamp */}
                 <div style={{ 
                     ...invoiceStyles.stamp, 
                     color: isPaid ? '#22c55e' : '#ff4d4f', 
@@ -208,15 +208,15 @@ const isBoxSale =
                     <div style={invoiceStyles.summaryBox}>
                         <div style={invoiceStyles.summaryRow}>
                             <span style={{ color: '#666',margin:"0" }}>Total Sale Amount</span>
-                            <span>{formatCurrency(data.totalSaleAmount + (data.discount || 0))}</span>
+                            <span>{formatCurrency(data.totalSaleAmount + (realData.discount))}</span>
                         </div>
                         <div style={{ ...invoiceStyles.summaryRow, color: '#ff4d4f',margin:"0" }}>
                             <span>Discount</span>
-                            <span>- {formatCurrency(data.discount)}</span>
+                            <span>- {formatCurrency(totalDiscount) }</span>
                         </div>
                         <div style={invoiceStyles.totalRow}>
                             <span>Total </span>
-                            <span style={{ color: '#581aae' }}>{formatCurrency(data.totalSaleAmount) }</span>
+                            <span style={{ color: '#581aae' }}>{formatCurrency(newTotalSaleAmount ) }</span>
                         </div>
                         <div style={invoiceStyles.summaryRow}>
                             <span style={{ color: '#666', marginTop: '-10px' }}>Amount Paid</span>
@@ -232,7 +232,7 @@ const isBoxSale =
                         }}>
                             <span>OutStanding Balance </span>
                             <span style={{ color: isPaid ? '#22c55e' : '#f97316' }}>
-                                {isPaid ? 'PAID IN FULL' : formatCurrency(data.balance)}
+                                {isPaid ? 'PAID IN FULL' : formatCurrency(data.balance - data.discount)}
                             </span>
                         </div>
 
