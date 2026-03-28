@@ -14,6 +14,7 @@ import ContainerLog from "./ContainerLog";
 const ContainerController = ({ breadcrumb, navigate, goBackTo }) => {
   const [view, setView] = useState("table");
   const [containers, setContainers] = useState([]);
+   const [matrix, setMatrix] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState("table");
@@ -65,9 +66,9 @@ const fetchContainersWithFinance = async (pageNum = page) => {
     const params = { ...filters, page: pageNum };
     const containerRes = await ContainerServices.list(params);
     const containerData = containerRes.data?.record?.data || [];
+    const containerRec = containerRes.data
 
     const tripUuids = [...new Set(containerData.map((c) => c.trip?.trip_uuid).filter(Boolean))];
-
     const financeMap = {}; 
 
     for (const uuid of tripUuids) {
@@ -96,6 +97,7 @@ const fetchContainersWithFinance = async (pageNum = page) => {
 
     setTripRates(financeMap); 
     setContainers(containerData);
+    setMatrix(containerRec)
     setPagination(containerRes.data?.record || {});
   } catch (err) { console.error(err); } finally { setLoading(false); }
 };
@@ -110,10 +112,7 @@ useEffect(() => {
 
   return () => clearTimeout(timer);
 }, [page, filters]);
-/* =========================
-   CALCULATE DRILL SUMMARY
-========================= */
-// const totalContainers = containers.length;
+
  const totalContainers = pagination.total; 
 
 
@@ -230,27 +229,27 @@ const formatMoneyUSD = (value) =>
      <div className="drill-summary">
   <div className="summary-item">
     <p className="small">Total Containers</p>
-    <h2>{totalContainers}</h2>
+    <h2>{matrix.container_count}</h2>
   </div>
 
   <div className="summary-item">
     <p className="small">Average Landing Cost ₦</p>
-    <h2>{"₦" + formatMoney(avgLandingCost)}</h2>
+    <h2>{"₦" + matrix.average_landing_cost}</h2>
   </div>
 
   <div className="summary-item">
     <p className="small">Average Pieces</p>
-    <h2>{formatMoney(avgPieces)}</h2>
+    <h2>{matrix.average_pieces}</h2>
   </div>
 
   <div className="summary-item">
     <p className="small">Average Quoted Price</p>
-    <h2>{"$" + formatMoneyUSD(avgQuotedPrice)}</h2>
+    <h2>{"$" + matrix.average_quoted_amount_usd}</h2>
   </div>
 
   <div className="summary-item">
     <p className="small">Average Unit Price</p>
-    <h2>{"$" + formatMoneyUSD(avgUnitPrice)}</h2>
+    <h2>{"$" + matrix.average_unit_price_usd}</h2>
   </div>
 </div>
     </div>

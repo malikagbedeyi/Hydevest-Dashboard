@@ -10,6 +10,7 @@ import { useOutletContext } from "react-router-dom";
 
 const SaleController = () => {
   const [sales, setSales] = useState([]);
+  const [matrix,setMatrix]= useState([]);
   const [selectedSale, setSelectedSale] = useState(null);
   const [view, setView] = useState("empty");
   const [loading, setLoading] = useState(false);
@@ -52,7 +53,7 @@ const logFields = ["all", "Sale ID", "Entity", "Performed By"];
 const saleFields = ["all", "Sale ID", "Tracking Number", "Payment Status"];
 const activeFields = activeTab === "table" ? saleFields : logFields;
 
-// 2. Reset search when tab changes
+
 useEffect(() => {
   setSearchField("all");
   setSearch("");
@@ -69,8 +70,9 @@ const fetchSales = async (pageNum = page) => {
 });
 
     const record = res?.data?.record;
-
+    const recordRec = res?.data;
     const records = record?.data || [];
+     setMatrix(recordRec)
     setSales(records);
 
     setPagination({
@@ -353,24 +355,24 @@ const totalBalance= sales.reduce(
           <div className="drill-summary">
             <div className="summary-item">
               <p className="small"> sales Record</p>
-              <h2>{totalSale}</h2>
+              <h2>{matrix.total_sales_count}</h2>
             </div>
             <div className="summary-item">
               <p className="small">Total Sale Amount (₦)</p>
-              <h2>{formatCurrency(totalSaleAmount)}</h2>
+              <h2>₦{(matrix.total_sales_amount)}</h2>
             </div>
 
             <div className="summary-item">
               <p className="small">Total Recovery Amount (₦)</p>
-              <h2>{formatCurrency(totalRecoveryAmount)}</h2>
+              <h2>₦{(matrix.total_recovery_amount)}</h2>
             </div>
             <div className="summary-item">
               <p className="small">Outstanding Balance (₦)</p>
-              <h2>{formatCurrency(totalBalance)}</h2>
+              <h2>₦{(matrix.outstanding_balance)}</h2>
             </div>
-<div className="summary-item">
-              <p className="small">Total Container</p>
-              <h2>{totalContainer}</h2>
+            <div className="summary-item">
+              <p className="small">Total Customer</p>
+              <h2>{matrix.customers_count}</h2>
             </div>
           </div>
         </div>

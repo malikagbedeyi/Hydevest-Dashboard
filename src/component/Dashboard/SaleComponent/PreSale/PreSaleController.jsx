@@ -26,7 +26,7 @@ const PreSaleController = ({ openSubmenu }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [datas, setDatas] = useState([]);
   const [containers, setContainers] = useState([]);
-
+ const [matrix,setMatrix]= useState([]);
   const [view, setView] = useState("table"); 
   const [activeTab, setActiveTab] = useState("table");
 
@@ -71,6 +71,7 @@ useEffect(() => {
     try {
       const res = await PresaleServices.containerList({});
       setContainers(res.data?.record ?? []);
+
     } catch (err) {
       console.error("Failed to fetch sale containers:", err);
       setContainers([]);
@@ -90,7 +91,8 @@ useEffect(() => {
   page: pageNum
 });
     const record = res.data?.record;
-
+      const recordRec = res?.data;
+      setMatrix(recordRec)
     setDatas(record?.data ?? []);
 
     setPagination({
@@ -115,61 +117,7 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [page, filters]);
 
-const metrics = datas.reduce(
-  (acc, sale) => {
-    const wcPieces = Number(sale.wc_pieces) || 0;
-    const pricePerPiece = Number(sale.price_per_piece) || 0;
-    const pricePerKg = Number(sale.price_per_kg) || 0;
 
-    const containersCount = sale.container ? 1 : 0;
-
-    const totalPallets = Number(sale.total_no_of_pallets) || 0;
-    const totalPalletPieces = Number(sale.pallet_pieces) || 0;
-    const totalExpectedRev = Number(sale.expected_sales_revenue) || 0;
-
-    acc.totalPreSales += 1;
-    acc.totalWcPieces += wcPieces;
-    acc.totalContainers += containersCount;
-
-    acc.totalPricePerPiece += pricePerPiece;
-    acc.totalPricePerKg += pricePerKg;
-
-    acc.totalPallets += totalPallets;
-    acc.totalPalletPieces += totalPalletPieces;
-
-    acc.totalExpectedRev += totalExpectedRev;
-
-    return acc;
-  },
-  {
-    totalPreSales: 0,
-    totalWcPieces: 0,
-    totalContainers: 0,
-    totalPricePerPiece: 0,
-    totalPricePerKg: 0,
-    totalPallets: 0,
-    totalPalletPieces: 0,
-    totalExpectedRev: 0,
-  }
-);
-const avgExpectedRevenue =
-  metrics.totalPreSales > 0
-    ? metrics.totalExpectedRev / metrics.totalPreSales
-    : 0;
-
-const avgPricePerPiece =
-  metrics.totalPreSales > 0
-    ? metrics.totalPricePerPiece / metrics.totalPreSales
-    : 0;
-
-const avgPricePerKg =
-  metrics.totalPreSales > 0
-    ? metrics.totalPricePerKg / metrics.totalPreSales
-    : 0;
-    const avgPieces =
-  metrics.totalPreSales > 0
-    ? metrics.totalWcPieces / metrics.totalPreSales
-    : 0;
 
   const formatMoneyNGN = (value) =>
     value === "" ? "" : "₦" + Number(value).toLocaleString("en-NG");
@@ -237,24 +185,24 @@ const filteredData = datas.filter(sale => {
           <div className="drill-summary">
              <div className="summary-item">
               <p className="small">Total Container</p>
-              <h2>{metrics.totalContainers}</h2>
+              <h2>{matrix.container_count}</h2>
             </div>
              <div className="summary-item">
               <p className="small">Average WC Pieces</p>
-              <h2>{formatMoneyNGN(avgPieces)}</h2>
+              <h2>{formatMoneyNGN(matrix.average_wc_pieces)}</h2>
             </div>
             <div className="summary-item">
               <p className="small">Average Expected Revenue</p>
-              <h2>{formatMoneyNGN(avgExpectedRevenue)}</h2>
+              <h2>₦{(matrix.average_expected_revenue)}</h2>
             </div>
           <div className="summary-item">
   <p className="small">Average Price Per Piece </p>
-  <h2>{formatMoneyNGN(avgPricePerPiece)}</h2>
+  <h2>₦{(matrix.average_price_per_piece)}</h2>
 </div>
 
 <div className="summary-item">
   <p className="small">Average Price per KG </p>
-  <h2>{formatMoneyNGN(avgPricePerKg)}</h2>
+  <h2>₦{(matrix.average_price_per_kg)}</h2>
 </div>
           </div>
         </div>

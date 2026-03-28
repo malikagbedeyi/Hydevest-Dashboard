@@ -14,6 +14,7 @@ const RecoveryController = ({}) => {
   const [data, setData] = useState([]);
   const [sales, setSales] = useState([]);
   const [view, setView] = useState("table");
+  const [matrix,setMatrix]= useState([]);
   const [selectedRecovery, setSelectedRecovery] = useState(null);
   const [activeTab, setActiveTab] = useState("table");
   const [page, setPage] = useState(1);
@@ -73,6 +74,8 @@ const fetchRecoveries = async (pageNum = page) => {
       });
 
       const records = result.data?.record?.data || [];
+         const recordRec = result?.data;
+      setMatrix(recordRec)
       setData(records);
       setPagination({
         page: result.data.record?.current_page || 1,
@@ -232,17 +235,17 @@ const totalRecoveryAmount = data.reduce(
           <div className="drill-summary">
             <div className="summary-item">
               <p className="small">Total Recovery</p>
-              <h2>{totalRecoveries}</h2>
+              <h2>{matrix.total_recovery}</h2>
             </div>
 
             <div className="summary-item">
               <p className="small">Total Customer</p>
-              <h2>{totalCustomers}</h2>
+              <h2>{matrix.customers_count}</h2>
             </div>
 
             <div className="summary-item">
               <p className="small">Total Recovery Amount (NGN)</p>
-              <h2>{formatMoney(totalRecoveryAmount)}</h2>
+              <h2>₦{matrix.total_recovery_amount}</h2>
             </div>
 
           </div>
