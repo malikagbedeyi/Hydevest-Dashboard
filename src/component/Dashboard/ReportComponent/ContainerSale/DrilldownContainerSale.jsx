@@ -7,7 +7,7 @@ const DrilldownContainerSale = ({formatDate, data, goBack, sales = [], presales 
 
 const [salesPage, setSalesPage] = useState(1);
   const [recoveryPage, setRecoveryPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
 const presaleAmount = useMemo(() => {
     const found = presales.find(p => p.container_one_id === data.containerId || p.container_two_id === data.containerId);
