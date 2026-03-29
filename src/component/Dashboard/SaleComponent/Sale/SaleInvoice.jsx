@@ -22,6 +22,18 @@ const isBoxSale =
             maximumFractionDigits: 0
         }).format(v || 0);
 
+        // Invoice Date
+const invoiceDate = data?.created_at ? new Date(data.created_at) : new Date();
+  
+const dueDate = new Date(invoiceDate);
+dueDate.setDate(dueDate.getDate() + 14);
+  
+const formatDate = (date) => date.toLocaleDateString("en-NG", {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric'
+});
+
         const invoiceItems = isBoxSale
   ? [
       {
@@ -238,7 +250,15 @@ const isBoxSale =
 
                     </div>
                 </div>
-
+{!isPaid && (
+  <div id="customer-section">
+    <div>
+      <p style={{ fontSize: '12px', fontWeight: '600', color: '#581aae', marginTop: "3vw" }}>
+        <strong>Note: </strong> The customer agrees to settle the outstanding balance in full by  <strong>{formatDate(dueDate)}</strong>. Failure to meet this obligation may result in alternative recovery actions, including but not limited to property seizure.
+      </p>
+    </div>
+  </div>
+)}
 <div id="customer-section"  style={invoiceStyles.signatureArea}>
                         <div style={invoiceStyles.sigBox}>
                             <img style={{width:"50%"}} src={Signature} alt="" />

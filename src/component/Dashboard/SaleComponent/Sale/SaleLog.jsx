@@ -113,6 +113,11 @@ const formatMoney = (value) => {
                     label: "Discount", 
                     before: log.before?.sale?.discount ?? log.before?.discount, 
                     after: log.after?.sale?.discount ?? log.after?.discount
+                  },
+                      { 
+                    label: "Excess", 
+                    before: log.before?.sale?.excess ?? log.before?.excess, 
+                    after: log.after?.sale?.excess ?? log.after?.excess
                   }
                 ];
 

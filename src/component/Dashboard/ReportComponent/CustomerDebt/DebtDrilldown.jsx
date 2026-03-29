@@ -1,8 +1,12 @@
+import { Plus } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
+import DeptComment from './DeptComment';
 
 const DebtDrilldown = ({ customer, sales, recoveries, goBack }) => {
   const [activeTab, setActiveTab] = useState("sales");
   const [salesPage, setSalesPage] = useState(1);
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [customerComments, setCustomerComments] = useState([]);
   const [recoveryPage, setRecoveryPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -26,6 +30,9 @@ const DebtDrilldown = ({ customer, sales, recoveries, goBack }) => {
 
   const formatMoney = (val) => "₦" + Number(val).toLocaleString("en-NG", { minimumFractionDigits: 2 });
 
+  const addComment = (comment) => {
+    setCustomerComments(prev => [...prev, comment]);
+  };
   return (
     <div className="drilldown">
       <div className="section-report-head"><h3>Details: {customer.customerName}</h3></div>
@@ -43,8 +50,14 @@ const DebtDrilldown = ({ customer, sales, recoveries, goBack }) => {
           <div className="tab-header">
             <button className={activeTab === "sales" ? "active" : ""} onClick={() => setActiveTab("sales")}>Sales Records ({customerSales.length})</button>
             <button className={activeTab === "recoveries" ? "active" : ""} onClick={() => setActiveTab("recoveries")}>Recovery Records ({customerRecoveries.length})</button>
-          </div>
+            <button className={activeTab === "comment" ? "active" : ""} onClick={() => setActiveTab("comment")}>Comments Table</button>
 
+                 <div style={{ marginLeft: "auto", display: "flex", gap: "10px", alignItems: "center" }}>
+          <button onClick={() => setShowCommentModal(true)} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 10px", borderRadius: "6px", border: "1px solid #581aae", background: "#fff", cursor: "pointer" }}>
+            <Plus size={16} /> Add Comment
+          </button>
+        </div>
+</div>
           {activeTab === "sales" && (
             <div className="userTable">
               <div className="table-wrap">
@@ -116,6 +129,47 @@ const DebtDrilldown = ({ customer, sales, recoveries, goBack }) => {
               </div>
             </div>
           )}
+
+          {activeTab === "comment" && (
+            <div className="userTable">
+              <div className="table-wrap">
+                <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
+                  <thead>
+                    <tr>
+                      <th>S/N</th>
+                      <th>Comment ID</th>
+                      <th>Title</th>
+                      <th>Comment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                   <tr>
+                    <td></td>
+                      <td></td>
+                       <td>No comment Found</td>
+                       <td></td>
+                   </tr>
+                  </tbody>
+                </table>
+                {customerRecoveries.length > itemsPerPage && (
+                  <div className="pagination">
+                    <button disabled={recoveryPage === 1} onClick={() => setRecoveryPage(p => p - 1)}>Previous</button>
+                    <span>{recoveryPage} / {Math.ceil(customerRecoveries.length / itemsPerPage)}</span>
+                    <button disabled={recoveryPage * itemsPerPage >= customerRecoveries.length} onClick={() => setRecoveryPage(p => p + 1)}>Next</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+      {showCommentModal && (
+        <DeptComment 
+          comments={customerComments}
+          addComment={addComment}
+          onClose={() => setShowCommentModal(false)}
+        />
+      )}
+
+
         </div>
         <div className="btn-row" style={{ marginTop: '20px' }}><button className="cancel" onClick={goBack}>Back to Report</button></div>
       </section>

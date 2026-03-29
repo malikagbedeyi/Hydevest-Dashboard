@@ -363,8 +363,8 @@ const totalBalance= sales.reduce(
             </div>
 
             <div className="summary-item">
-              <p className="small">Total Recovery Amount (₦)</p>
-              <h2>₦{(matrix.total_recovery_amount)}</h2>
+              <p className="small">Total  Amount Paid (₦)</p>
+              <h2>₦{(matrix.total_amount_paid)}</h2>
             </div>
             <div className="summary-item">
               <p className="small">Outstanding Balance (₦)</p>
