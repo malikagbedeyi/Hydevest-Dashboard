@@ -1,4 +1,4 @@
-// src/services/SaleServices.js
+
 import api from "../api";
 
 export const SaleServices = {

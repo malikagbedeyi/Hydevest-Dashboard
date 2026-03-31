@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { CustomerService } from "../../../../services/Account/CustomerService";
-import { RecoveryServices } from "../../../../services/Sale/recovery"; // Imported RecoveryServices
+import { SaleServices } from "../../../../services/Sale/sale"; // Switched to SaleServices
 import { X } from "lucide-react";
 
 const SaleCustomer = ({ onCustomerResolved }) => {
@@ -20,7 +20,7 @@ const SaleCustomer = ({ onCustomerResolved }) => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-/* ================= REFACTORED SEARCH LOGIC ================= */
+  /* ================= UPDATED SEARCH LOGIC (SALE SERVICES) ================= */
   const handleCustomerSearch = async (e) => {
     const value = e.target.value;
     setPhone(value);
@@ -34,10 +34,17 @@ const SaleCustomer = ({ onCustomerResolved }) => {
     }
 
     try {
-      const res = await RecoveryServices.getCustomer(value);
-      
-      // console.log("Search API Response:", res.data); 
+      // Logic to determine if searching by phone or name for the params
+      const isNumber = /^[0-9]+$/.test(value);
+      const params = {
+        phone_no: isNumber ? value : "",
+        search_fullname: !isNumber ? value : ""
+      };
 
+      // Using SaleServices instead of RecoveryServices
+      const res = await SaleServices.getCustomer(params);
+      
+      // Accessing the 'customer' key based on your previous console logs
       const matches = res.data?.customer || res.data?.record || [];
 
       if (Array.isArray(matches) && matches.length > 0) {
@@ -51,6 +58,7 @@ const SaleCustomer = ({ onCustomerResolved }) => {
       setMatchingCustomers([]);
     }
   };
+
   const handleAddCustomer = async () => {
     if (!phone || !form.customerName || !form.customerEmail || !form.customerAddress) {
       setMessage("Please fill all customer fields");
@@ -82,6 +90,7 @@ const SaleCustomer = ({ onCustomerResolved }) => {
       const backendMessage = err.response?.data?.message || "";
       if (backendMessage.toLowerCase().includes("taken") || backendMessage.toLowerCase().includes("exists")) {
         setMessage("Customer already exists. Fetching details...");
+        // Re-trigger search using the current phone value
         handleCustomerSearch({ target: { value: phone } });
       } else {
         setMessage(backendMessage || "Failed to create customer");
@@ -150,7 +159,7 @@ const SaleCustomer = ({ onCustomerResolved }) => {
                     setFoundCustomer(mapped);
                     onCustomerResolved(mapped);
                     setMatchingCustomers([]);
-                    setPhone(`${c.firstname} ${c.lastname}`); // Set input to the selected name
+                    setPhone(`${c.firstname} ${c.lastname}`); 
                   }}
                 >
                   {c.firstname} {c.lastname} — {c.phone_no}
