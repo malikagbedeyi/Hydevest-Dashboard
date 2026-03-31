@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { CustomerService } from "../../../../services/Account/CustomerService";
+import { RecoveryServices } from "../../../../services/Sale/recovery"; // Imported RecoveryServices
 import { X } from "lucide-react";
 
 const SaleCustomer = ({ onCustomerResolved }) => {
@@ -12,59 +13,44 @@ const SaleCustomer = ({ onCustomerResolved }) => {
     customerAddress: "",
   });
   const [message, setMessage] = useState(null);
+  const [matchingCustomers, setMatchingCustomers] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-const [matchingCustomers, setMatchingCustomers] = useState([]);
+/* ================= REFACTORED SEARCH LOGIC ================= */
+  const handleCustomerSearch = async (e) => {
+    const value = e.target.value;
+    setPhone(value);
+    setFoundCustomer(null);
+    setForm({ customerName: "", customerEmail: "", customerAddress: "" });
 
-const handleCustomerSearch = async (e) => {
-  const value = e.target.value;
-  setPhone(value);
-  setFoundCustomer(null);
-  setForm({ customerName: "", customerEmail: "", customerAddress: "" });
-
-  if (!value.trim()) {
-    setShowAddCustomerFields(false);
-    setMatchingCustomers([]);
-    return;
-  }
-
-  try {
-    const res = await CustomerService.list();
-    const customers = res.data?.record?.data || [];
-
-    const search = value.toLowerCase().replace(/\s+/g, " ").trim();
-
-    const matches = customers.filter(c => {
-      const fullName = `${c.firstname} ${c.lastname}`
-        .toLowerCase()
-        .replace(/\s+/g, " ")
-        .trim();
-
-      return (
-        String(c.phone_no).includes(search) ||
-        fullName.includes(search) ||
-        c.firstname?.toLowerCase().includes(search) ||
-        c.lastname?.toLowerCase().includes(search)
-      );
-    });
-
-    if (matches.length === 0) {
-      setShowAddCustomerFields(true);
+    if (!value.trim()) {
+      setShowAddCustomerFields(false);
       setMatchingCustomers([]);
       return;
     }
 
-    setMatchingCustomers(matches);
-    setShowAddCustomerFields(false);
-  } catch (err) {
-    setShowAddCustomerFields(true);
-  }
-};
+    try {
+      const res = await RecoveryServices.getCustomer(value);
+      
+      // console.log("Search API Response:", res.data); 
 
+      const matches = res.data?.customer || res.data?.record || [];
+
+      if (Array.isArray(matches) && matches.length > 0) {
+        setMatchingCustomers(matches);
+        setShowAddCustomerFields(false);
+      } else {
+        setMatchingCustomers([]);
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+      setMatchingCustomers([]);
+    }
+  };
   const handleAddCustomer = async () => {
     if (!phone || !form.customerName || !form.customerEmail || !form.customerAddress) {
       setMessage("Please fill all customer fields");
@@ -83,8 +69,11 @@ const handleCustomerSearch = async (e) => {
     try {
       setMessage("Creating customer...");
       const res = await CustomerService.create({
-        firstname, lastname, email: form.customerEmail,
-        phone_no: phone, address: form.customerAddress,
+        firstname,
+        lastname,
+        email: form.customerEmail,
+        phone_no: phone,
+        address: form.customerAddress,
       });
 
       const raw = res.data?.record || res.data?.data || res.data;
@@ -120,7 +109,6 @@ const handleCustomerSearch = async (e) => {
 
   return (
     <div className="customer-section">
-      {/* ✅ MESSAGING MODAL (Refactored to match CreateSale) */}
       {message && (
         <div className="trip-card-popup">
           <div className="trip-card-popup-container">
@@ -138,33 +126,38 @@ const handleCustomerSearch = async (e) => {
 
       <div className="grid-4" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "20px" }}>
         <div className="form-group" style={{ flex: "4", position: "relative" }}>
-          <input placeholder="Search customer by phone or name"value={phone}onChange={handleCustomerSearch}/>
+          <input 
+            placeholder="Search customer by phone or name"
+            value={phone}
+            onChange={handleCustomerSearch}
+          />
 
           {matchingCustomers.length > 0 && (
-  <div className="customer-dropdown">
-    {matchingCustomers.map(c => ( 
-      <div
-        key={c.user_uuid}
-        className="customer-option"
-        onClick={() => {
-          const mapped = {
-            id: c.id,
-            user_uuid: c.user_uuid,
-            name: `${c.firstname} ${c.lastname}`,
-            email: c.email,
-            phone: c.phone_no,
-            address: c.address,
-          };
-          setFoundCustomer(mapped);
-          onCustomerResolved(mapped);
-          setMatchingCustomers([]);
-        }}
-      >
-        {c.firstname} {c.lastname} — {c.phone_no}
-      </div>
-    ))}
-  </div>
-)}
+            <div className="customer-dropdown">
+              {matchingCustomers.map((c) => (
+                <div
+                  key={c.user_uuid}
+                  className="customer-option"
+                  onClick={() => {
+                    const mapped = {
+                      id: c.id,
+                      user_uuid: c.user_uuid,
+                      name: `${c.firstname} ${c.lastname}`,
+                      email: c.email,
+                      phone: c.phone_no,
+                      address: c.address,
+                    };
+                    setFoundCustomer(mapped);
+                    onCustomerResolved(mapped);
+                    setMatchingCustomers([]);
+                    setPhone(`${c.firstname} ${c.lastname}`); // Set input to the selected name
+                  }}
+                >
+                  {c.firstname} {c.lastname} — {c.phone_no}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {!foundCustomer && (
@@ -178,10 +171,16 @@ const handleCustomerSearch = async (e) => {
         <div className="customer-grid-3 mt-2">
           <div className="customer-details">
             <ul className="ul">
-              <li>Name: {foundCustomer.name}</li>
-              <li>Email: {foundCustomer.email}</li>
-              <li>Address: {foundCustomer.address}</li>
+              <li><strong>Name:</strong> {foundCustomer.name}</li>
+              <li><strong>Email:</strong> {foundCustomer.email}</li>
+              <li><strong>Address:</strong> {foundCustomer.address}</li>
             </ul>
+            <button 
+                className="mt-2 text-sm text-red-500 underline" 
+                onClick={() => {setFoundCustomer(null); setPhone("");}}
+            >
+                Change Customer
+            </button>
           </div>
         </div>
       )}
