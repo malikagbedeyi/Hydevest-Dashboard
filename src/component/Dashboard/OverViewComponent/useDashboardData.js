@@ -25,6 +25,26 @@ export const useDashboardData = (activeFilters) => {
     containerMatric: {}
   });
 
+  const fetchAllSales = async (params) => {
+  let allData = [];
+  let page = 1;
+  let lastPage = 1;
+
+  do {
+    const res = await SaleServices.list({ ...params, page });
+    
+    const record = res?.data?.record;
+    const data = record?.data || [];
+
+    allData = [...allData, ...data];
+    lastPage = record?.last_page || 1;
+
+    page++;
+  } while (page <= lastPage);
+
+  return allData;
+};
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -35,13 +55,14 @@ export const useDashboardData = (activeFilters) => {
       const [salesRes, recoveryRes, containerRes, presaleRes, tripRes] = await Promise.all([
         SaleServices.list({ from_date: activeFilters.from, to_date: apiToDate, per_page: 1000 }),
         RecoveryServices.list({ from_date: activeFilters.from, to_date: apiToDate, per_page: 1000 }),
-        ContainerServices.list({ page: 1, per_page: 1000 }), 
+        ContainerServices.list({  per_page: 1000 }), 
         PresaleServices.list({ from_date: activeFilters.from, to_date: apiToDate, per_page: 1000 }),
-        TripServices.list({ page: 1, per_page: 1000 }) 
+        TripServices.list({  per_page: 1000 }) 
       ]);
 
 
-      const salesRaw = salesRes?.data?.record?.data || [];
+      // const salesRaw = salesRes?.data?.record?.data || [];
+      const salesRaw = await fetchAllSales({from_date: activeFilters.from,to_date: apiToDate});
       const salesMatric = salesRes?.data || {};
       const presalesRaw = presaleRes?.data?.record?.data || [];
       const presalesMatric = presaleRes?.data || {};
@@ -49,7 +70,6 @@ export const useDashboardData = (activeFilters) => {
       const containersRaw = containerRes?.data?.record?.data || [];
       const containerMatric = containerRes?.data || {};
       const tripsRaw = tripRes?.data?.record?.data || [];
-
       /* ================= 1. CALCULATE LANDING COST MAP (KEPT) ================= */
       const tripUuids = [...new Set(containersRaw.map(c => c.trip?.trip_uuid).filter(Boolean))];
       const allExps = await Promise.all(
@@ -94,13 +114,14 @@ export const useDashboardData = (activeFilters) => {
         customerMap[custId].totalPaid += Number(sale.amount_paid || 0);
       });
 
-      // Total Debt calculation based on your report logic: sale - paid
       const calculatedTotalDebt = Object.values(customerMap).reduce((acc, curr) => {
         const diff = curr.totalSale - curr.totalPaid;
         return acc + (diff > 0 ? diff : 0);
       }, 0);
 
-      const debtorsCount = Object.values(customerMap).filter(c => c.totalSale > c.totalPaid).length;
+const debtorsCount = Object.values(customerMap)
+  .filter(c => c.totalSale > c.totalPaid)
+.length;
 
       /* ================= 3. CHART DATA (KEPT & UPDATED) ================= */
       const start = new Date(activeFilters.from);
@@ -170,7 +191,7 @@ export const useDashboardData = (activeFilters) => {
       const inTransitCount = containersRaw.filter(c => inTransitTripIds.includes(c.trip_id)).length;
 
       setData({
-        totalContainer: validPresaleContainerIds.size,
+        totalContainer: containerMatric.container_count,
         inTransitCount,
         debtorsCount,
         totalSales: salesRes?.data?.total_sales_count || 0,
