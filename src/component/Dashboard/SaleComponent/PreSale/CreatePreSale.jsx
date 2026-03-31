@@ -505,15 +505,15 @@ const isExpanded = expandedContainers.includes(container.container_uuid);
             <li>Total Extimated Price NGN : {formatMoneyNGN(container.total_estimated_price_ngn ?? "0")}</li>
             <li>Average Weight: {container.average_weight ?? "0"}</li>
             <li> Pieces: {container.pieces ?? "0"}</li>
-            <li>Unit Price ($): {container.unit_price_usd ?? "0"}</li>
-            <li>Amount ($): ${Number(container.unit_price_usd  * container.pieces ?? 0).toLocaleString()}</li>
+            {/* <li>Unit Price ($): {container.unit_price_usd ?? "0"}</li> */}
+            {/* <li>Amount ($): ${Number(container.unit_price_usd  * container.pieces ?? 0).toLocaleString()}</li> */}
              {container.funding === "ENTITY" ? (
               <>
               <li>Max Weight: {container.max_weight ?? "-"}</li>
                <li>Status: {container.status === 1 ? "Approved": "Pending"}</li>
                </> ) : (<>
-             <li>Quoted Price ($): {container.quoted_price_usd ?? "-"}</li>
-            <li>Quoted Amount ($): ${Number((container.quoted_price_usd ?? 0) * (container.pieces ?? 0)).toLocaleString()}</li>
+             {/* <li>Quoted Price ($): {container.quoted_price_usd ?? "-"}</li> */}
+            {/* <li>Quoted Amount ($): ${Number((container.quoted_price_usd ?? 0) * (container.pieces ?? 0)).toLocaleString()}</li> */}
             </>)}
             <li> Funding: {container.funding }</li>
             <li>Created Date: {formatDate(container.created_at)}</li>
