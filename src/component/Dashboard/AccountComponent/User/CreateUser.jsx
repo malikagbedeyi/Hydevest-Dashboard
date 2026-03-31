@@ -35,7 +35,7 @@ const CreateUser = ({ user, mode = "submenu", setView, setData, onSuccess, openS
         is_system_user: user.is_system_user,
         system_email: user.system_email || "",
         role_uuid: user.role_uuid || "",
-        password: "", // optional for edit
+        password: "",  
         start_date: user.start_date || "",
         status: user.status
       });

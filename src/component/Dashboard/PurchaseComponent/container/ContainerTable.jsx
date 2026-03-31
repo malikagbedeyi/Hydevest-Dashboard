@@ -2,7 +2,7 @@ import React from "react";
 import { Trash2 } from "lucide-react";
 import "../../../../assets/Styles/dashboard/table.scss";
 
-const ContainerTable = ({totalContainerCount,landingCost, data,loading,page,setPage,pagination,onRowClick, avgContainerRate,totalGeneralNGN ,getRate }) => {
+const ContainerTable = ({canViewTracking,landingCost, data,loading,page,setPage,pagination,onRowClick, avgContainerRate,totalGeneralNGN ,getRate }) => {
 
   const formatDate = (date) =>
     date
@@ -106,7 +106,10 @@ const calculateQuotedContainerNGN = (item, rate) => {
           <td>{String(idx + 1).padStart(2, "0")}</td>
           <td>{item.status === 1 ? (<span style={{ color: "green" }}>Approved</span>) : (<span style={{ color: "orange" }}>Pending</span>)}</td>
          <td>{item.trip.title || "-"}</td>
-          <td>TRN-{item.tracking_number || "-"}</td>
+          <td>TRN-{canViewTracking 
+                        ? `TRN-${item.tracking_number}` 
+                        : "****-****" 
+                      }</td>
           <td>{Number(item.pieces || 0).toLocaleString()}</td>
            <td>{formatMoney(item.average_weight)}</td>
              <td>{formatMoney(item.max_weight)}</td>

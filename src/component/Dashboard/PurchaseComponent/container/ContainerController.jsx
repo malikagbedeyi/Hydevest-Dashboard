@@ -27,6 +27,16 @@ const [tripContainerCount, setTripContainerCount] = useState(0);
 const [showFilters, setShowFilters] = useState(false);
 const [openStatusSelect, setOpenStatusSelect] = useState(false);
 const [tripRates, setTripRates] = useState({});
+const [userPermissions, setUserPermissions] = useState([]);
+
+
+useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (userData && userData.permissions) {
+      const perms = userData.permissions.map(p => p.name);
+      setUserPermissions(perms);
+    }
+  }, []);
 
 const { avgContainerRate, financeData } = useTripFinance(
   selectedContainer?.trip?.trip_uuid
@@ -479,6 +489,7 @@ placeholder={
                 getRate={getActiveRate}
                 page={page} totalContainerCount={tripContainerCount} 
                 setPage={setPage}
+                canViewTracking={userPermissions.includes("can_view_container_tracking_number")}
                 pagination={pagination}
                 onRowClick={(container) => {
                   setSelectedContainer(container);

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { CustomerService } from "../../../../services/Account/CustomerService";
-import { SaleServices } from "../../../../services/Sale/sale"; // Switched to SaleServices
+import { SaleServices } from "../../../../services/Sale/sale"; 
 import { X } from "lucide-react";
 
 const SaleCustomer = ({ onCustomerResolved }) => {
@@ -34,17 +34,15 @@ const SaleCustomer = ({ onCustomerResolved }) => {
     }
 
     try {
-      // Logic to determine if searching by phone or name for the params
       const isNumber = /^[0-9]+$/.test(value);
       const params = {
         phone_no: isNumber ? value : "",
         search_fullname: !isNumber ? value : ""
       };
 
-      // Using SaleServices instead of RecoveryServices
+
       const res = await SaleServices.getCustomer(params);
       
-      // Accessing the 'customer' key based on your previous console logs
       const matches = res.data?.customer || res.data?.record || [];
 
       if (Array.isArray(matches) && matches.length > 0) {
