@@ -8,6 +8,7 @@ import { RecoveryServices } from "../../../../services/Sale/recovery";
 
 const DebtController = ({ goBack }) => {
   const [sales, setSales] = useState([]);
+   const [matric, setMatric] = useState([]);
   const [recoveries, setRecoveries] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,8 @@ const DebtController = ({ goBack }) => {
   while (hasMore) {
     const res = await SaleServices.list({ page });
     const records = res?.data?.record?.data || [];
-
+    const matrix = res.data || [];
+    setMatric(matrix)
     allSales = [...allSales, ...records];
 
     if (records.length === 0) {
@@ -107,19 +109,19 @@ const customerDebtData = useMemo(() => {
             <div className="drill-summary">
               <div className="summary-item">
                 <p className="small">Total Sale Amount</p>
-                <h2>{formatMoney(metrics.sale)}</h2>
+                <h2>₦{(matric.total_sales_amount)}</h2>
               </div>
               <div className="summary-item">
                 <p className="small">Total Amount Paid</p>
-                <h2>{formatMoney(metrics.paid)}</h2>
+                <h2>₦{(matric.total_amount_paid)}</h2>
               </div>
               <div className="summary-item">
                 <p className="small">Total Outstanding</p>
-                <h2 style={{ color: "red" }}>{formatMoney(metrics.debt)}</h2>
+                <h2 style={{ color: "red" }}>₦{(matric.outstanding_balance)}</h2>
               </div>
               <div className="summary-item">
                 <p className="small">Payment Status</p>
-                <h2 style={{ color: metrics.debt <= 0 ? "green" : "orange" }}>{metrics.status}</h2>
+                <h2 style={{ color: matric.outstanding_balance <= 0 ? "green" : "orange" }}>{matric.outstanding_balance <= 0 ? "Settled" : "Outstanding"}</h2>
               </div>
             </div>
           </div>
