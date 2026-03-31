@@ -386,7 +386,7 @@ const handleSave = async () => {
         <div className="drill-summary">
           <div className="summary-item">
             <p className="small"> Total Sale Amount</p>
-            <h2>{formatCurrency(editableData.totalSaleAmount + data.discount) }</h2>
+            <h2>{formatCurrency(editableData.totalSaleAmount  + data.discount) }</h2>
           </div>
                <div className="summary-item">
             <p className="small"> Discount</p>

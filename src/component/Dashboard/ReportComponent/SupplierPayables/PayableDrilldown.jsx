@@ -18,10 +18,65 @@ const PayableDrilldown = ({ tripData, allContainers, allExpenses, goBack }) => {
   const paginatedExpenses = tripExpenses.slice((expPage - 1) * itemsPerPage, expPage * itemsPerPage);
 
   const formatUSD = (val) => `$${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  const formatNumber = (val) => `${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+
+  const supplierAmount = useMemo(() => {
+  return tripContainers.reduce((sum, cont) => {
+    const base = Number(cont.unit_price_usd || 0) * Number(cont.pieces || 0);
+    const shipping = Number(cont.shipping_amount_usd || 0);
+    return sum + base + shipping;
+  }, 0);
+}, [tripContainers]);
+
+const amountPaid = useMemo(() => {
+  return tripExpenses.reduce((sum, exp) => {
+    return sum + Number(exp.amount || 0);
+  }, 0);
+}, [tripExpenses]);
+
+const balance = supplierAmount - amountPaid;
+
+const statusData = useMemo(() => {
+  if (amountPaid > supplierAmount) {
+    return { label: "Over Paid", color: "blue" };
+  } else if (supplierAmount > amountPaid) {
+    return { label: "Outstanding", color: "orange" };
+  } else {
+    return { label: "Settled", color: "green" };
+  }
+  
+}, [supplierAmount, amountPaid]);
+
 
   return (
     <div className="drilldown">
-      {/* ... Summary Section ... */}
+         <div className="drill-summary-grid">
+            <div className="drill-summary">
+        <div className="summary-item">
+  <p className="small">Amount owed to Supplier</p>
+  <h2>{formatUSD(supplierAmount)}</h2>
+</div>
+
+<div className="summary-item">
+  <p className="small">Amount Paid to Supplier</p>
+  <h2>{formatUSD(amountPaid)}</h2>
+</div>
+
+<div className="summary-item">
+  <p className="small">Net Balance Owed</p>
+  <h2 style={{ color: balance > 0 ? "orange" : "green" }}>
+    {formatUSD(balance)}
+  </h2>
+</div>
+
+<div className="summary-item">
+  <p className="small">Global Payment Status</p>
+  <h2 style={{ color: statusData.color }}>
+    {statusData.label}
+  </h2>
+</div>
+            </div>
+          </div>
       <section style={{ background: "#fff", padding: "20px", borderRadius: "16px", marginTop: "20px" }}>
         <div className="tab-section">
           <div className="tab-header">
@@ -32,7 +87,7 @@ const PayableDrilldown = ({ tripData, allContainers, allExpenses, goBack }) => {
           {activeTab === "expenses" && (
             <div className="userTable">
               <div className="table-wrap">
-                <table className="table" style={{ width: "100%" }}>
+                <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
                   <thead>
                     <tr><th>S/N</th><th>Expense ID</th><th>USD Amount</th><th>Rate</th><th>Status</th></tr>
                   </thead>
@@ -42,7 +97,7 @@ const PayableDrilldown = ({ tripData, allContainers, allExpenses, goBack }) => {
                         <td>{String((expPage - 1) * itemsPerPage + idx + 1).padStart(2, '0')}</td>
                         <td>{exp.expense_unique_id}</td>
                         <td>{formatUSD(exp.amount)}</td>
-                        <td>₦{exp.rate}</td>
+                        <td>₦{formatNumber(exp.rate)}</td>
                         <td style={{ color: exp.status === 1 ? "green" : "orange" }}>{exp.status ? "Approved" : "Pending"}</td>
                       </tr>
                     ))}
@@ -62,7 +117,7 @@ const PayableDrilldown = ({ tripData, allContainers, allExpenses, goBack }) => {
           {activeTab === "containers" && (
             <div className="userTable">
               <div className="table-wrap">
-                <table className="table" style={{ width: "100%" }}>
+                <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
                   <thead>
                     <tr><th>S/N</th><th>Container ID</th><th>Tracking No</th><th>Total Cost ($)</th></tr>
                   </thead>
@@ -92,6 +147,8 @@ const PayableDrilldown = ({ tripData, allContainers, allExpenses, goBack }) => {
           )}
         </div>
       </section>
+
+       <div className="btn-row"><button className="cancel" onClick={goBack}>Previous</button></div>
     </div>
   );
 };

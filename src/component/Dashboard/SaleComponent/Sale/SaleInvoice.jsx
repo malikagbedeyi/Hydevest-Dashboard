@@ -160,8 +160,8 @@ const formatDate = (date) => date.toLocaleDateString("en-NG", {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                         <h2 style={invoiceStyles.invoiceLabel}>INVOICE</h2>
-                        <p style={invoiceStyles.subText}><strong>No:</strong> {data?.invoice_no || `INV-${data?.id || '001'}`}</p>
-                        <p style={invoiceStyles.subText}><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
+                        {/* <p style={invoiceStyles.subText}><strong>No:</strong> {data?.invoice_no || `INV-${data?.id || '001'}`}</p> */}
+                        <p style={invoiceStyles.subText}><strong>Date:</strong> {formatDate(invoiceDate)}</p>
                     </div>
                 </div>
 
@@ -220,9 +220,13 @@ const formatDate = (date) => date.toLocaleDateString("en-NG", {
                     <div style={invoiceStyles.summaryBox}>
                         <div style={invoiceStyles.summaryRow}>
                             <span style={{ color: '#666',margin:"0" }}>Total Sale Amount</span>
-                            <span>{formatCurrency(data.totalSaleAmount + (realData.discount))}</span>
+                            <span>{formatCurrency(data.totalSaleAmount + (realData.discount) - (realData.excess))}</span>
                         </div>
-                        <div style={{ ...invoiceStyles.summaryRow, color: '#ff4d4f',margin:"0" }}>
+                        <div style={{ ...invoiceStyles.summaryRow, color: 'green',margin:"-10px 0" }}>
+                            <span>Excess</span>
+                            <span>+{formatCurrency(realData.excess) }</span>
+                        </div>
+                        <div style={{ ...invoiceStyles.summaryRow, color: '#ff4d4f',margin:"0 0 -10px " }}>
                             <span>Discount</span>
                             <span>- {formatCurrency(totalDiscount) }</span>
                         </div>
@@ -231,14 +235,14 @@ const formatDate = (date) => date.toLocaleDateString("en-NG", {
                             <span style={{ color: '#581aae' }}>{formatCurrency(newTotalSaleAmount ) }</span>
                         </div>
                         <div style={invoiceStyles.summaryRow}>
-                            <span style={{ color: '#666', marginTop: '-10px' }}>Amount Paid</span>
-                            <span style={{ color: '#22c55e', fontWeight: '600', marginTop: '-10px' }}>{formatCurrency(data.amountPaid)}</span>
+                            <span style={{ color: '#666', margin:"-10px 0"}}>Amount Paid</span>
+                            <span style={{ color: '#22c55e', fontWeight: '600', margin:"-10px 0" }}>{formatCurrency(data.amountPaid)}</span>
                         </div>
                         <div style={{ 
                             ...invoiceStyles.summaryRow, 
                             fontWeight: 'bold', 
                             marginTop: '5px', 
-                            padding: '12px 10px', 
+                            padding: '10px 10px', 
                             background: isPaid ? '#f0fdf4' : '#fff7ed',
                             borderRadius: '8px'
                         }}>
@@ -253,7 +257,7 @@ const formatDate = (date) => date.toLocaleDateString("en-NG", {
 {!isPaid && (
   <div id="customer-section">
     <div>
-      <p style={{ fontSize: '12px', fontWeight: '600', color: '#581aae', marginTop: "3vw" }}>
+      <p style={{ fontSize: '12px', fontWeight: '600', color: '#581aae', marginTop: "2vw" }}>
         <strong>Note: </strong> The customer agrees to settle the outstanding balance in full by  <strong>{formatDate(dueDate)}</strong>. Failure to meet this obligation may result in alternative recovery actions, including but not limited to property seizure.
       </p>
     </div>

@@ -270,6 +270,7 @@ const container = saleMaster.container?.title || "—"
      containerName: saleMaster.container?.title,
       presaleId: saleMaster.presale?.pre_sale_unique_id ,
       wcPieces: saleMaster.presale?.wc_pieces ,
+      created_at: saleMaster.created_at,
     });
 
     setView("drilldown");

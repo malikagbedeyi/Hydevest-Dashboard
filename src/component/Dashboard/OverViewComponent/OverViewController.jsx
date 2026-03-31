@@ -60,7 +60,7 @@ const OverViewController = () => {
       <div className="drill-summary-grid">
         <div className="drill-summary">
           <div className="summary-item"><p className="small">Revenue</p><h2>₦{(dashboardData.salesMatric.total_sales_amount)}</h2></div>
-          <div className="summary-item"><p className="small">Recovered</p><h2>₦{(dashboardData.salesMatric.total_recovery_amount)}</h2></div>
+          <div className="summary-item"><p className="small">Recovered</p><h2>₦{(dashboardData.salesMatric.total_amount_paid)}</h2></div>
           <div className="summary-item"><p className="small">Outstanding</p><h2 style={{ color: "orange" }}>₦{(dashboardData.salesMatric.outstanding_balance)}</h2></div>
               {/* <div className="summary-item">   <p className="small">Net Margin %</p> <h2 style={{ color: dashboardData.netMargin >= 0 ? '#22c55e' : '#ff4d4f' }}> {dashboardData.netMargin.toFixed(1)}% </h2> </div> */}
           <div className="summary-item"><p className="small">Sales</p><h2>{dashboardData.salesMatric.total_sales_count}</h2></div>
