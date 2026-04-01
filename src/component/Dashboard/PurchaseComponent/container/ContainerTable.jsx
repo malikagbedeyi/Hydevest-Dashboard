@@ -2,7 +2,7 @@ import React from "react";
 import { Trash2 } from "lucide-react";
 import "../../../../assets/Styles/dashboard/table.scss";
 
-const ContainerTable = ({canViewTracking,landingCost, data,loading,page,setPage,pagination,onRowClick, avgContainerRate,totalGeneralNGN ,getRate }) => {
+const ContainerTable = ({permissionAssign,landingCost, data,loading,page,setPage,pagination,onRowClick, avgContainerRate,totalGeneralNGN ,getRate }) => {
 
   const formatDate = (date) =>
     date
@@ -61,10 +61,8 @@ const calculateQuotedContainerNGN = (item, rate) => {
     
     <div className="userTable">
       <div className="table-wrap">
-        <table
-          className="table"
-          style={{ width: "130%", minWidth: "170%" ,maxWidth:"170%"}}
-        >
+        <table className="table" style={  permissionAssign   ? { width: "100%", minWidth: "100%", maxWidth: "100%" }:
+        { width: "130%", minWidth: "170%", maxWidth: "170%" }  }>
           <thead>
             <tr>
               <th>S/N</th>
@@ -74,6 +72,12 @@ const calculateQuotedContainerNGN = (item, rate) => {
               <th>Pieces</th>
               <th>Average Weight</th>
               <th>Max weight</th>
+              {permissionAssign ? (
+                 <>
+                 
+                  </>
+                ) : (
+                <> 
               <th>Unit Price ($)</th>
               <th>Amount ($)</th>
               <th>Amount (₦)</th>
@@ -81,6 +85,8 @@ const calculateQuotedContainerNGN = (item, rate) => {
               <th>Quoted Price ($)</th>
                <th>Quoted Amount ($)</th>
               <th>Quoted Amount (₦)</th>
+               </>
+  )}
               <th>Created By</th>
               <th>Created Date</th>
               
@@ -102,27 +108,41 @@ const calculateQuotedContainerNGN = (item, rate) => {
   const containerNGN = calculateContainerNGN(item, itemRate);
   const rowLandingCost = containerNGN + itemShare;
       return (
-        <tr key={item.container_uuid} onClick={() => onRowClick(item)} style={{ cursor: "pointer" }}>
-          <td>{String(idx + 1).padStart(2, "0")}</td>
-          <td>{item.status === 1 ? (<span style={{ color: "green" }}>Approved</span>) : (<span style={{ color: "orange" }}>Pending</span>)}</td>
-         <td>{item.trip.title || "-"}</td>
-          <td>TRN-{canViewTracking 
-                        ? `TRN-${item.tracking_number}` 
-                        : "****-****" 
-                      }</td>
-          <td>{Number(item.pieces || 0).toLocaleString()}</td>
-           <td>{formatMoney(item.average_weight)}</td>
-             <td>{formatMoney(item.max_weight)}</td>
-          <td>${formatMoneyUSD(item.unit_price_usd)}</td>
-          <td>${formatMoneyUSD(calculateContainerUSD(item))}</td>
-          <td>₦{itemRate > 0 ? formatMoney(calculateContainerNGN(item, itemRate)) : "₦0.00"}</td>
-          <td>₦{formatMoney(rowLandingCost)}</td>
-          <td>${item.quoted_price_usd || 0}</td>  
-          <td>${formatMoneyUSD(calculateQuotedContainerUSD(item))}</td>
-          <td>₦{itemRate > 0 ? formatMoney(calculateQuotedContainerNGN(item, itemRate)) : "0.00"}</td>
-          <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
-          <td>{formatDate(item.created_at)}</td>
-        </tr>
+<tr key={item.container_uuid} onClick={() => onRowClick(item)} style={{ cursor: "pointer" }}>
+
+  <td>{String(idx + 1).padStart(2, "0")}</td>
+  <td>{item.status === 1 ? (<span style={{ color: "green" }}>Approved</span>) : (<span style={{ color: "orange" }}>Pending</span>)}</td>
+  <td>{item.trip.title || "-"}</td>
+  <td>{(item.tracking_number ? `TRN-${item.tracking_number}` : "-")}</td>
+  <td>{Number(item.pieces || 0).toLocaleString()}</td>
+  <td>{formatMoney(item.average_weight)}</td>
+  <td>{formatMoney(item.max_weight)}</td>
+
+  {permissionAssign ? (
+    <>
+      {/* <td>$****</td> 
+      <td>$****</td> 
+      <td>₦****</td> 
+      <td>₦****</td> 
+      <td>$****</td> 
+      <td>$****</td> 
+      <td>₦****</td>  */}
+      <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
+    </>
+  ) : (
+    <> 
+      <td>${formatMoneyUSD(item.unit_price_usd)}</td>
+      <td>${formatMoneyUSD(calculateContainerUSD(item))}</td>
+      <td>₦{itemRate > 0 ? formatMoney(calculateContainerNGN(item, itemRate)) : "₦0.00"}</td>
+      <td>₦{formatMoney(rowLandingCost)}</td> 
+      <td>${item.quoted_price_usd || 0}</td>  
+      <td>${formatMoneyUSD(calculateQuotedContainerUSD(item))}</td>
+      <td>₦{itemRate > 0 ? formatMoney(calculateQuotedContainerNGN(item, itemRate)) : "0.00"}</td>
+      <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
+    </>
+  )}
+  <td>{formatDate(item.created_at)}</td>
+</tr>
       );
     })
   )}

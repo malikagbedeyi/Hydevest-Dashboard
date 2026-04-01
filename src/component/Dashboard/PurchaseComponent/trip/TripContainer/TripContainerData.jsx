@@ -3,7 +3,7 @@ import { Plus, X, Edit, Trash2, ChevronDown, ChevronUp, Paperclip } from "lucide
 import { ContainerServices } from '../../../../../services/Trip/container';
 import { ExpenseServices } from '../../../../../services/Trip/expense';
 
-const TripContainerData = ({ containerData, setContainerData, handleContainerRowClick, handleDeleteContainer, avgContainerRate, tripUuid, reloadKey}) => {
+const TripContainerData = ({ permissionAssign,containerData, setContainerData, handleContainerRowClick, handleDeleteContainer, avgContainerRate, tripUuid, reloadKey}) => {
 
    
    const [search , setSearch ] = useState('')
@@ -126,7 +126,8 @@ const calculateLandingCost = (item, rate) => {
     <div>
       <div className="userTable">
       <div className="table-wrap">
-        <table className="table" style={{width:"150%"}}>
+<table className="table" style={  permissionAssign   ? { width: "100%", minWidth: "100%", maxWidth: "100%" }:
+        { width: "150%" }  }>
           <thead>
             <tr>
               <th>S/N</th>
@@ -136,14 +137,23 @@ const calculateLandingCost = (item, rate) => {
                <th>Pieces</th>
                <th>Average Weight</th>
                <th>Max Weight</th>
+                {permissionAssign ? (
+                 <>
+                 
+                  </>
+                ) : (
+                <> 
                <th>Unit Price ($)</th>
                <th style={{ color: "#581aae", fontWeight: "bold" }}>Landing Cost (₦)</th>
                 <th>Shipping Amount ($)</th>
                  <th>Surcharge (₦)</th>
                <th>Amount ($)</th>
                <th>Amount (₦)</th>
+                <th>Quoted Price ($)</th>
                <th>Quoted Amount ($)</th>
                <th>Quoted Amount (₦)</th>
+                   </>
+  )}
                <th>Created By</th>
               <th>Created Date</th>
               {/* <th>Actions</th> */}
@@ -167,15 +177,33 @@ const calculateLandingCost = (item, rate) => {
                   <td>{formatMoney(item.pieces || 0)}</td>
                   <td>{formatMoney(item.average_weight)}</td>
                   <td>{formatMoney(item.max_weight)}</td>
-                  <td>${formatMoneyUSd(item.unit_price_usd || 0)}</td>
-                  <td style={{ fontWeight: "600" }}>₦{formatMoney(calculateLandingCost(item, avgContainerRate))}</td>
-                <td>${formatMoneyUSd(Number(item.shipping_amount_usd) || 0)}</td>
+                    {permissionAssign ? (
+    <>
+      {/* <td>$****</td> 
+      <td>$****</td> 
+      <td>₦****</td> 
+       <td>₦****</td> 
+      <td>₦****</td> 
+      <td>$****</td> 
+      <td>$****</td> 
+      <td>$****</td> 
+      <td>₦****</td>  */}
+      <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
+    </>
+  ) : (
+    <> 
+    <td>${formatMoneyUSd(item.unit_price_usd || 0)}</td>
+    <td style={{ fontWeight: "600" }}>₦{formatMoney(calculateLandingCost(item, avgContainerRate))}</td>
+      <td>${formatMoneyUSd(Number(item.shipping_amount_usd) || 0)}</td>
                   <td>₦{formatMoney(Number(item.surcharge_ngn || 0))}</td>
-                  <td>${formatMoneyUSd(calculateContainerUSD(item))}</td>
-                  <td>₦{formatMoney(calculateContainerNGN(item, avgContainerRate))}</td>
-                  <td>${formatMoneyUSd(calculateQuotedContainerUSD(item))}</td>
-                   <td>₦{formatMoney(calculateQuotedContainerNGN(item, avgContainerRate))}</td>
-                  <td>{item?.creator_info?.firstname} {item?.creator_info?.lastname}</td>
+<td>${formatMoneyUSd(calculateContainerUSD(item))}</td>
+ <td>₦{formatMoney(calculateContainerNGN(item, avgContainerRate))}</td>
+      <td>${formatMoney(item.quoted_price_usd || 0)}</td>  
+ <td>${formatMoneyUSd(calculateQuotedContainerUSD(item))}</td>
+<td>₦{formatMoney(calculateQuotedContainerNGN(item, avgContainerRate))}</td>
+ <td>{item?.creator_info?.firstname} {item?.creator_info?.lastname}</td>
+    </>
+  )}
                   <td>{formatDate(item.created_at)}</td>
                 </tr>
               ))

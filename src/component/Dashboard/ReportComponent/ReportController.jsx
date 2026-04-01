@@ -12,6 +12,7 @@ const reportTypes = [
   { icon: Wallet, label: "Supp. Payables", submenu: "supp-payable", ready: true },
   { icon: HandCoins, label: "Customer Debt", submenu: "customer-dept", ready: true },
   { icon: DollarSign, label: "Container Profit", submenu: "container-profit", ready: true },
+  { icon: Wallet, label: "Supp. Receivable", submenu: "supp-receivable", ready: true },
   { icon: ArrowUpCircle, label: "Financial", submenu: "report-financial", ready: false },
   { icon: Users, label: "Partner", submenu: "report-partner", ready: false },
   { icon: CreditCard, label: "Purchase", submenu: "report-purchase", ready: false },

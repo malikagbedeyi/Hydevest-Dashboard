@@ -31,12 +31,12 @@ const [userPermissions, setUserPermissions] = useState([]);
 
 
 useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (userData && userData.permissions) {
-      const perms = userData.permissions.map(p => p.name);
-      setUserPermissions(perms);
-    }
-  }, []);
+  const userData = JSON.parse(localStorage.getItem("user"));
+  if (userData && userData.permissions) {
+    const perms = userData.permissions.map(p => p.name);
+    setUserPermissions(perms);
+  }
+}, []);
 
 const { avgContainerRate, financeData } = useTripFinance(
   selectedContainer?.trip?.trip_uuid
@@ -166,10 +166,7 @@ const summaryData = useMemo(() => {
     };
 }, {totalLandingCost: 0,totalPieces: 0,totalUnitPrice: 0,totalQuotedPrice: 0,count: 0});
 }, [containers, tripRates]);
-const avgLandingCost = summaryData.count > 0 ? (summaryData.totalLandingCost / summaryData.count) : 0;
-const avgPieces = summaryData.count > 0 ? (summaryData.totalPieces / summaryData.count) : 0;
-const avgUnitPrice = summaryData.count > 0 ? (summaryData.totalUnitPrice / summaryData.count) : 0;
-const avgQuotedPrice = summaryData.count > 0 ? (summaryData.totalQuotedPrice / summaryData.count) : 0;
+
 const landingCost = summaryData.count > 0 ? (summaryData.totalLandingCost) : 0
 
 useEffect(() => {
@@ -195,12 +192,22 @@ useEffect(() => {
     (c) => c.trip_id === selectedContainer.trip_id
   );
 
+  if (userPermissions.includes("Fontend_can't_view_container_money_format")){
+    setView("details" === false)
+  }
+
   const tripSpecificCount = siblingContainers.length > 0 ? siblingContainers.length : 0;
 
     return (
-     <DrildownContainer container={selectedContainer} navigate={navigate} breadcrumb={breadcrumb}
-  avgContainerRate={fxRate}  totalGeneralNGN={totalGeneralNGN} goBackTo={goBackTo}
-totalContainerCount={tripSpecificCount}  goBack={() => {fetchContainersWithFinance(page);setView("table");}}
+     <DrildownContainer
+      container={selectedContainer} 
+      navigate={navigate} 
+      breadcrumb={breadcrumb}
+  avgContainerRate={fxRate}  
+  totalGeneralNGN={totalGeneralNGN} 
+  goBackTo={goBackTo}
+totalContainerCount={tripSpecificCount} 
+ goBack={() => {fetchContainersWithFinance(page);setView("table");}}
   reloadTable={() => fetchContainersWithFinance(page)} 
   onUpdate={(updated) => {setContainers((prev) =>prev.map((c) => c.container_uuid === updated.container_uuid? updated: c));
   }}
@@ -489,7 +496,7 @@ placeholder={
                 getRate={getActiveRate}
                 page={page} totalContainerCount={tripContainerCount} 
                 setPage={setPage}
-                canViewTracking={userPermissions.includes("can_view_container_tracking_number")}
+               permissionAssign={userPermissions.includes("Fontend_can't_view_container_money_format")}
                 pagination={pagination}
                 onRowClick={(container) => {
                   setSelectedContainer(container);

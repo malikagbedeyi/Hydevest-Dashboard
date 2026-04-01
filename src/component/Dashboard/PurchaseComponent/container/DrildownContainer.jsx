@@ -10,7 +10,7 @@ import { SupplierService } from "../../../../services/Account/SupplierService";
 
   const fundingOption = ["PARTNER", "ENTITY"];
 const sourceNationOptions = ["WET SALTED", "AIR DRIED"];
-  const DrildownContainer = ({container = {},previous= () => {} ,goBack ,onUpdate,avgContainerRate,formatNumber,reloadTable, totalGeneralNGN = 0,totalContainerCount = 0,}) => {
+  const DrildownContainer = ({container = {},previous= () => {} ,permissionAssign,goBack ,onUpdate,avgContainerRate,formatNumber,reloadTable, totalGeneralNGN = 0,totalContainerCount = 0,}) => {
 
     const { showMessage } = usePopup();
 

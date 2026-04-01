@@ -92,7 +92,17 @@ const [suppliers, setSuppliers] = useState([]);
   const [clearingAgents, setClearingAgents] = useState([]);
   const [openSupplierDrop, setOpenSupplierDrop] = useState(false);
   const [openClearingDrop, setOpenClearingDrop] = useState(false);
+  const [userPermissions, setUserPermissions] = useState([]);
+  
+  
 
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (userData && userData.permissions) {
+      const perms = userData.permissions.map(p => p.name);
+      setUserPermissions(perms);
+    }
+  }, []);
   const originalRef = useRef(null);
 
 
@@ -560,33 +570,50 @@ onApprovalChange={(updatedExpense) => {
  />;
 
   }
+const isRestricted = userPermissions.includes("Fontend_can't_view_container_money_format");
+
 
 if (currentBreadcrumb?.view === "container") {
-    return <DrildownContainer
-  container={selectedContainerDrill}
-  navigate={navigate}
-goBack={() => goBackTo(1)}
-  previous={() => {setShowContainerDetails(false);}}
-  avgContainerRate={avgContainerRate}
-  formatNumber={formatNumber}
-  totalAmountUSD={totalAmountUSD}
-  totalAmountNGN={totalContainerNGN}
-  totalContainers={totalContainers}
-  totalUnitPriceUSD={totalUnitPriceUSD}
-  reloadTable={() => setContainerReloadKey(k => k + 1)}
-  totalGeneralNGN={totalGeneralPaymentNGN}
-  totalContainerCount={containerData.length}
-  onUpdate={(updated) => {
-    setContainerData((prev) =>
-      prev.map((c) =>
-        c.container_uuid === updated.container_uuid
-          ? updated
-          : c
-      )
+
+    if (isRestricted) {
+        return (
+            <div className="trip-card-popup">
+                <div className="trip-card-popup-container">
+                    <div className="popup-content error">
+                        <div onClick={() => goBackTo(1)} className="delete-box">✕</div>
+                        <span>You do not have the permission for the action.</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <DrildownContainer
+            container={selectedContainerDrill}
+            navigate={navigate}
+            goBack={() => goBackTo(1)}
+            previous={() => { setShowContainerDetails(false); }}
+            avgContainerRate={avgContainerRate}
+            formatNumber={formatNumber}
+            totalAmountUSD={totalAmountUSD}
+            totalAmountNGN={totalContainerNGN}
+            totalContainers={totalContainers}
+            totalUnitPriceUSD={totalUnitPriceUSD}
+            reloadTable={() => setContainerReloadKey(k => k + 1)}
+            totalGeneralNGN={totalGeneralPaymentNGN}
+            totalContainerCount={containerData.length}
+            onUpdate={(updated) => {
+                setContainerData((prev) =>
+                    prev.map((c) => c.container_uuid === updated.container_uuid ? updated : c)
+                );
+            }}
+        />
     );
-  }}
-/>
-  }
+}
+
+
+
   if (showDocumentDril) {
     return <TripDocumentDrill
      trip={selectedDocument}
@@ -600,6 +627,8 @@ const handleCloseMessage = () => {
     goBack(true);
   }
 };
+
+  
   /* ================== UI ================== */
   if (message) {
             //  {message && ( <div className={`alert ${messageType}`}>{message}</div>)}
@@ -923,6 +952,7 @@ const handleCloseMessage = () => {
   <div className="finance-section">
     <TripContainerData
   containerData={containerData}
+   permissionAssign={userPermissions.includes("Fontend_can't_view_container_money_format")}
   setContainerData={setContainerData}
   handleContainerRowClick={handleContainerRowClick}
   handleDeleteContainer={handleDeleteContainer}

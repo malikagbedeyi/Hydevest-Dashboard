@@ -13,10 +13,13 @@ const ProfilePopup = ({ onClose, logout }) => {
         const parsedUser = JSON.parse(savedUser);
         setUserInfo(parsedUser);
       }
+     
     } catch (error) {
       console.error("❌ Failed to parse user from localstorage", error);
     }
   }, []);
+
+   console.log(userInfo)
 
   if (!userInfo) return null;
 
