@@ -119,9 +119,9 @@ useEffect(() => {
       icons: UserCheck,
       label: "Accounts",
       isModulePage: true,
-      permission: "Fontend_can_view_accounts",
+      // permission: "Fontend_can_view_accounts",
       submenu: [
-        { path: "/dashboard/accounts/system-user", label: "System User", permission: "Fontend_Fontend_can.view.system_users" },
+        { path: "/dashboard/accounts/system-user", label: "System User",  },
         { path: "/dashboard/accounts/partner", label: "Partner", permission: "Fontend_Fontend_can.view.partners" },
         { path: "/dashboard/accounts/invest", label: "Investor", permission: "Fontend_Fontend_can.view.investors" },
         { path: "/dashboard/accounts/retailer", label: "Customer", permission: "Fontend_Fontend_can.view.retailers" },
