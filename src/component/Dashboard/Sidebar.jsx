@@ -134,10 +134,10 @@ useEffect(() => {
       path: "/dashboard/admin",
       icons: Shield,
       label: "Admin",
-      permission: "Fontend_can_view_admin",
+      // permission: "Fontend_can_view_admin",
       submenu: [
         { path: "/dashboard/admin/role", label: "Role ", permission: "Fontend_can.view.roles" },
-        { path: "/dashboard/admin/permission", label: "Permission", permission: "Fontend_can.view.permissions" },
+        { path: "/dashboard/admin/permission", label: "Permission",  },
         { path: "/dashboard/admin/bonus", label: "Bonus", permission: "Fontend_can.view.bonuses" },
         { path: "/dashboard/admin/entity", label: "Entity", permission: "Fontend_can.view.entities" },
         { path: "/dashboard/admin/bank-account", label: "Bank Account", permission: "Fontend_can.view.bank_accounts" },
