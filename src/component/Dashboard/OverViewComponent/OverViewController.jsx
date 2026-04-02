@@ -73,7 +73,7 @@ const OverViewController = () => {
           chartData={dashboardData.chartData} 
           pieData={dashboardData.pieData} 
           formatCurrency={formatCurrency} 
-          hideProfit={dashboardData.hideContent} // Pass flag to handle profit chart visibility internally
+          hideProfit={dashboardData.hideContent}
         />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -81,7 +81,9 @@ const OverViewController = () => {
           <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
             <h4>Quick Actions</h4>
             <div className="mt-3" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+             {!dashboardData.hideContent && (
               <button style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/purchase", "/dashboard/trip", "create")}><PlaneTakeoff size={18} /> New Trip</button>
+             )}
               <button style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/sales", "/dashboard/pre-sale", "create")}><Tag size={18} /> New Presale</button>
               <button className="action-btn-animated" style={{ background: '#581aae', border: 'none', color: '#fff', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/sales", "/dashboard/sales", "create")}><PlusCircle size={18} /> New Sale</button>
               <button style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/sales", "/dashboard/recovery", "create")}><DollarSign size={18} /> Record Customer Payment</button>
@@ -118,7 +120,6 @@ const OverViewController = () => {
             </div>
           </div>
 
-          {/* HIDE CONTAINER PROFIT REPORT TILE BASED ON PERMISSION */}
           {!dashboardData.hideContent && (
             <div 
               style={{ background: "#fff", padding: "15px 20px", borderRadius: "16px", border: '1px solid #eee', cursor: 'pointer' }}
