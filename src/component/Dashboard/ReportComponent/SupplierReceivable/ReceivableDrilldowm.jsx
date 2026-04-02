@@ -21,7 +21,7 @@ const ReceivableDrilldowm = ({ trip, goBack }) => {
         <div className="drill-summary">
           <div className="summary-item"><p className="small">Trip</p><h2>{trip.trip_unique_id}</h2></div>
           <div className="summary-item"><p className="small">Total Purchase Pieces</p><h2>{formatUSD(trip.totalPieces)}</h2></div>
-          <div className="summary-item"><p className="small">Total Loaded Pieces</p><h2>{formatUSD(trip.totalActualLoaded)}</h2></div>
+          <div className="summary-item"><p className="small">Total Loaded Pieces</p><h2>{formatUSD(trip.totalLoaderPieces)}</h2></div>
           <div className="summary-item">
             <p className="small">Total Shortfall</p>
             <h2 style={{color: trip.receivable > 0 ? '#581aae' : 'green'}}>{formatUSD(trip.receivable)}</h2>
@@ -51,6 +51,7 @@ const ReceivableDrilldowm = ({ trip, goBack }) => {
                       <th>Tracking No</th>
                       <th>Purchase Pieces</th>
                       <th>Loaded Pieces</th>
+                       <th>Shortfall Pieces</th>
                       <th>Unit Price</th>
                       <th>Shortfall ($)</th>
                       <th>Status</th>
@@ -61,8 +62,7 @@ const ReceivableDrilldowm = ({ trip, goBack }) => {
                       const contractVal = Number(p.container?.pieces || 0) * Number(p.container?.unit_price_usd || 0);
                       const loadedVal = Number(p.container_loaded_pieces || 0) * Number(p.container?.unit_price_usd || 0);
                       const rowShortfall = contractVal - loadedVal;
-                      
-                      // Calculate continuous S/N
+                      const shortfallPieces = Number(p.container?.pieces || 0) - Number(p.container_loaded_pieces || 0)
                       const serialNumber = ((currentPage - 1) * itemsPerPage) + (idx + 1);
 
                       return (
@@ -72,6 +72,7 @@ const ReceivableDrilldowm = ({ trip, goBack }) => {
                           <td>TRN-{p.container?.tracking_number}</td>
                           <td>{formatNumber(p.container?.pieces)}</td>
                           <td>{formatNumber(p.container_loaded_pieces)}</td>
+                          <td>{formatNumber(shortfallPieces)}</td>
                           <td>{formatUSD(p.container?.unit_price_usd)}</td>
                           <td style={{ fontWeight: '600' }}>{formatUSD(rowShortfall)}</td>
                           <td>

@@ -59,18 +59,19 @@ const ReceivableController = ({ goBack }) => {
   /* ================= AGGREGATION LOGIC (FIXED) ================= */
   const reportData = useMemo(() => {
     return trips.map((trip) => {
-      // Find all presale records belonging to this specific trip
+
       const tripPresales = presales.filter(p => Number(p.container?.trip_id) === Number(trip.id));
       
-      // Calculate Contract Amount (Price * Pieces)
       const totalContract = tripPresales.reduce((sum, p) => 
         sum + (Number(p.container?.unit_price_usd || 0) * Number(p.container?.pieces || 0)), 0);
 
-      // ✅ FIXED: Added initial value 0 and proper syntax
       const totalPieces = tripPresales.reduce((sum, p) => 
         sum + Number(p.container?.pieces || 0), 0);
       
-      // Calculate Actual Value based on loaded pieces
+      const totalLoaderPieces = tripPresales.reduce((sum, p) => 
+        sum + Number(p.container_loaded_pieces || 0), 0);
+      
+
       const totalActualLoaded = tripPresales.reduce((sum, p) => 
         sum + (Number(p.container?.unit_price_usd || 0) * Number(p.container_loaded_pieces || 0)), 0);
 
@@ -81,6 +82,7 @@ const ReceivableController = ({ goBack }) => {
         totalContract,
         totalActualLoaded,
         receivable,
+        totalLoaderPieces,
         totalPieces,
         tripPresales,
         status: receivable <= 0 ? "Settled" : "Outstanding",
@@ -89,6 +91,7 @@ const ReceivableController = ({ goBack }) => {
     });
   }, [trips, presales]);
 
+  
   /* ================= MASTER METRICS ================= */
   const masterMetrics = useMemo(() => {
     return reportData.reduce((acc, curr) => ({

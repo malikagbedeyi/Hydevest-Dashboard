@@ -14,6 +14,8 @@ const ReceivableTable = ({ data, onRowClick, goBack }) => {
   const currentItems = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
   const formatUSD = (val) => `$${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
+    const formatNumber = (val) => Number(val || 0).toLocaleString();
+
   return (
     <>
       <div className="top-content">
@@ -24,18 +26,15 @@ const ReceivableTable = ({ data, onRowClick, goBack }) => {
       </div>
       <div className="userTable">
         <div className="table-wrap">
-          <table className="table" style={{ width: "120%", maxWidth: "120%" }}>
+          <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
             <thead>
               <tr>
                 <th>S/N</th>
                 <th>Trip ID</th>
                 <th>Title</th>
-                <th>Description</th>
-                <th>Location</th>
-                <th>Supplier</th>
-                <th>Clearing Agent</th>
-                <th>Start Date</th>
-                <th>End Date</th>
+                <th> Purchase Pieces</th>
+                <th> Loaded Pieces</th>
+                <th> Shortfall</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -45,12 +44,9 @@ const ReceivableTable = ({ data, onRowClick, goBack }) => {
                   <td>{String((page - 1) * itemsPerPage + idx + 1).padStart(2, '0')}</td>
                   <td>{trip.trip_unique_id}</td>
                   <td>{trip.title}</td>
-                  <td>{trip.desc}</td>
-                  <td>{(trip.location)}</td>
-                  <td>{(trip.supplier)}</td>
-                  <td style={{ fontWeight: '600' }}>{(trip.clearing_agent)}</td>
-                  <td>{trip.start_date}</td>
-                  <td>{trip.end_date}</td>
+                  <td>{formatNumber(trip.totalPieces)}</td>
+                  <td>{formatNumber(trip.totalLoaderPieces)}</td>
+                  <td>{formatNumber(trip.receivable)}</td>
                   <td style={{ color:trip.progress === "COMPLETED" ? "green" : trip.progress === "NOT STARTED" ? "red" : "orange"   }}>{trip.progress}</td>
                 </tr>
               ))}
