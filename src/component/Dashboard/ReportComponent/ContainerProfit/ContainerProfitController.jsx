@@ -7,6 +7,7 @@ import { ContainerServices } from "../../../../services/Trip/container";
 import { ExpenseServices } from "../../../../services/Trip/expense";
 import { PresaleServices } from "../../../../services/Sale/presale";
 import { SaleServices } from "../../../../services/Sale/sale";
+import { calculateWeightedRate, calculateOverheadShare } from "../../../../utils/financeMath"; 
 
 const ContainerProfitController = ({ goBack }) => {
   const [containers, setContainers] = useState([]);
@@ -15,147 +16,177 @@ const ContainerProfitController = ({ goBack }) => {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [dateRange, setDateRange] = useState({ from: "", to: "" });
 
-  // ✅ 1. Added Date Filter State
-  const [dateRange, setDateRange] = useState({
-    from: "",
-    to: ""
-  });
+  /* ================= 1. RECURSIVE FETCH ================= */
+  const fetchAllData = async (service, params = {}) => {
+    let allRecords = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      try {
+        const res = await service.list({ ...params, page, per_page: 100 });
+        const records = res?.data?.record?.data || res?.data?.data || [];
+        allRecords = [...allRecords, ...records];
+        const lastPage = res?.data?.record?.last_page || 1;
+        if (page >= lastPage || records.length === 0) hasMore = false;
+        else page++;
+      } catch (err) {
+        console.error("Fetch Loop Error:", err);
+        hasMore = false;
+      }
+    }
+    return allRecords;
+  };
 
   const fetchData = async () => {
+    if (containers.length > 0) return; 
+    
     setLoading(true);
     try {
-      const [contRes, preRes, saleRes] = await Promise.all([
-        ContainerServices.list({ page: 1 }),
-        PresaleServices.list({ page: 1 }),
-        SaleServices.list({ page: 1 })
+      const [contData, preData, saleData] = await Promise.all([
+        fetchAllData(ContainerServices),
+        fetchAllData(PresaleServices),
+        fetchAllData(SaleServices)
       ]);
 
-      const contData = contRes?.data?.record?.data || [];
-      setPresales(preRes?.data?.record?.data || []);
-      setSales(saleRes?.data?.record?.data || []);
+      setContainers(contData);
+      setPresales(preData);
+      setSales(saleData);
 
       const tripUuids = [...new Set(contData.map(c => c.trip?.trip_uuid).filter(Boolean))];
-      const expPromises = tripUuids.map(uuid => 
-        ExpenseServices.list({ trip_uuid: uuid }).then(res => res.data?.record?.data || [])
+      const expResults = await Promise.all(
+        tripUuids.map(uuid => fetchAllData(ExpenseServices, { trip_uuid: uuid }))
       );
-      const allExps = await Promise.all(expPromises);
-      setExpenses(allExps.flat());
-      setContainers(contData);
+      setExpenses(expResults.flat());
     } catch (err) {
-      console.error("Error fetching profit data", err);
+      console.error("Critical error in Profit Report:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+     fetchData(); 
+  }, []);
 
-/* ================= PROFIT AGGREGATION LOGIC ================= */
-const profitReportData = useMemo(() => {
+  /* ================= 2. CALCULATION LOGIC ================= */
+  const profitReportData = useMemo(() => {
+    if (!containers.length) return [];
 
-  let filteredContainers = containers;
-  if (dateRange.from || dateRange.to) {
-    filteredContainers = containers.filter(container => {
-      const tripEndDate = new Date(container.trip?.end_date);
-      const fromDate = dateRange.from ? new Date(dateRange.from) : null;
-      const toDate = dateRange.to ? new Date(dateRange.to) : null;
-      if (fromDate && tripEndDate < fromDate) return false;
-      if (toDate && tripEndDate > toDate) return false;
-      return true;
-    });
-  }
-  
-  return filteredContainers
-    .filter((container) => {
-      return presales.some(p => p.container_one_id === container.id || p.container_two_id === container.id);
-    })
-    .map((container) => {
-      const presale = presales.find(p => p.container_one_id === container.id || p.container_two_id === container.id);
-
-      const tripUuid = container.trip?.trip_uuid;
-      const tripExps = expenses.filter(e => e.trip_uuid === tripUuid || Number(e.trip_id) === Number(container.trip_id));
-      const tripContainersCount = containers.filter(c => c.trip_id === container.trip_id).length;
-
-      const finance = tripExps.reduce((acc, item) => {
-        if (Number(item.is_container_payment) === 1) {
-          acc.purchaseNgn += Number(item.total_amount || 0);
-          acc.purchaseUsd += Number(item.amount || 0);
-        } else {
-          acc.generalOverhead += Number(item.total_amount || 0);
+    // First, filter based on criteria (Date and Presale existence)
+    return containers
+      .filter((container) => {
+        if (dateRange.from || dateRange.to) {
+          const tripEndDateStr = container.trip?.end_date;
+          if (!tripEndDateStr) return false;
+          const tripEndDate = new Date(tripEndDateStr);
+          if (dateRange.from && tripEndDate < new Date(dateRange.from)) return false;
+          if (dateRange.to && tripEndDate > new Date(dateRange.to)) return false;
         }
-        return acc;
-      }, { purchaseNgn: 0, purchaseUsd: 0, generalOverhead: 0 });
+        return presales.some(p => p.container_one_id === container.id || p.container_two_id === container.id);
+      })
+      .map((container) => {
+        const presale = presales.find(p => p.container_one_id === container.id || p.container_two_id === container.id);
+        const tripUuid = container.trip?.trip_uuid;
+        const tripId = container.trip_id;
 
-      const fxRate = finance.purchaseUsd > 0 ? finance.purchaseNgn / finance.purchaseUsd : 0;
-      const overheadShare = tripContainersCount > 0 ? finance.generalOverhead / tripContainersCount : 0;
 
-      const amountUSD = (Number(container.unit_price_usd || 0) * Number(container.pieces || 0)) + Number(container.shipping_amount_usd || 0);
-      const surcharge = container.funding?.toLowerCase() === "partner" ? Number(container.surcharge_ngn || 0) : 0;
-      
-      const landingCost = (amountUSD * fxRate) + surcharge + overheadShare;
+        const tripExps = expenses.filter(e => 
+          (tripUuid && e.trip_uuid === tripUuid) || (tripId && Number(e.trip_id) === Number(tripId))
+        );
+        
+        const tripContainersCount = containers.filter(c => Number(c.trip_id) === Number(tripId)).length;
 
-      const expectedRevenue = Number(presale?.expected_sales_revenue || 0);
-      const actualSales = sales.filter(s => s.container_id === container.id);
-      const actualRevenue = actualSales.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
+        const fxRate = calculateWeightedRate(tripExps);
+        const overheadShare = calculateOverheadShare(tripExps, tripContainersCount);
 
-      return {
-        ...container,
-        landingCost,
-        expectedRevenue,
-        actualRevenue,
-        expectedProfit: (expectedRevenue || 0) - (landingCost || 0),
-        actualProfit: (actualRevenue || 0) - (landingCost || 0),
-        presaleRecord: presale,
-        saleRecords: actualSales
-      };
+        const pieces = Number(container.pieces || 0);
+        const unitPrice = Number(container.unit_price_usd || 0);
+        const shipping = Number(container.shipping_amount_usd || 0);
+const surcharge =
+  container.funding?.toLowerCase() === "partner"
+    ? Number(container.surcharge_ngn || 0)
+    : 0;
+        
+        // Exact Math formula used in TripDetails
+        const amountUSD = (unitPrice * pieces) + shipping;
+        const landingCost = (amountUSD * fxRate) + surcharge + overheadShare;
 
-    });
-}, [containers, expenses, presales, sales, dateRange]);
- 
- const masterMetrics = useMemo(() => {
+        const expectedRevenue = Number(presale?.expected_sales_revenue || 0);
+        const actualSalesForContainer = sales.filter(s => Number(s.container_id) === Number(container.id));
+        const actualRevenue = actualSalesForContainer.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
+
+        return {
+          ...container,
+          landingCost: landingCost || 0,
+          expectedRevenue,
+          actualRevenue,
+          expectedProfit: expectedRevenue - landingCost,
+          actualProfit: actualRevenue - landingCost,
+          presaleRecord: presale,
+          saleRecords: actualSalesForContainer
+        };
+      });
+  }, [containers, expenses, presales, sales, dateRange]);
+
+  const masterMetrics = useMemo(() => {
     return profitReportData.reduce((acc, curr) => ({
-      landing: acc.landing + curr.landingCost,
-      expRev: acc.expRev + curr.expectedRevenue,
-      expProf: acc.expProf + curr.expectedProfit,
-      actRev: acc.actRev + curr.actualRevenue,
-      actProf: acc.actProf + curr.actualProfit,
+      landing: acc.landing + (curr.landingCost || 0),
+      expRev: acc.expRev + (curr.expectedRevenue || 0),
+      expProf: acc.expProf + (curr.expectedProfit || 0),
+      actRev: acc.actRev + (curr.actualRevenue || 0),
+      actProf: acc.actProf + (curr.actualProfit || 0),
     }), { landing: 0, expRev: 0, expProf: 0, actRev: 0, actProf: 0 });
   }, [profitReportData]);
 
-  const formatMoney = (val) => "₦" + Number(val).toLocaleString("en-NG", { maximumFractionDigits: 2 });
-  
-  if(profitReportData?.sales_status === null ) {
-    masterMetrics.actProf = 0
+  const formatMoney = (val) => "₦" + Number(val || 0).toLocaleString("en-NG", { 
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2 
+  });
+
+  /* ================= 3. RENDER LOGIC ================= */
+  // Move selectedItem check above loading to prevent UI resets
+  if (selectedItem) {
+    return (
+      <div className="drilldown">
+        <ContainerProfitDrilldown 
+          data={selectedItem} 
+          goBack={() => setSelectedItem(null)} 
+        />
+      </div>
+    );
   }
 
+  if (loading) {
+    return (
+      <div className="drilldown" style={{ textAlign: 'center', padding: '10vw' }}>
+        <h2 style={{ color: '#581aae' }}>Aggregating Live Data...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="drilldown">
-      {!selectedItem ? (
-        <>
-          <div className="section-report-head"><h3>Container Profit Report</h3></div>
-          <div className="drill-summary-grid">
-            <div className="drill-summary">
-              <div className="summary-item"><p className="small">Total Landing Cost</p><h2>{formatMoney(masterMetrics.landing)}</h2></div>
-              <div className="summary-item"><p className="small">Total Expected Revenue</p><h2>{formatMoney(masterMetrics.expRev)}</h2></div>
-              <div className="summary-item"><p className="small">Total Expected Profit</p><h2 style={{color: masterMetrics.expProf >= 0 ? 'green' : 'red'}}>{formatMoney(masterMetrics.expProf)}</h2></div>
-              <div className="summary-item"><p className="small">Actual Revenue</p><h2>{formatMoney(masterMetrics.actRev)}</h2></div>
-              <div className="summary-item"><p className="small">Actual Profit</p><h2 style={{color: masterMetrics.actProf >= 0 ? 'green' : 'red'}}>{formatMoney(masterMetrics.actProf)}</h2></div>
-            </div>
-          </div>
-          
-          <ContainerProfitTable 
-            data={profitReportData} 
-            onRowClick={setSelectedItem} 
-            goBack={goBack} 
-            dateRange={dateRange}
-            setDateRange={setDateRange} 
-          />
-        </>
-      ) : (
-        <ContainerProfitDrilldown data={selectedItem} goBack={() => setSelectedItem(null)} />
-      )}
+      <div className="section-report-head"><h3>Container Profit Report</h3></div>
+      <div className="drill-summary-grid">
+        <div className="drill-summary">
+          <div className="summary-item"><p className="small">Total Landing Cost</p><h2>{formatMoney(masterMetrics.landing)}</h2></div>
+          <div className="summary-item"><p className="small">Total Expected Revenue</p><h2>{formatMoney(masterMetrics.expRev)}</h2></div>
+          <div className="summary-item"><p className="small">Total Expected Profit</p><h2 style={{color: masterMetrics.expProf >= 0 ? 'green' : 'red'}}>{formatMoney(masterMetrics.expProf)}</h2></div>
+          <div className="summary-item"><p className="small">Actual Revenue</p><h2>{formatMoney(masterMetrics.actRev)}</h2></div>
+          <div className="summary-item"><p className="small">Actual Profit</p><h2 style={{color: masterMetrics.actProf >= 0 ? 'green' : 'red'}}>{formatMoney(masterMetrics.actProf)}</h2></div>
+        </div>
+      </div>
+      
+      <ContainerProfitTable 
+        data={profitReportData} 
+        onRowClick={(row) => setSelectedItem(row)} 
+        goBack={goBack} 
+        dateRange={dateRange}
+        setDateRange={setDateRange} 
+      />
     </div>
   );
 };

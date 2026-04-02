@@ -1,54 +1,53 @@
 import { useEffect, useState, useMemo } from "react";
 import { ExpenseServices } from "../../../../../services/Trip/expense";
+import { calculateWeightedRate } from "../../../../../utils/financeMath";
+
 
 export const useTripFinance = (tripUuid) => {
   const [financeData, setFinanceData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!tripUuid) return;
+    if (!tripUuid) {
+      setFinanceData([]);
+      return;
+    }
 
-    const fetchFinance = async () => {
+    const fetchAllFinancePages = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const res = await ExpenseServices.list({ trip_uuid: tripUuid });
-        setFinanceData(res.data?.record?.data || res.data?.data || []);
+        let allRecords = [];
+        let page = 1;
+        let hasMore = true;
+
+        while (hasMore) {
+          const res = await ExpenseServices.list({ trip_uuid: tripUuid, page, per_page: 100 });
+          const records = res.data?.record?.data || res.data?.data || [];
+          
+          allRecords = [...allRecords, ...records];
+
+          const lastPage = res.data?.record?.last_page || 1;
+          if (page >= lastPage || records.length === 0) {
+            hasMore = false;
+          } else {
+            page++;
+          }
+        }
+        
+        setFinanceData(allRecords);
       } catch (err) {
-        console.error("Failed to fetch finance", err);
+        console.error("Failed to fetch finance for trip:", tripUuid, err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFinance();
+    fetchAllFinancePages();
   }, [tripUuid]);
-  
-const avgContainerRate = useMemo(() => {
-  const containerPayments = financeData.filter(
-    (item) =>
-      Number(item.is_container_payment) === 1 &&
-      item.currency === "USD" &&
-      Number(item.rate) > 0
-  );
 
-  if (!containerPayments.length) return 0;
-
-  const totals = containerPayments.reduce((acc, item) => {
-    const usd = Number(item.amount) || 0;
-    const rate = Number(item.rate) || 0;
-    
-    return {
-      usd: acc.usd + usd,
-      ngn: acc.ngn + (usd * rate)
-    };
-  }, { usd: 0, ngn: 0 });
-
-  if (totals.usd === 0) return 0;
-
-
-  return totals.ngn / totals.usd; 
-}, [financeData]);
-
+  const avgContainerRate = useMemo(() => {
+    return calculateWeightedRate(financeData);
+  }, [financeData]);
 
   return {
     financeData,
@@ -56,6 +55,4 @@ const avgContainerRate = useMemo(() => {
     avgContainerRate,
     loading,
   };
-
-  
 };

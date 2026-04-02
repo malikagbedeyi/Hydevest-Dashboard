@@ -61,8 +61,8 @@ const fetchData = async (pageNum = page) => {
       const totalGeneralNGN = expenses.reduce((sum, item) => {
         return Number(item.is_container_payment) === 0 ? sum + Number(item.total_amount || 0) : sum;
       }, 0);
-
-      const totalCount = res.data?.record?.total || containers.length;
+      
+      const totalCount = containers.length;
       const share = totalCount > 0 ? (totalGeneralNGN / totalCount) : 0;
       
       setGeneralShare(share);

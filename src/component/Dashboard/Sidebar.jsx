@@ -15,7 +15,6 @@ useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
     if (userData) {
       const perms = userData.permissions?.map(p => p.name) || [];
-      console.log("EXACT PERMISSIONS FROM API:", perms); // <--- ADD THIS
       setUserPermissions(perms);
       setIsSuperuser(userData.is_superuser === 1);
     }

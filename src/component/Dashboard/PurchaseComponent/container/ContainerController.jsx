@@ -70,13 +70,16 @@ useEffect(() => {
 }, [breadcrumb]);
 
 
+/* =========================
+   FETCH LOGIC (ALIGNED WITH TRIPPRECISION)
+========================= */
 const fetchContainersWithFinance = async (pageNum = page) => {
   try {
     setLoading(true);
     const params = { ...filters, page: pageNum };
     const containerRes = await ContainerServices.list(params);
     const containerData = containerRes.data?.record?.data || [];
-    const containerRec = containerRes.data
+    const containerRec = containerRes.data;
 
     const tripUuids = [...new Set(containerData.map((c) => c.trip?.trip_uuid).filter(Boolean))];
     const financeMap = {}; 
@@ -87,19 +90,27 @@ const fetchContainersWithFinance = async (pageNum = page) => {
         const records = res.data?.record?.data || res.data?.data || [];
         
         const totals = records.reduce((acc, item) => {
-          if (Number(item.is_container_payment) === 1) {
+          // Identify payments specifically for containers in USD
+          if (Number(item.is_container_payment) === 1 && item.currency === "USD") {
             acc.purchaseNgn += Number(item.total_amount || 0);
             acc.purchaseUsd += Number(item.amount || 0);
-          } else {
+          } 
+          // Identify general trip overhead (NOT container specific payments)
+          else if (Number(item.is_container_payment) === 0) {
             acc.generalOverhead += Number(item.total_amount || 0);
           }
           return acc;
         }, { purchaseNgn: 0, purchaseUsd: 0, generalOverhead: 0 });
 
+        // IMPORTANT: Use the total container count for this trip to divide overhead
+        // If the API provides a total count for the trip, use it here. 
+        // Otherwise, we count from the current dataset.
         const countInTrip = containerData.filter(c => c.trip?.trip_uuid === uuid).length;
 
         financeMap[uuid] = {
+          // Weighted Average Rate (Total NGN spent / Total USD bought)
           rate: totals.purchaseUsd > 0 ? totals.purchaseNgn / totals.purchaseUsd : 0,
+          // Shared Overhead per container
           overheadShare: countInTrip > 0 ? totals.generalOverhead / countInTrip : 0
         };
       } catch (err) { console.error("Map failed", err); }
@@ -107,10 +118,43 @@ const fetchContainersWithFinance = async (pageNum = page) => {
 
     setTripRates(financeMap); 
     setContainers(containerData);
-    setMatrix(containerRec)
+    setMatrix(containerRec);
     setPagination(containerRes.data?.record || {});
-  } catch (err) { console.error(err); } finally { setLoading(false); }
+  } catch (err) { 
+    console.error(err); 
+  } finally { 
+    setLoading(false); 
+  }
 };
+
+/* =========================
+   SUMMARY DATA CALCULATION (ALIGNED)
+========================= */
+const summaryData = useMemo(() => {
+  if (containers.length === 0) return { totalLandingCost: 0, totalPieces: 0, count: 0 };
+
+  return containers.reduce((acc, item) => {
+    const tripId = item.trip?.trip_uuid || item.trip_uuid;
+    const finance = tripRates[tripId] || { rate: 0, overheadShare: 0 };
+    
+    const pieces = Number(item.pieces || 0);
+    const unitPrice = Number(item.unit_price_usd || 0);
+    const shipping = Number(item.shipping_amount_usd || 0);
+    const surcharge = Number(item.surcharge_ngn || 0); // Correctly pulling from API field
+
+    // Formula: ((UnitPrice * Pieces) + Shipping) * WeightedRate + Surcharge + (TripOverhead / ContainerCount)
+    const amountUSD = (unitPrice * pieces) + shipping;
+    const landingCost = (amountUSD * finance.rate) + surcharge + finance.overheadShare;
+
+    return {
+      totalLandingCost: acc.totalLandingCost + landingCost,
+      totalPieces: acc.totalPieces + pieces,
+      totalUnitPrice: acc.totalUnitPrice + unitPrice,
+      totalQuotedPrice: acc.totalQuotedPrice + Number(item.quoted_price_usd || 0), 
+      count: acc.count + 1
+    };
+}, {totalLandingCost: 0, totalPieces: 0, totalUnitPrice: 0, totalQuotedPrice: 0, count: 0});
+}, [containers, tripRates]);
 
   /* =========================
      EFFECTS
@@ -144,28 +188,6 @@ const fxRate = selectedContainer
    CALCULATE DRILL SUMMARY (FIXED AVERAGES)
 ========================= */
 const [totalGeneralNGN, setTotalGeneralNGN] = useState(0);
-const summaryData = useMemo(() => {
-  if (containers.length === 0) return { totalLandingCost: 0, totalPieces: 0, count: 0 };
-
-  return containers.reduce((acc, item) => {
-    const tripId = item.trip?.trip_uuid || item.trip_uuid;
-    const finance = tripRates[tripId] || { rate: 0, overheadShare: 0 };
-    
-    const pieces = Number(item.pieces || 0);
-    const amountUSD = (Number(item.unit_price_usd || 0) * pieces) + Number(item.shipping_amount_usd || 0);
-    const surcharge = item.funding?.toLowerCase() === "partner" ? Number(item.surcharge_ngn || 0) : 0;
-    const containerNGN = (amountUSD * finance.rate) + surcharge;
-    const landingCost = containerNGN + finance.overheadShare;
-
-    return {
-      totalLandingCost: acc.totalLandingCost + landingCost,
-      totalPieces: acc.totalPieces + pieces,
-      totalUnitPrice: acc.totalUnitPrice + Number(item.unit_price_usd || 0),
-      totalQuotedPrice: acc.totalQuotedPrice + Number(item.quoted_price_usd || 0), 
-      count: acc.count + 1
-    };
-}, {totalLandingCost: 0,totalPieces: 0,totalUnitPrice: 0,totalQuotedPrice: 0,count: 0});
-}, [containers, tripRates]);
 
 const landingCost = summaryData.count > 0 ? (summaryData.totalLandingCost) : 0
 
