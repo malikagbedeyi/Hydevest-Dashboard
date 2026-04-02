@@ -79,7 +79,6 @@ useEffect(() => {
       path: "/dashboard/expensify",
       icons: BarChart2,
       label: "Expensify",
-      isModulePage: true,
       permission: "Fontend_can_view_expensify",
       submenu: [
         { path: "/dashboard/finance", label: "Finance", permission: "Fontend_can.view.finance" },
