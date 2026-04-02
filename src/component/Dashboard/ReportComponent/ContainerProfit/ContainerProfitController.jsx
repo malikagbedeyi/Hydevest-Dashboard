@@ -75,7 +75,6 @@ const ContainerProfitController = ({ goBack }) => {
   const profitReportData = useMemo(() => {
     if (!containers.length) return [];
 
-    // First, filter based on criteria (Date and Presale existence)
     return containers
       .filter((container) => {
         if (dateRange.from || dateRange.to) {
@@ -110,7 +109,7 @@ const surcharge =
     ? Number(container.surcharge_ngn || 0)
     : 0;
         
-        // Exact Math formula used in TripDetails
+
         const amountUSD = (unitPrice * pieces) + shipping;
         const landingCost = (amountUSD * fxRate) + surcharge + overheadShare;
 
@@ -147,7 +146,6 @@ const surcharge =
   });
 
   /* ================= 3. RENDER LOGIC ================= */
-  // Move selectedItem check above loading to prevent UI resets
   if (selectedItem) {
     return (
       <div className="drilldown">
@@ -162,7 +160,7 @@ const surcharge =
   if (loading) {
     return (
       <div className="drilldown" style={{ textAlign: 'center', padding: '10vw' }}>
-        <h2 style={{ color: '#581aae' }}>Aggregating Live Data...</h2>
+        <h2 style={{ color: '#581aae' }}>Reloading...</h2>
       </div>
     );
   }

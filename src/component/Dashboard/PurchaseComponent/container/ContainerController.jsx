@@ -10,6 +10,7 @@ import { TripServices } from "../../../../services/Trip/trip";
 import { useTripFinance } from "../trip/hook/useTripFinance";
 import { ExpenseServices } from "../../../../services/Trip/expense";
 import ContainerLog from "./ContainerLog";
+import { calculateWeightedRate } from "../../../../utils/financeMath";
 
 const ContainerController = ({ breadcrumb, navigate, goBackTo }) => {
   const [view, setView] = useState("table");
@@ -84,37 +85,33 @@ const fetchContainersWithFinance = async (pageNum = page) => {
     const tripUuids = [...new Set(containerData.map((c) => c.trip?.trip_uuid).filter(Boolean))];
     const financeMap = {}; 
 
-    for (const uuid of tripUuids) {
+    await Promise.all(tripUuids.map(async (uuid) => {
       try {
-        const res = await ExpenseServices.list({ trip_uuid: uuid });
-        const records = res.data?.record?.data || res.data?.data || [];
-        
-        const totals = records.reduce((acc, item) => {
-          // Identify payments specifically for containers in USD
-          if (Number(item.is_container_payment) === 1 && item.currency === "USD") {
-            acc.purchaseNgn += Number(item.total_amount || 0);
-            acc.purchaseUsd += Number(item.amount || 0);
-          } 
-          // Identify general trip overhead (NOT container specific payments)
-          else if (Number(item.is_container_payment) === 0) {
-            acc.generalOverhead += Number(item.total_amount || 0);
-          }
-          return acc;
-        }, { purchaseNgn: 0, purchaseUsd: 0, generalOverhead: 0 });
+        const [expRes, allContRes] = await Promise.all([
+          ExpenseServices.list({ trip_uuid: uuid, per_page: 100 }),
+          ContainerServices.list({ trip_uuid: uuid, per_page: 100 }) 
+        ]);
 
-        // IMPORTANT: Use the total container count for this trip to divide overhead
-        // If the API provides a total count for the trip, use it here. 
-        // Otherwise, we count from the current dataset.
-        const countInTrip = containerData.filter(c => c.trip?.trip_uuid === uuid).length;
+        const records = expRes.data?.record?.data || expRes.data?.data || [];
+        const tripContainers = allContRes.data?.record?.data || [];
+        
+
+        const weightedRate = calculateWeightedRate(records);
+        
+        const totalGeneralOverhead = records.reduce((sum, item) => {
+          return Number(item.is_container_payment) === 0 ? sum + Number(item.total_amount || 0) : sum;
+        }, 0);
+
+        const actualTripTotalCount = allContRes.data?.record?.total || tripContainers.length;
 
         financeMap[uuid] = {
-          // Weighted Average Rate (Total NGN spent / Total USD bought)
-          rate: totals.purchaseUsd > 0 ? totals.purchaseNgn / totals.purchaseUsd : 0,
-          // Shared Overhead per container
-          overheadShare: countInTrip > 0 ? totals.generalOverhead / countInTrip : 0
+          rate: weightedRate,
+          overheadShare: actualTripTotalCount > 0 ? totalGeneralOverhead / actualTripTotalCount : 0
         };
-      } catch (err) { console.error("Map failed", err); }
-    }
+      } catch (err) {
+        console.error(`Finance mapping failed for trip ${uuid}:`, err);
+      }
+    }));
 
     setTripRates(financeMap); 
     setContainers(containerData);

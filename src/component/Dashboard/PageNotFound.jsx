@@ -27,10 +27,10 @@ const PageNotFound = () => {
             <span>Go Back</span>
           </button>
           
-          <button className="create" onClick={() => navigate('/dashboard/overview')}>
+          {/* <button className="create" onClick={() => navigate('/dashboard/overview')}>
             <Home />
             <span>Overview</span>
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

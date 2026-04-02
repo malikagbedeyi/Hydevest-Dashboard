@@ -113,6 +113,13 @@ useEffect(() => {
         { path: "/dashboard/partnerlot", label: "Partner Lot", permission: "Fontend_can.view.partnerlots" },
       ],
     },
+      {
+      path: "/dashboard/hynvest",
+      icons: TrendingUp,
+      label: " Hynvest",
+      isModulePage: true,
+      permission: "Fontend_can_view_hynvest",
+    },
     {
       path: "/dashboard/accounts",
       icons: UserCheck,

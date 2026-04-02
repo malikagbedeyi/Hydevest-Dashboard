@@ -83,7 +83,7 @@ const OverViewController = () => {
               <button style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/purchase", "/dashboard/trip", "create")}><PlaneTakeoff size={18} /> New Trip</button>
               <button style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/sales", "/dashboard/pre-sale", "create")}><Tag size={18} /> New Presale</button>
               <button className="action-btn-animated" style={{ background: '#581aae', border: 'none', color: '#fff', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/sales", "/dashboard/sales", "create")}><PlusCircle size={18} /> New Sale</button>
-              <button style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/sales", "/dashboard/recovery", "create")}><DollarSign size={18} /> Add Payment</button>
+              <button style={{ background: '#fff', border: '1px solid #581aae', color: '#581aae', padding: '12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => handleAction("/dashboard/sales", "/dashboard/recovery", "create")}><DollarSign size={18} /> Record Customer Payment</button>
             </div>
           </div>
 

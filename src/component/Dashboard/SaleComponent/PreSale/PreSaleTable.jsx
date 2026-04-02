@@ -127,9 +127,12 @@ const currentData = preSales;
                   </td>
                 </tr>
               ) : (
-                currentData.map((sale, idx) => (
+                currentData.map((sale, idx) => {
+
+  const serialNumber = (page - 1) * 10 + (idx + 1);
+  return (
                   <tr key={sale.pre_sale_uuid} onClick={() => onEdit(sale)}>
-                    <td>{  idx + 1}</td>
+                    <td>{String(serialNumber).padStart(2, "0")}</td>
                     <td>{sale.sale_option}</td>
                     {/* <td>{Array.isArray(sale.container?.title)? sale.container.title.join(", "): sale.container?.title || "—"}</td> */}
                     <td>TRN-{sale.container.tracking_number}</td>
@@ -148,7 +151,8 @@ const currentData = preSales;
                     <td>{sale?.creator_info?.firstname} {sale?.creator_info?.lastname}</td>
                     <td>{formatDate(sale.created_at)}</td>
                   </tr>
-                ))
+                )
+                  })
               )}
             </tbody>
           </table>

@@ -62,7 +62,7 @@ const calculateQuotedContainerNGN = (item, rate) => {
     <div className="userTable">
       <div className="table-wrap">
         <table className="table" style={  permissionAssign   ? { width: "100%", minWidth: "100%", maxWidth: "100%" }:
-        { width: "130%", minWidth: "170%", maxWidth: "170%" }  }>
+        { width: "200%", minWidth: "200%", maxWidth: "200%" }  }>
           <thead>
             <tr>
               <th>S/N</th>
@@ -87,10 +87,11 @@ const calculateQuotedContainerNGN = (item, rate) => {
               <th>Quoted Amount (₦)</th>
                </>
   )}
+    <th>Hide Type</th>
+            <th>Trip Status</th>
               <th>Created By</th>
               <th>Created Date</th>
               
-              {/* <th>Actions</th> */}
             </tr>
           </thead>
 
@@ -107,26 +108,24 @@ const calculateQuotedContainerNGN = (item, rate) => {
   const itemShare = finance?.overheadShare || 0;
   const containerNGN = calculateContainerNGN(item, itemRate);
   const rowLandingCost = containerNGN + itemShare;
+  const serialNumber = (pagination.current_page - 1) * pagination.per_page + (idx + 1);
+
       return (
 <tr key={item.container_uuid} onClick={() => onRowClick(item)} style={{ cursor: "pointer" }}>
 
-  <td>{String(idx + 1).padStart(2, "0")}</td>
+<td>{String(serialNumber).padStart(2, "0")}</td>
   <td>{item.status === 1 ? (<span style={{ color: "green" }}>Approved</span>) : (<span style={{ color: "orange" }}>Pending</span>)}</td>
   <td>{item.trip.title || "-"}</td>
   <td>{(item.tracking_number ? `TRN-${item.tracking_number}` : "-")}</td>
   <td>{Number(item.pieces || 0).toLocaleString()}</td>
   <td>{formatMoney(item.average_weight)}</td>
   <td>{formatMoney(item.max_weight)}</td>
+  
 
   {permissionAssign ? (
     <>
-      {/* <td>$****</td> 
-      <td>$****</td> 
-      <td>₦****</td> 
-      <td>₦****</td> 
-      <td>$****</td> 
-      <td>$****</td> 
-      <td>₦****</td>  */}
+    <td>{(item.source_nation)}</td>
+      <td> <span style={{ color: item.trip.progress === "NOT STARTED"  ? "red"  : item.trip.progress === "COMPLETED" ? "green": "orange"}}>{item.trip.progress}</span></td>
       <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
     </>
   ) : (
@@ -138,6 +137,8 @@ const calculateQuotedContainerNGN = (item, rate) => {
       <td>${item.quoted_price_usd || 0}</td>  
       <td>${formatMoneyUSD(calculateQuotedContainerUSD(item))}</td>
       <td>₦{itemRate > 0 ? formatMoney(calculateQuotedContainerNGN(item, itemRate)) : "0.00"}</td>
+       <td>{(item.source_nation)}</td>
+            <td> <span style={{ color: item.trip.progress === "NOT STARTED"  ? "red"  : item.trip.progress === "COMPLETED" ? "green": "orange"}}>{item.trip.progress}</span></td>
       <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
     </>
   )}

@@ -99,9 +99,14 @@ const RecoveryTable = ({
                   </td>
                 </tr>
               ) : (
-                tableData.map((rec, idx) => (
+                tableData.map((rec, idx) => {
+  const perPage = pagination.limit || 10;
+  const currentPage = pagination.page || 1;
+  const serialNumber = (currentPage - 1) * perPage + (idx + 1);
+
+  return (
                   <tr key={rec.id} onClick={() => handleRowClick?.(rec)}>
-                    <td>{(pagination.page - 1) * pagination.limit + idx + 1} </td>
+                    <td>{String(serialNumber).padStart(2, "0")}</td>
                     <td>{rec.sale?.sale_unique_id}</td>
                     <td>TRN-{rec.container?.tracking_number || "N/A"}</td>
                     <td>{rec.customerName}</td>
@@ -125,12 +130,11 @@ const RecoveryTable = ({
                       </button>
                     </td>
                   </tr>
-                ))
+                 )})
               )}
             </tbody>
           </table>
 
-          {/* Backend Pagination */}
           {pagination.totalPages > 1 && (
             <div className="pagination">
               <button
