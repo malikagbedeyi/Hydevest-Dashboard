@@ -1,152 +1,105 @@
 import React, { useState } from 'react';
 
-const ReceivableDrilldowm = ({ data, goBack }) => {
-  const [activeTab, setActiveTab] = useState("presale");
-  const [palletPage, setPalletPage] = useState(1);
-  const itemsPerPage = 5;
+const ReceivableDrilldowm = ({ trip, goBack }) => {
+  const [activeTab, setActiveTab] = useState("containers");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Formatters
   const formatUSD = (val) => `$${Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  const formatNGN = (val) => `₦${Number(val || 0).toLocaleString()}`;
   const formatNumber = (val) => Number(val || 0).toLocaleString();
 
-  // Pallet Pagination Logic
-  const pallets = data?.pallets || [];
-  const totalPalletPages = Math.ceil(pallets.length / itemsPerPage);
-  const paginatedPallets = pallets.slice((palletPage - 1) * itemsPerPage, palletPage * itemsPerPage);
+  // Pagination for the inner table
+  const totalItems = trip.tripPresales.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const currentData = trip.tripPresales.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="drilldown">
-      {/* 1. TOP METRICS GRID */}
+      {/* 1. TRIP SUMMARY GRID */}
       <div className="drill-summary-grid">
         <div className="drill-summary">
+          <div className="summary-item"><p className="small">Trip</p><h2>{trip.trip_unique_id}</h2></div>
+          <div className="summary-item"><p className="small">Total Purchase Pieces</p><h2>{formatUSD(trip.totalPieces)}</h2></div>
+          <div className="summary-item"><p className="small">Total Loaded Pieces</p><h2>{formatUSD(trip.totalActualLoaded)}</h2></div>
           <div className="summary-item">
-            <p className="small">Contract Amount</p>
-            <h2>{formatUSD(data.contractAmount)}</h2>
-          </div>
-
-          <div className="summary-item">
-            <p className="small">Actual Loaded Value</p>
-            <h2>{formatUSD(data.actualLoadedValue)}</h2>
-          </div>
-
-          <div className="summary-item">
-            <p className="small">Supplier Receivable</p>
-            <h2 style={{ color: data.receivable > 0 ? "#581aae" : "green" }}>
-              {formatUSD(data.receivable)}
-            </h2>
-          </div>
-
-          <div className="summary-item">
-            <p className="small">Payment Status</p>
-            <h2 style={{ color: data.statusColor }}>
-              {data.status}
-            </h2>
+            <p className="small">Total Shortfall</p>
+            <h2 style={{color: trip.receivable > 0 ? '#581aae' : 'green'}}>{formatUSD(trip.receivable)}</h2>
           </div>
         </div>
       </div>
 
-      {/* 2. TABBED SECTION */}
       <section style={{ background: "#fff", padding: "20px", borderRadius: "16px", marginTop: "20px" }}>
         <div className="tab-section">
           <div className="tab-header">
             <button 
-              className={activeTab === "presale" ? "active" : ""} 
-              onClick={() => setActiveTab("presale")}
+              className={activeTab === "containers" ? "active" : ""} 
+              onClick={() => setActiveTab("containers")}
             >
-              Presale Record
-            </button>
-            <button 
-              className={activeTab === "pallet" ? "active" : ""} 
-              onClick={() => setActiveTab("pallet")}
-            >
-              Pallet Record ({pallets.length})
+              Containers ({totalItems})
             </button>
           </div>
 
           <div className="tab-body" style={{ marginTop: '20px' }}>
-            
-            {/* TAB 1: PRESALE RECORD (TABLE FORMAT) */}
-            {activeTab === "presale" && (
-              <div className="userTable">
-                <div className="table-wrap">
-                  <table className="table" style={{ width: "130%", maxWidth: "130%" }}>
-                    <thead>
-                      <tr>
-                        <th>Tracking Number</th>
-                        <th>Container Unique ID</th>
-                        <th>Presale Unique ID</th>
-                        <th>Sale Option</th>
-                        <th>Source Nation</th>
-                        <th>Contract Pieces</th>
-                        <th>Actual Loaded Pieces</th>
-                        <th>Unit Price (USD)</th>
-                        <th>Expected Revenue (NGN)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+            <div className="userTable">
+              <div className="table-wrap">
+                <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
+                  <thead>
                     <tr>
-                       <td style={{ fontWeight: '600' }}>TRN-{data.container?.tracking_number}</td>
-                      <td>{data.container?.container_unique_id}</td>
-                      <td>{data.pre_sale_unique_id}</td>
-                      <td>{data.sale_option}</td>
-                      <td>{data.container?.source_nation || 'N/A'}</td>
-                      <td>{formatNumber(data.container?.pieces)}</td>
-                      <td>{formatNumber(data.container_loaded_pieces)}</td>
-                      <td>{formatUSD(data.container?.unit_price_usd)}</td>
-                      <td style={{ color: "green", fontWeight: "600" }}>{formatNGN(data.expected_sales_revenue)}</td>
+                      <th>S/N</th>
+                      <th>Container ID</th>
+                      <th>Tracking No</th>
+                      <th>Purchase Pieces</th>
+                      <th>Loaded Pieces</th>
+                      <th>Unit Price</th>
+                      <th>Shortfall ($)</th>
+                      <th>Status</th>
                     </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+                  </thead>
+                  <tbody>
+                    {currentData.map((p, idx) => {
+                      const contractVal = Number(p.container?.pieces || 0) * Number(p.container?.unit_price_usd || 0);
+                      const loadedVal = Number(p.container_loaded_pieces || 0) * Number(p.container?.unit_price_usd || 0);
+                      const rowShortfall = contractVal - loadedVal;
+                      
+                      // Calculate continuous S/N
+                      const serialNumber = ((currentPage - 1) * itemsPerPage) + (idx + 1);
 
-            {/* TAB 2: PALLET RECORD (TABLE FORMAT) */}
-            {activeTab === "pallet" && (
-              <div className="userTable">
-                <div className="table-wrap">
-                  <table className="table" style={{ width: "100%", maxWidth: "100%" }}>
-                    <thead>
-                      <tr>
-                        <th>S/N</th>
-                        <th>Pallet ID</th>
-                        <th>Pieces per Pallet</th>
-                        <th>Number of Pallets</th>
-                        <th>Total Pieces</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedPallets.length > 0 ? paginatedPallets.map((pallet, idx) => (
-                        <tr key={pallet.id}>
-                          <td>{String((palletPage - 1) * itemsPerPage + idx + 1).padStart(2, '0')}</td>
-                          <td>{pallet.pallet_uuid?.slice(0, 8).toUpperCase() || 'N/A'}</td>
-                          <td>{formatNumber(pallet.pallet_pieces)}</td>
-                          <td>{formatNumber(pallet.no_of_pallets)}</td>
-                          <td style={{ fontWeight: "600" }}>{formatNumber(pallet.pallet_pieces * pallet.no_of_pallets)}</td>
+                      return (
+                        <tr key={p.id}>
+                          <td>{String(serialNumber).padStart(2, '0')}</td>
+                          <td>{p.container?.container_unique_id}</td>
+                          <td>TRN-{p.container?.tracking_number}</td>
+                          <td>{formatNumber(p.container?.pieces)}</td>
+                          <td>{formatNumber(p.container_loaded_pieces)}</td>
+                          <td>{formatUSD(p.container?.unit_price_usd)}</td>
+                          <td style={{ fontWeight: '600' }}>{formatUSD(rowShortfall)}</td>
+                          <td>
+                            <span style={{ color: rowShortfall <= 0 ? "green" : "orange" }}>
+                              {rowShortfall <= 0 ? "Settled" : "Outstanding"}
+                            </span>
+                          </td>
                         </tr>
-                      )) : (
-                        <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>No pallet records found</td></tr>
-                      )}
-                    </tbody>
-                  </table>
-                  
-                  {pallets.length > itemsPerPage && (
-                    <div className="pagination">
-                      <button disabled={palletPage === 1} onClick={() => setPalletPage(p => p - 1)}>Previous</button>
-                      <span>Page {palletPage} of {totalPalletPages}</span>
-                      <button disabled={palletPage >= totalPalletPages} onClick={() => setPalletPage(p => p + 1)}>Next</button>
-                    </div>
-                  )}
-                </div>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {totalPages > 1 && (
+                  <div className="pagination">
+                    <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Prev</button>
+                    <span>{currentPage} / {totalPages}</span>
+                    <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="btn-row">
-        <button className="cancel" onClick={goBack}>Previous</button>
+      <div className="btn-row" style={{marginTop: '20px'}}>
+        <button className="cancel" onClick={goBack}>Back to Table</button>
       </div>
     </div>
   );

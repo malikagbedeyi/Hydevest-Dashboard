@@ -4,32 +4,47 @@ import "../../../../assets/Styles/dashboard/table.scss";
 import ReceivableTable from "./ReceivableTable";
 import ReceivableDrilldowm from "./ReceivableDrilldowm";
 import { PresaleServices } from "../../../../services/Sale/presale";
+import { TripServices } from "../../../../services/Trip/trip";
 
 const ReceivableController = ({ goBack }) => {
+  const [trips, setTrips] = useState([]);
   const [presales, setPresales] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [selectedTrip, setSelectedTrip] = useState(null);
 
   /* ================= FETCH DATA (AGGRESSIVE BYPASS) ================= */
-  const fetchAggressively = async () => {
-    setLoading(true);
-    let allData = [];
+  const fetchAggressively = async (service, params = {}) => {
+    let allRecords = [];
     let page = 1;
     let hasMore = true;
-
-    try {
-      while (hasMore) {
-        const res = await PresaleServices.list({ page, per_page: 100 });
+    while (hasMore) {
+      try {
+        const res = await service.list({ ...params, page, per_page: 100 });
         const records = res?.data?.record?.data || [];
-        allData = [...allData, ...records];
-
+        allRecords = [...allRecords, ...records];
+        
         if (page >= (res?.data?.record?.last_page || 1) || records.length === 0) {
           hasMore = false;
         } else {
           page++;
         }
+      } catch (err) {
+        console.error("Loop fetch error:", err);
+        hasMore = false;
       }
-      setPresales(allData);
+    }
+    return allRecords;
+  };
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [allTrips, allPresales] = await Promise.all([
+        fetchAggressively(TripServices),
+        fetchAggressively(PresaleServices)
+      ]);
+      setTrips(allTrips);
+      setPresales(allPresales);
     } catch (err) {
       console.error("Error fetching receivable data", err);
     } finally {
@@ -37,88 +52,101 @@ const ReceivableController = ({ goBack }) => {
     }
   };
 
-  useEffect(() => { fetchAggressively(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  /* ================= AGGREGATION LOGIC ================= */
+  /* ================= AGGREGATION LOGIC (FIXED) ================= */
   const reportData = useMemo(() => {
-    return presales.map((item) => {
-      const unitPrice = Number(item.container?.unit_price_usd || 0);
-      const contractPieces = Number(item.container?.pieces || 0);
-      const loadedPieces = Number(item.container_loaded_pieces || 0);
+    return trips.map((trip) => {
+      // Find all presale records belonging to this specific trip
+      const tripPresales = presales.filter(p => Number(p.container?.trip_id) === Number(trip.id));
+      
+      // Calculate Contract Amount (Price * Pieces)
+      const totalContract = tripPresales.reduce((sum, p) => 
+        sum + (Number(p.container?.unit_price_usd || 0) * Number(p.container?.pieces || 0)), 0);
 
-      const contractAmount = unitPrice * contractPieces;
-      const actualLoadedValue = unitPrice * loadedPieces;
-      const receivable = contractAmount - actualLoadedValue;
+      // ✅ FIXED: Added initial value 0 and proper syntax
+      const totalPieces = tripPresales.reduce((sum, p) => 
+        sum + Number(p.container?.pieces || 0), 0);
+      
+      // Calculate Actual Value based on loaded pieces
+      const totalActualLoaded = tripPresales.reduce((sum, p) => 
+        sum + (Number(p.container?.unit_price_usd || 0) * Number(p.container_loaded_pieces || 0)), 0);
+
+      const receivable = totalContract - totalActualLoaded;
 
       return {
-        ...item,
-        contractAmount,
-        actualLoadedValue,
+        ...trip,
+        totalContract,
+        totalActualLoaded,
         receivable,
-        status: receivable <= 0 ? "Settled" : "Not Settled",
-        statusColor: receivable <= 0 ? "green" : "red"
+        totalPieces,
+        tripPresales,
+        status: receivable <= 0 ? "Settled" : "Outstanding",
+        statusColor: receivable <= 0 ? "green" : "orange"
       };
     });
-  }, [presales]);
+  }, [trips, presales]);
 
-  /* ================= MASTER METRICS (UPDATED) ================= */
+  /* ================= MASTER METRICS ================= */
   const masterMetrics = useMemo(() => {
-    const totals = reportData.reduce((acc, curr) => ({
-      totalContract: acc.totalContract + curr.contractAmount,
-      totalActual: acc.totalActual + curr.actualLoadedValue,
-      totalReceivable: acc.totalReceivable + curr.receivable
-    }), { totalContract: 0, totalActual: 0, totalReceivable: 0 });
-
-    return {
-      ...totals,
-      // Global status logic
-      paymentStatus: totals.totalReceivable <= 0 ? "Settled" : "Outstanding",
-      statusColor: totals.totalReceivable <= 0 ? "green" : "orange"
-    };
+    return reportData.reduce((acc, curr) => ({
+      contract: acc.contract + curr.totalContract,
+      actual: acc.actual + curr.totalActualLoaded,
+      receivable: acc.receivable + curr.receivable
+    }), { contract: 0, actual: 0, receivable: 0 });
   }, [reportData]);
 
-  const formatUSD = (val) => `$${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  const formatUSD = (val) => `$${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  if (loading) return <div className="drilldown"><p>Loading aggressive data sync...</p></div>;
+  if (loading) {
+    return (
+      <div className="drilldown" style={{ textAlign: 'center', padding: '10vw' }}>
+        <h2 style={{ color: '#581aae' }}>Syncing Global Records...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="drilldown">
-      {!selectedRecord ? (
+      {!selectedTrip ? (
         <>
           <div className="section-report-head"><h3>Supplier Receivable Report</h3></div>
-
+          
           <div className="drill-summary-grid">
             <div className="drill-summary">
               <div className="summary-item">
                 <p className="small">Total Amount</p>
-                <h2>{formatUSD(masterMetrics.totalContract)}</h2>
+                <h2>{formatUSD(masterMetrics.contract)}</h2>
               </div>
               <div className="summary-item">
                 <p className="small">Total Actual Loaded</p>
-                <h2>{formatUSD(masterMetrics.totalActual)}</h2>
+                <h2>{formatUSD(masterMetrics.actual)}</h2>
               </div>
               <div className="summary-item">
-                <p className="small">Total Supplier Receivable</p>
-                <h2 style={{ color: "#581aae" }}>{formatUSD(masterMetrics.totalReceivable)}</h2>
+                <p className="small">Global Receivable</p>
+                <h2 style={{ color: "#581aae" }}>{formatUSD(masterMetrics.receivable)}</h2>
               </div>
-              {/* Added Payment Status Metric */}
               <div className="summary-item">
-                <p className="small">Payment Status</p>
-                <h2 style={{ color: masterMetrics.statusColor }}>{masterMetrics.paymentStatus}</h2>
+                <p className="small">Global Status</p>
+                <h2 style={{ color: masterMetrics.receivable <= 0 ? 'green' : 'orange' }}>
+                  {masterMetrics.receivable <= 0 ? 'Settled' : 'Outstanding'}
+                </h2>
               </div>
             </div>
           </div>
 
-          <ReceivableTable
+          <ReceivableTable 
             data={reportData} 
-            onRowClick={setSelectedRecord} 
+            onRowClick={setSelectedTrip} 
             goBack={goBack} 
           />
         </>
       ) : (
         <ReceivableDrilldowm 
-          data={selectedRecord} 
-          goBack={() => setSelectedRecord(null)} 
+          trip={selectedTrip} 
+          goBack={() => setSelectedTrip(null)} 
         />
       )}
     </div>
