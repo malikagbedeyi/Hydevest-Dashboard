@@ -103,7 +103,7 @@ const FinanceController = ({ openSubmenu, autoOpenCreate, setAutoOpenCreate }) =
 
                   <div className="import-input"><p>Import</p></div>
                   <div className="import-input"><p>Export</p></div>
-                  <button onClick={() => setView("create")}>Create Finance</button>
+                  <button onClick={() => setView("create")}>Add Item</button>
                 </div>
               </div>
             </div>

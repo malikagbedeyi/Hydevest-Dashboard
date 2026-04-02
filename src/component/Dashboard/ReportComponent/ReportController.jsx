@@ -6,6 +6,7 @@ import ContainerSaleReport from "./ContainerSale/ContainerSaleReport";
 import PayableController from "./SupplierPayables/PayableController";
 import DebtController from "./CustomerDebt/DebtController";
 import ContainerProfitController from "./ContainerProfit/ContainerProfitController";
+import ReceivableController from "./SupplierReceivable/ReceivableController";
 
 const reportTypes = [
   { icon: Tag, label: "Container Sales", submenu: "container-sale", ready: true ,permissions:"Fontend_can_view_contaner_sale_reports"},
@@ -105,6 +106,7 @@ const ReportController = () => {
             {activeReport === "supp-payable" && <PayableController goBack={resetReportView} />}
             {activeReport === "customer-dept" && <DebtController goBack={resetReportView} />}
             {activeReport === "container-profit" && <ContainerProfitController goBack={resetReportView} />}
+            {activeReport === "supp-receivable" && <ReceivableController goBack={resetReportView} />}
             {activeReport === "report-expensify" && <div>Expensify Report</div>}
           </div>
         </div>

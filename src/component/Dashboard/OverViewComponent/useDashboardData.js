@@ -133,8 +133,8 @@ export const useDashboardData = (activeFilters) => {
       });
 
       /* ================= 4. PIE CHART AGGREGATIONS ================= */
-      const pieData = presalesRaw.reduce((acc, curr) => {
-        const opt = curr.sale_option?.toUpperCase().trim();
+      const pieData = salesRaw.reduce((acc, curr) => {
+        const opt = curr.presale.sale_option?.toUpperCase().trim();
         if (['BOX SALE', 'SPLIT SALE'].includes(opt)) {
           const ex = acc.find(i => i.name === opt);
           if (ex) ex.value += 1; else acc.push({ name: opt, value: 1 });
@@ -143,12 +143,12 @@ export const useDashboardData = (activeFilters) => {
       }, []);
 
       /* ================= 5. IN-TRANSIT & DEBTORS ================= */
-      // Logic: Find IDs of trips that are INTRANSIT
+
       const inTransitTripIds = tripsRaw
         .filter(t => t.progress === "INTRANSIT" || t.progress === "In Progress")
         .map(t => t.id);
 
-      // Count containers that belong to those trips
+
       const inTransitCount = containersRaw.filter(c => inTransitTripIds.includes(Number(c.trip_id))).length;
 
       const customerMap = {};
