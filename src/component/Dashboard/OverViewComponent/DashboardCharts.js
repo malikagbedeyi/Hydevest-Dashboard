@@ -31,7 +31,7 @@ const ChartCard = ({ title, children, height = 250, dataLength = 0 }) => (
   </div>
 );
 
-const DashboardCharts = ({ chartData, pieData, sourceNationPie, supplierPie, formatCurrency }) => {
+const DashboardCharts = ({hideProfit, chartData, pieData, sourceNationPie, supplierPie, formatCurrency }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
@@ -81,47 +81,24 @@ const DashboardCharts = ({ chartData, pieData, sourceNationPie, supplierPie, for
       </div>
 
       {/* 3. Profit Analysis */}
-      <ChartCard title="Expected vs Actual Profit Analysis" dataLength={chartData.length}>
-        <AreaChart data={chartData}>
-          <defs>
-            <linearGradient id="colorExp" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#581aae" stopOpacity={0.1} /><stop offset="95%" stopColor="#581aae" stopOpacity={0} /></linearGradient>
-            <linearGradient id="colorAct" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#22c55e" stopOpacity={0.1} /><stop offset="95%" stopColor="#22c55e" stopOpacity={0} /></linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} dy={10} />
-          <Tooltip formatter={(value) => formatCurrency(value)} />
-          <Legend verticalAlign="top" align="right" height={36} iconType="rect" />
-          <Area name="Expected Profit" type="monotone" dataKey="ExpProfit" stroke="#581aae" strokeWidth={3} fillOpacity={1} fill="url(#colorExp)" />
-          <Area name="Actual Profit" type="monotone" dataKey="ActProfit" stroke="#22c55e" strokeWidth={3} fillOpacity={1} fill="url(#colorAct)" />
-        </AreaChart>
-      </ChartCard>
-
-      {/* 4. FIXED: SOURCE & SUPPLIER */}
-      {/* <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-        <ChartCard title="Source Nation Ratio" height={220} dataLength={sourceNationPie?.length}>
-          <PieChart>
-            <Pie data={sourceNationPie} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-              {sourceNationPie?.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: '600' }} />
-          </PieChart>
+ {!hideProfit && (
+        <ChartCard title="Expected vs Actual Profit Analysis" dataLength={chartData.length}>
+          <AreaChart data={chartData}>
+            <defs>
+              <linearGradient id="colorExp" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#581aae" stopOpacity={0.1} /><stop offset="95%" stopColor="#581aae" stopOpacity={0} /></linearGradient>
+              <linearGradient id="colorAct" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#22c55e" stopOpacity={0.1} /><stop offset="95%" stopColor="#22c55e" stopOpacity={0} /></linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} dy={10} />
+            <Tooltip formatter={(value) => formatCurrency(value)} />
+            <Legend verticalAlign="top" align="right" height={36} iconType="rect" />
+            <Area name="Expected Profit" type="monotone" dataKey="ExpProfit" stroke="#581aae" strokeWidth={3} fillOpacity={1} fill="url(#colorExp)" />
+            <Area name="Actual Profit" type="monotone" dataKey="ActProfit" stroke="#22c55e" strokeWidth={3} fillOpacity={1} fill="url(#colorAct)" />
+          </AreaChart>
         </ChartCard>
+      )}
 
-        <ChartCard title="Supplier Distribution" height={220} dataLength={supplierPie?.length}>
-          <PieChart>
-            <Pie data={supplierPie} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-              {supplierPie?.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: '600' }} />
-          </PieChart>
-        </ChartCard>
-      </div> */}
+ 
 
     </div>
   );

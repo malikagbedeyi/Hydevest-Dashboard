@@ -261,34 +261,36 @@ const formatMoneyUSD = (value) =>
         <div className="controller-content">
           {/* ===== TOP BAR ===== */}
           <div className="top-content">
+          {!userPermissions.includes("Fontend_can't_view_container_money_format") && (
               <div className="drill-summary-grid mb-5">
-     <div className="drill-summary">
-  <div className="summary-item">
-    <p className="small">Total Containers</p>
-    <h2>{matrix.container_count}</h2>
-  </div>
+                <div className="drill-summary">
+                  <div className="summary-item">
+                    <p className="small">Total Containers</p>
+                    <h2>{matrix.container_count}</h2>
+                  </div>
 
-  <div className="summary-item">
-    <p className="small">Average Landing Cost ₦</p>
-    <h2>{"₦" + matrix.average_landing_cost}</h2>
-  </div>
+                  <div className="summary-item">
+                    <p className="small">Average Landing Cost ₦</p>
+                    <h2>{"₦" + matrix.average_landing_cost}</h2>
+                  </div>
 
-  <div className="summary-item">
-    <p className="small">Average Pieces</p>
-    <h2>{matrix.average_pieces}</h2>
-  </div>
+                  <div className="summary-item">
+                    <p className="small">Average Pieces</p>
+                    <h2>{matrix.average_pieces}</h2>
+                  </div>
 
-  <div className="summary-item">
-    <p className="small">Average Quoted Price</p>
-    <h2>{"$" + matrix.average_quoted_amount_usd}</h2>
-  </div>
+                  <div className="summary-item">
+                    <p className="small">Average Quoted Price</p>
+                    <h2>{"$" + matrix.average_quoted_amount_usd}</h2>
+                  </div>
 
-  <div className="summary-item">
-    <p className="small">Average Unit Price</p>
-    <h2>{"$" + matrix.average_unit_price_usd}</h2>
-  </div>
-</div>
-    </div>
+                  <div className="summary-item">
+                    <p className="small">Average Unit Price</p>
+                    <h2>{"$" + matrix.average_unit_price_usd}</h2>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="top-content-wrapper">
               <div className="left-wrapper" />
 

@@ -18,6 +18,7 @@ const OverViewController = () => {
   const [activeFilters, setActiveFilters] = useState(defaultRange);
   const [tempFilters, setTempFilters] = useState(defaultRange);
 
+  // dashboardData now contains the 'hideContent' flag based on permissions
   const { loading, data: dashboardData } = useDashboardData(activeFilters);
 
   const formatCurrency = (val) => 
@@ -62,7 +63,6 @@ const OverViewController = () => {
           <div className="summary-item"><p className="small">Revenue</p><h2>₦{(dashboardData.salesMatric.total_sales_amount)}</h2></div>
           <div className="summary-item"><p className="small">Recovered</p><h2>₦{(dashboardData.salesMatric.total_amount_paid)}</h2></div>
           <div className="summary-item"><p className="small">Outstanding</p><h2 style={{ color: "orange" }}>₦{(dashboardData.salesMatric.outstanding_balance)}</h2></div>
-              {/* <div className="summary-item">   <p className="small">Net Margin %</p> <h2 style={{ color: dashboardData.netMargin >= 0 ? '#22c55e' : '#ff4d4f' }}> {dashboardData.netMargin.toFixed(1)}% </h2> </div> */}
           <div className="summary-item"><p className="small">Sales</p><h2>{dashboardData.salesMatric.total_sales_count}</h2></div>
         </div>
       </div>
@@ -73,6 +73,7 @@ const OverViewController = () => {
           chartData={dashboardData.chartData} 
           pieData={dashboardData.pieData} 
           formatCurrency={formatCurrency} 
+          hideProfit={dashboardData.hideContent} // Pass flag to handle profit chart visibility internally
         />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -87,53 +88,53 @@ const OverViewController = () => {
             </div>
           </div>
 
-         {/* CONTAINERS IN TRANSIT */}
-          <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee', }} 
-          // onClick={() => handleAction("/dashboard/purchase", "/dashboard/trip", "table")}
-           >
+          <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee' }}>
             <p className="small">Container In Transit</p>
             <h3 style={{ color: 'orange' }}>{dashboardData.inTransitCount}</h3>
-            {/* <div style={{ color: '#581aae', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>Track Progress <ArrowRight size={12} /></div> */}
           </div>
 
-          {/* TOTAL CONTAINERS */}
           <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee', cursor: 'pointer' }} onClick={() => handleAction("/dashboard/purchase", "/dashboard/container", "table")}>
             <p className="small">Total Containers</p>
             <h3>{dashboardData.totalContainer}</h3>
             <div style={{ color: '#581aae', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>View All <ArrowRight size={12} /></div>
           </div>
 
-          <div style={{ marginTop: '10px', marginBottom: '-5px',display:"flex",justifyContent:"space-between" }}>
+          <div style={{ marginTop: '10px', marginBottom: '-5px', display: "flex", justifyContent: "space-between" }}>
             <h5 style={{ fontWeight: '700', color: '#581aae', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <FileText size={18} /> Reports
             </h5>
-            
-           <div style={{display:"flex",gap:"1vw",alignContent:"center",justifyContent:"center",cursor:"pointer"}}>
-            <span style={{color:"#581aae"}} onClick={() => handleAction("/dashboard/report", "/dashboard/report")}> View</span>
-             <ArrowRight size={16} color="#581aae" />
-           </div>
-          </div>
-
-<div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee', cursor: 'pointer' }} 
-     onClick={() => handleAction("/dashboard/report", "/dashboard/report", "customer-dept")}>
-  <p className="small">Customers Debt List</p>
-  <h3 style={{ color: '#d9534f' }}>{dashboardData.debtorsCount}</h3>
-  <div style={{ color: '#581aae', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-    View Debt List <ArrowRight size={12} />
-  </div>
-</div>
-          <div style={{ background: "#fff", padding: "15px 20px", borderRadius: "16px", border: '1px solid #eee', cursor: 'pointer' }}onClick={() => handleAction("/dashboard/report", "/dashboard/report", "container-profit")}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: '600',color:"#581aae" }}>Container Profit Report</span>
-                <ArrowRight size={16} color="#581aae" />
+            <div style={{ display: "flex", gap: "1vw", alignItems: "center", cursor: "pointer" }}>
+              <span style={{ color: "#581aae" }} onClick={() => handleAction("/dashboard/report", "/dashboard/report")}> View</span>
+              <ArrowRight size={16} color="#581aae" />
             </div>
           </div>
+
+          <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: '1px solid #eee', cursor: 'pointer' }} 
+               onClick={() => handleAction("/dashboard/report", "/dashboard/report", "customer-dept")}>
+            <p className="small">Customers Debt List</p>
+            <h3 style={{ color: '#d9534f' }}>{dashboardData.debtorsCount}</h3>
+            <div style={{ color: '#581aae', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              View Debt List <ArrowRight size={12} />
+            </div>
+          </div>
+
+          {/* HIDE CONTAINER PROFIT REPORT TILE BASED ON PERMISSION */}
+          {!dashboardData.hideContent && (
+            <div 
+              style={{ background: "#fff", padding: "15px 20px", borderRadius: "16px", border: '1px solid #eee', cursor: 'pointer' }}
+              onClick={() => handleAction("/dashboard/report", "/dashboard/report", "container-profit")}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: '600', color: "#581aae" }}>Container Profit Report</span>
+                <ArrowRight size={16} color="#581aae" />
+              </div>
+            </div>
+          )}
 
         </div>
       </div>  
     </div>  
   );
 };
-
 
 export default OverViewController;

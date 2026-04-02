@@ -5,6 +5,7 @@ import { ContainerServices } from '../../../services/Trip/container';
 import { PresaleServices } from '../../../services/Sale/presale';
 import { ExpenseServices } from '../../../services/Trip/expense';
 import { TripServices } from '../../../services/Trip/trip';
+import { calculateWeightedRate, calculateOverheadShare } from '../../../utils/financeMath';
 
 export const useDashboardData = (activeFilters) => {
   const [loading, setLoading] = useState(true);
@@ -22,108 +23,86 @@ export const useDashboardData = (activeFilters) => {
     supplierPie: [],
     salesMatric: {},
     presalesMatric: {},
-    containerMatric: {}
+    containerMatric: {},
+    hideContent: false 
   });
 
-  const fetchAllSales = async (params) => {
-  let allData = [];
-  let page = 1;
-  let lastPage = 1;
-
-  do {
-    const res = await SaleServices.list({ ...params, page });
-    
-    const record = res?.data?.record;
-    const data = record?.data || [];
-
-    allData = [...allData, ...data];
-    lastPage = record?.last_page || 1;
-
-    page++;
-  } while (page <= lastPage);
-
-  return allData;
-};
+  /* ================= HELPERS: AGGRESSIVE FETCHING ================= */
+  const fetchAll = async (service, params = {}) => {
+    let allData = [];
+    let page = 1;
+    let hasMore = true;
+    try {
+      while (hasMore) {
+        const res = await service.list({ ...params, page, per_page: 100 });
+        const record = res?.data?.record;
+        const data = record?.data || res?.data?.data || [];
+        
+        allData = [...allData, ...data];
+        
+        const lastPage = record?.last_page || 1;
+        if (page >= lastPage || data.length === 0) {
+          hasMore = false;
+        } else {
+          page++;
+        }
+      }
+    } catch (e) {
+      console.error(`Aggressive fetch failed for ${service}`, e);
+    }
+    return allData;
+  };
 
   const fetchData = async () => {
     try {
       setLoading(true);
       const apiToDate = `${activeFilters.to} 23:59:59`;
 
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const perms = userData?.permissions?.map(p => p.name) || [];
+      const hideContent = perms.includes("Fontend_hide_overview_content") && userData?.is_superuser === 0;
 
-      
-      const [salesRes, recoveryRes, containerRes, presaleRes, tripRes] = await Promise.all([
-        SaleServices.list({ from_date: activeFilters.from, to_date: apiToDate, per_page: 1000 }),
-        RecoveryServices.list({ from_date: activeFilters.from, to_date: apiToDate, per_page: 1000 }),
-        ContainerServices.list({  per_page: 1000 }), 
-        PresaleServices.list({ from_date: activeFilters.from, to_date: apiToDate, per_page: 1000 }),
-        TripServices.list({  per_page: 1000 }) 
+      /* ================= 1. AGGRESSIVE DATA COLLECTION ================= */
+
+      const [salesRaw, recoveryRaw, containersRaw, presalesRaw, tripsRaw, salesMatrixRes] = await Promise.all([
+        fetchAll(SaleServices, { from_date: activeFilters.from, to_date: apiToDate }),
+        fetchAll(RecoveryServices, { from_date: activeFilters.from, to_date: apiToDate }),
+        fetchAll(ContainerServices), 
+        fetchAll(PresaleServices, { from_date: activeFilters.from, to_date: apiToDate }),
+        fetchAll(TripServices),
+        SaleServices.list({ from_date: activeFilters.from, to_date: apiToDate }) // To get backend calculated Matrix
       ]);
 
+      const salesMatric = salesMatrixRes?.data || {};
 
-      // const salesRaw = salesRes?.data?.record?.data || [];
-      const salesRaw = await fetchAllSales({from_date: activeFilters.from,to_date: apiToDate});
-      const salesMatric = salesRes?.data || {};
-      const presalesRaw = presaleRes?.data?.record?.data || [];
-      const presalesMatric = presaleRes?.data || {};
-      const recoveryRaw = recoveryRes?.data?.record?.data || [];
-      const containersRaw = containerRes?.data?.record?.data || [];
-      const containerMatric = containerRes?.data || {};
-      const tripsRaw = tripRes?.data?.record?.data || [];
-      /* ================= 1. CALCULATE LANDING COST MAP (KEPT) ================= */
+      /* ================= 2. CALCULATE LANDING COST MAP (SYNCED) ================= */
       const tripUuids = [...new Set(containersRaw.map(c => c.trip?.trip_uuid).filter(Boolean))];
+      
+      // Fetch expenses for every trip found
       const allExps = await Promise.all(
         tripUuids.map(uuid => 
-          ExpenseServices.list({ trip_uuid: uuid }).then(res => ({ uuid, data: res.data?.record?.data || [] }))
+          fetchAll(ExpenseServices, { trip_uuid: uuid })
+            .then(data => ({ uuid, data }))
+            .catch(() => ({ uuid, data: [] })) 
         )
       );
 
       const landingCostMap = {};
       containersRaw.forEach(cont => {
         const tripExp = allExps.find(e => e.uuid === cont.trip?.trip_uuid)?.data || [];
-        const tripContCount = containersRaw.filter(c => c.trip_id === cont.trip_id).length;
+        // Divisor must be based on ALL containers in that trip
+        const tripContCount = containersRaw.filter(c => Number(c.trip_id) === Number(cont.trip_id)).length;
         
-        const finance = tripExp.reduce((acc, item) => {
-          if (Number(item.is_container_payment) === 1) {
-            acc.purchaseNgn += Number(item.total_amount || 0);
-            acc.purchaseUsd += Number(item.amount || 0);
-          } else { 
-            acc.overhead += Number(item.total_amount || 0); 
-          }
-          return acc;
-        }, { purchaseNgn: 0, purchaseUsd: 0, overhead: 0 });
+        const fxRate = calculateWeightedRate(tripExp);
+        const overheadShare = calculateOverheadShare(tripExp, tripContCount);
 
-        const fxRate = finance.purchaseUsd > 0 ? finance.purchaseNgn / finance.purchaseUsd : 0;
-        const overheadShare = tripContCount > 0 ? finance.overhead / tripContCount : 0;
         const amountUSD = (Number(cont.unit_price_usd || 0) * Number(cont.pieces || 0)) + Number(cont.shipping_amount_usd || 0);
-        const surcharge = cont.funding?.toLowerCase() === "partner" ? Number(cont.surcharge_ngn || 0) : 0;
+        const surcharge = Number(cont.surcharge_ngn || 0);
         
         landingCostMap[cont.id] = (amountUSD * fxRate) + surcharge + overheadShare;
       });
 
-      /* ================= 2. CUSTOMER DEBT LOGIC (NEW CHANGE) ================= */
-      const customerMap = {};
-      salesRaw.forEach((sale) => {
-        const custId = sale.customer?.user_uuid || sale.customer?.id;
-        if (!custId) return;
-
-        if (!customerMap[custId]) {
-          customerMap[custId] = { totalSale: 0, totalPaid: 0 };
-        }
-        customerMap[custId].totalSale += Number(sale.total_sale_amount || 0);
-        customerMap[custId].totalPaid += Number(sale.amount_paid || 0);
-      });
-
-      const calculatedTotalDebt = Object.values(customerMap).reduce((acc, curr) => {
-        const diff = curr.totalSale - curr.totalPaid;
-        return acc + (diff > 0 ? diff : 0);
-      }, 0);
-
-const debtorsCount = Object.values(customerMap)
-  .filter(c => c.totalSale > c.totalPaid)
-.length;
-
-      /* ================= 3. CHART DATA (KEPT & UPDATED) ================= */
+      /* ================= 3. CHART LOGIC (RECOVERED & DEBT) ================= */
       const start = new Date(activeFilters.from);
       const end = new Date(activeFilters.to);
       const chartBase = [];
@@ -131,80 +110,79 @@ const debtorsCount = Object.values(customerMap)
       let currentBucketDate = new Date(start.getFullYear(), start.getMonth(), 1);
       while (currentBucketDate <= end) {
         const label = currentBucketDate.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
-        chartBase.push({ name: label, Debt: 0, recovered: 0, Sales: 0, ExpProfit: 0, ActProfit: 0 });
+        chartBase.push({ name: label, Debt: 0, recovered: 0, Sales: 0, ExpProfit: 0 });
         currentBucketDate.setMonth(currentBucketDate.getMonth() + 1);
       }
 
-      // Monthly Sales and Profit Logic
-      presalesRaw.forEach(pre => {
-        const label = new Date(pre.created_at).toLocaleString('en-GB', { month: 'short', year: 'numeric' });
-        const bucket = chartBase.find(b => b.name === label);
-        if (!bucket) return;
-        const expectedRev = Number(pre.expected_sales_revenue || 0);
-        const containerIds = [pre.container_one_id, pre.container_two_id].filter(Boolean);
-        const totalLandingCost = containerIds.reduce((sum, id) => sum + (landingCostMap[id] || 0), 0);
-        bucket.ExpProfit += (expectedRev - totalLandingCost);
-      });
-
       chartBase.forEach((bucket) => {
-        bucket.Sales = salesRaw
-          .filter(s => new Date(s.created_at).toLocaleString('en-GB', { month: 'short', year: 'numeric' }) === bucket.name)
-          .reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
+        const salesInMonth = salesRaw.filter(s => 
+          new Date(s.created_at).toLocaleString('en-GB', { month: 'short', year: 'numeric' }) === bucket.name
+        );
+
+        const monthlyRevenue = salesInMonth.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0);
+        const monthlyRecovered = salesInMonth.reduce((sum, s) => sum + Number(s.amount_paid || 0), 0);
+        
+        bucket.Sales = monthlyRevenue;
+        bucket.recovered = monthlyRecovered;
+        bucket.Debt = Math.max(0, monthlyRevenue - monthlyRecovered);
+
+        // Expected Profit logic
+        const presalesInMonth = presalesRaw.filter(p => 
+            new Date(p.created_at).toLocaleString('en-GB', { month: 'short', year: 'numeric' }) === bucket.name
+        );
+        
+        presalesInMonth.forEach(pre => {
+            const expectedRev = Number(pre.expected_sales_revenue || 0);
+            const containerIds = [pre.container_one_id, pre.container_two_id].filter(Boolean);
+            const totalLandingCost = containerIds.reduce((sum, id) => sum + (landingCostMap[id] || 0), 0);
+            bucket.ExpProfit += (expectedRev - totalLandingCost);
+        });
       });
 
-      if (chartBase.length > 0) {
-        chartBase[chartBase.length - 1].Debt = calculatedTotalDebt;
-        chartBase[chartBase.length - 1].recovered = recoveryRaw.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-      }
+      /* ================= 4. DEBTOR COUNT & IN-TRANSIT ================= */
+      const inTransitTripIds = tripsRaw.filter(t => t.progress === "INTRANSIT").map(t => t.id);
+      const inTransitCount = containersRaw.filter(c => inTransitTripIds.includes(c.trip_id)).length;
 
-      /* ================= 4. PIE CHART AGGREGATIONS (KEPT) ================= */
+      const customerMap = {};
+      salesRaw.forEach(s => {
+        const cid = s.customer_id;
+        if(!customerMap[cid]) customerMap[cid] = { rev: 0, paid: 0 };
+        customerMap[cid].rev += Number(s.total_sale_amount || 0);
+        customerMap[cid].paid += Number(s.amount_paid || 0);
+      });
+      const debtorsCount = Object.values(customerMap).filter(c => c.rev > c.paid).length;
+
+
+      /* ================= 5. PIE CHART AGGREGATIONS (FIXED) ================= */
       const pieData = presalesRaw.reduce((acc, curr) => {
         const opt = curr.sale_option?.toUpperCase().trim();
+        // Requirement: only BOX and SPLIT sale
         if (['BOX SALE', 'SPLIT SALE'].includes(opt)) {
           const ex = acc.find(i => i.name === opt);
-          if (ex) ex.value += 1; else acc.push({ name: opt, value: 1 });
+          if (ex) {
+            ex.value += 1;
+          } else {
+            acc.push({ name: opt, value: 1 });
+          }
         }
         return acc;
       }, []);
 
-      const sourceNationPie = containersRaw.reduce((acc, curr) => {
-        const val = curr.source_nation?.toUpperCase().trim() || "UNSPECIFIED";
-        const ex = acc.find(i => i.name === val);
-        if (ex) ex.value += 1; else acc.push({ name: val, value: 1 });
-        return acc;
-      }, []);
 
-      const supplierPie = containersRaw.reduce((acc, curr) => {
-        const val = curr.supplier_code?.trim() || "NO CODE";
-        const ex = acc.find(i => i.name === val);
-        if (ex) ex.value += 1; else acc.push({ name: val, value: 1 });
-        return acc;
-      }, []);
-
-      /* ================= 5. METRICS & COUNTS (KEPT) ================= */
-      const validPresaleContainerIds = new Set([
-        ...presalesRaw.map(p => p.container_one_id),
-        ...presalesRaw.map(p => p.container_two_id)
-      ].filter(Boolean));
-
-      const inTransitTripIds = tripsRaw.filter(t => t.progress === "INTRANSIT").map(t => t.id);
-      const inTransitCount = containersRaw.filter(c => inTransitTripIds.includes(c.trip_id)).length;
-
+      /* ================= 6. STATE UPDATE ================= */
       setData({
-        totalContainer: containerMatric.container_count,
+        totalContainer: containersRaw.length,
         inTransitCount,
         debtorsCount,
-        totalSales: salesRes?.data?.total_sales_count || 0,
+        totalSales: salesRaw.length,
         totalRevenue: salesRaw.reduce((sum, s) => sum + Number(s.total_sale_amount || 0), 0),
-        totalRecovered: recoveryRaw.reduce((sum, r) => sum + Number(r.amount || 0), 0),
-        pendingBalance: calculatedTotalDebt,
+        totalRecovered: salesRaw.reduce((sum, s) => sum + Number(s.amount_paid || 0), 0),
+        pendingBalance: salesMatric?.outstanding_balance || 0,
         chartData: chartBase,
         salesMatric,
-        presalesMatric,
-        containerMatric,
-        pieData,
-        sourceNationPie,
-        supplierPie,
+        containerMatric: { container_count: containersRaw.length },
+        pieData, 
+        hideContent 
       });
 
     } catch (err) { 
