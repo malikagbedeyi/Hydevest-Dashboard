@@ -19,7 +19,7 @@ const ReceivableDrilldowm = ({ trip, goBack }) => {
       {/* 1. TRIP SUMMARY GRID */}
       <div className="drill-summary-grid">
         <div className="drill-summary">
-          <div className="summary-item"><p className="small">Trip</p><h2>{trip.trip_unique_id}</h2></div>
+          <div className="summary-item"><p className="small">Shortfall Pieces</p><h2>{formatNumber(trip.totalPieces - trip.totalLoaderPieces)}</h2></div>
           <div className="summary-item"><p className="small">Total Purchase Pieces</p><h2>{formatUSD(trip.totalPieces)}</h2></div>
           <div className="summary-item"><p className="small">Total Loaded Pieces</p><h2>{formatUSD(trip.totalLoaderPieces)}</h2></div>
           <div className="summary-item">
