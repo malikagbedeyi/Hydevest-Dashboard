@@ -36,7 +36,7 @@ const ReceivableTable = ({ data, onRowClick, goBack }) => {
                 <th> Loaded Pieces</th>
                  <th> Shortfall Pieces</th>
                 <th> Shortfall</th>
-                <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>

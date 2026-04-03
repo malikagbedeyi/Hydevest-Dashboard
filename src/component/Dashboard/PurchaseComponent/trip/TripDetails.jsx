@@ -997,7 +997,7 @@ const handleCloseMessage = () => {
       {showModal && activeTab === "container" && !showItemData && (
   <div className="modal-overlay">
     <TripContainer
-      onCreate={handleAddContainer}   // ✅ CORRECT
+      onCreate={handleAddContainer}  
       setShowItemData={setShowItemData}
       setShowModal={setShowModal}
        reloadKey={containerReloadKey}

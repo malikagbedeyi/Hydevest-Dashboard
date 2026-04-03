@@ -167,30 +167,22 @@ const calculateLandingCost = (item, rate) => {
                 </td>
               </tr>
             ) : (
-              containerData.map((item, idx) => {
-
+            containerData.map((item, idx) => {
   const perPage = pagination.per_page || 10;
-  const currentPage = pagination.current_page || 1;
   const serialNumber = (currentPage - 1) * perPage + (idx + 1);
-                <tr key={item.id} onClick={() => handleContainerRowClick(item)} style={{ cursor: "pointer" }}>
-                  <td>{String(serialNumber).padStart(2, "0")}</td>
-                  <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>
-                  {/* <td>{item.desc || "-"}</td> */}
-                  <td>TRN-{item.tracking_number || "-"}</td>
-                  <td>{formatMoney(item.pieces || 0)}</td>
-                  <td>{formatMoney(item.average_weight)}</td>
-                  <td>{formatMoney(item.max_weight)}</td>
+
+  return (
+    <tr key={item.id} onClick={() => handleContainerRowClick(item)} style={{ cursor: "pointer" }}>
+      <td>{String(serialNumber).padStart(2, "0")}</td>
+      <td>{item.status === 1 ? <span style={{color:"green"}}>Approved</span> : <span style={{color:"orange"}}>Pending</span>}</td>
+      <td>TRN-{item.tracking_number || "-"}</td>
+      <td>{formatMoney(item.pieces || 0)}</td>
+      <td>{formatMoney(item.average_weight)}</td>
+      <td>{formatMoney(item.max_weight)}</td>
+
                     {permissionAssign ? (
     <>
-      {/* <td>$****</td> 
-      <td>$****</td> 
-      <td>₦****</td> 
-       <td>₦****</td> 
-      <td>₦****</td> 
-      <td>$****</td> 
-      <td>$****</td> 
-      <td>$****</td> 
-      <td>₦****</td>  */}
+
       <td>{item.creator_info.firstname} {item.creator_info.lastname}</td>
     </>
   ) : (
@@ -208,8 +200,9 @@ const calculateLandingCost = (item, rate) => {
     </>
   )}
                   <td>{formatDate(item.created_at)}</td>
-                </tr>
-                })
+                  </tr>
+  );
+})
             )}
           </tbody>
         </table>
