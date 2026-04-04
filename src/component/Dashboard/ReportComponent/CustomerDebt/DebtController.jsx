@@ -66,7 +66,7 @@ const customerDebtData = useMemo(() => {
       map[custId] = {
         customerId: custId, 
         numericId: sale.customer?.id,
-        customerUniqueId: sale.customer?.customer_unique_id || `CUST-${custId.toString().slice(0,4)}`,
+        customerUniqueId: sale.customer?.customer_unique_id,
         customerName: `${sale.customer?.firstname || ""} ${sale.customer?.lastname || ""}`,
         customerPhone: sale.customer?.phone_no || "N/A",
         totalSaleAmount: 0,

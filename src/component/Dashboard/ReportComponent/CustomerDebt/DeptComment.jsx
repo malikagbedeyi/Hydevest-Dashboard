@@ -1,14 +1,22 @@
 import React, { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Loader2 } from 'lucide-react';
 
 const DeptComment = ({ comments, addComment, onClose }) => {
   const [newComment, setNewComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (newComment.trim() === "") return;
-    addComment({ id: Date.now(), title: "New Comment", text: newComment });
+    setSubmitting(true);
+    await addComment(newComment);
     setNewComment("");
+    setSubmitting(false);
+
+    onClose();
   };
+
+  // Limit to the most recent 5 comments
+  const limitedComments = comments.slice(0, 5);
 
   return (
     <div style={{
@@ -22,36 +30,46 @@ const DeptComment = ({ comments, addComment, onClose }) => {
     }}>
       <div style={{
         background: "#fff",
-        padding: "50px 30px",
+        padding: "30px",
         borderRadius: "12px",
         width: "600px",
         maxHeight: "80vh",
-        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
         position: "relative"
       }}>
-        <h3 style={{color:"#581aae"}}>Add  Comments</h3>
-        <X onClick={onClose} style={{ position: "absolute", top: "10px", right: "10px",color:"red" ,cursor:"pointer"}} />
+        <h3 style={{color:"#581aae", marginBottom: "5px"}}>Create Comments</h3>
+        <p style={{fontSize: '12px', color: '#666', marginBottom: '15px'}}>Recent Comment</p>
+        
+        <X onClick={onClose} style={{ position: "absolute", top: "20px", right: "20px", color:"#666", cursor:"pointer"}} />
 
-        <div style={{ margin: "10px 0" }}>
-          {comments.length === 0 && <p>No comments yet.</p>}
-          {comments.map((c, idx) => (
-            <div key={c.id} style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-              <strong>{c.title}:</strong>
-              <p>{c.text}</p>
-            </div>
-          ))}
+        <div style={{ flex: 1, overflowY: "auto", marginBottom: "20px", paddingRight: "10px" }}>
+          {limitedComments.length === 0 ? <p style={{color: "#999"}}>No history found.</p> : 
+            limitedComments.map((c) => (
+              <div key={c.id} style={{ padding: "12px", borderBottom: "1px solid #eee", background: "#f9f9f9", borderRadius: "8px", marginBottom: "10px" }}>
+                <div style={{display: "flex", justifyContent: "space-between", marginBottom: "5px"}}>
+                  <strong style={{fontSize: "13px", color: "#581aae"}}>{c.creator_info?.firstname} {c.creator_info?.lastname}</strong>
+                  <span style={{fontSize: "11px", color: "#999"}}>{new Date(c.created_at).toLocaleString()}</span>
+                </div>
+                <p style={{fontSize: "14px", margin: 0}}>{c.comment}</p>
+              </div>
+            ))
+          }
         </div>
 
-        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+        <div style={{ display: "flex", gap: "10px" }}>
           <textarea
-            type="text"
-            value={newComment}q
+            value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Add new comment"
-            style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "1px solid #ccc" }}
+            placeholder="Write a comment about this debt..."
+            style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid #ddd", minHeight: "60px", resize: "none" }}
           />
-          <button onClick={handleAddComment} style={{ padding: "8px 12px", display: "flex", alignItems: "center", gap: "5px", background: "#581aae", color: "#fff", borderRadius: "6px", border: "none", cursor: "pointer" }}>
-            <Plus size={16} /> Add
+          <button 
+            onClick={handleAddComment} 
+            disabled={submitting}
+            style={{ padding: "0 20px", display: "flex", alignItems: "center", gap: "5px", background: "#581aae", color: "#fff", borderRadius: "8px", border: "none", cursor: "pointer" }}
+          >
+            {submitting ? <Loader2 size={16} className="animate-spin" /> : <><Plus size={16} /> Post</>}
           </button>
         </div>
       </div>

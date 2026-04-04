@@ -24,6 +24,13 @@ const DebtTable = ({ data, onRowClick, goBack }) => {
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const currentItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const formatDate = (date) =>
+    date
+      ? new Date(date)
+          .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+          .replace(/ /g, "-")
+      : "-";
+      
   return (
     <div className="userTable">
       <div className="top-content">
@@ -59,7 +66,7 @@ const DebtTable = ({ data, onRowClick, goBack }) => {
           <thead>
             <tr>
               <th>S/N</th>
-              <th>Customer ID</th>
+              {/* <th>Customer ID</th> */}
               <th>Name</th>
               <th>Phone</th>
               <th>Total Sale</th>
@@ -72,7 +79,7 @@ const DebtTable = ({ data, onRowClick, goBack }) => {
             {currentItems.map((row, idx) => (
               <tr key={row.customerId} onClick={() => onRowClick(row)} style={{ cursor: "pointer" }}>
                 <td>{String((currentPage - 1) * itemsPerPage + idx + 1).padStart(2, '0')}</td>
-                <td>{row.customerUniqueId}</td>
+                {/* <td>{row.customerUniqueId}</td> */}
                 <td>{row.customerName}</td>
                 <td>{row.customerPhone}</td>
                 <td>₦{row.totalSaleAmount.toLocaleString()}</td>
